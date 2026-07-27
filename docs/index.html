@@ -79,7 +79,32 @@
   .trend-resolved { color: #0ca30c; }
   .trend-note { color: var(--text-secondary); }
 
+  .chart-section {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .chart-card {
+    background: var(--surface-card);
+    border: 1px solid var(--border-hairline);
+    border-radius: 8px;
+    padding: 16px;
+  }
+  .chart-card h2 { font-size: 0.95rem; margin: 0 0 12px 0; }
+  .chart-empty { color: var(--text-secondary); font-size: 0.9rem; }
+  .rules-chart, .history-chart { width: 100%; height: auto; }
+  .chart-row-label { font-size: 11px; fill: var(--text-secondary); dominant-baseline: middle; }
+  .chart-value-label { font-size: 11px; fill: var(--text-primary); font-variant-numeric: tabular-nums; dominant-baseline: middle; }
+  .chart-axis-label { font-size: 10px; fill: var(--text-muted); }
+  .chart-legend { display: flex; gap: 16px; margin-top: 10px; flex-wrap: wrap; }
+  .chart-legend-item { display: inline-flex; align-items: center; gap: 6px; font-size: 0.8rem; color: var(--text-secondary); }
+  .chart-legend-swatch { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+
   .filter-bar { margin-bottom: 12px; }
+  .pagination-bar { display: flex; align-items: center; gap: 12px; margin-top: 14px; }
+  .pagination-bar .filter-button:disabled { opacity: 0.4; cursor: default; }
+  #page-indicator { color: var(--text-secondary); font-size: 0.85rem; }
   .filter-button {
     font-family: inherit;
     font-size: 0.85rem;
@@ -121,7 +146,7 @@
 <div class="page-wrap">
   <header>
     <h1>SEO Audit Dashboard</h1>
-    <p>https://simprosys.com &middot; Run #2 &middot; Jul 27, 2026, 11:09 AM UTC</p>
+    <p>https://simprosys.com &middot; Run #1 &middot; Jul 27, 2026, 11:42 AM UTC</p>
   </header>
 
   <div class="stat-tiles">
@@ -148,13 +173,120 @@
         
   </div>
 
-  
-    <div class="trend-row">
-      <div class="trend-item"><span class="trend-number trend-new">0</span> new since last run</div>
-      <div class="trend-item"><span class="trend-number trend-resolved">0</span> resolved since last run</div>
-      <div class="trend-item"><span class="trend-number trend-recurring">439</span> still present from last run</div>
-    </div>
+  <p class="trend-note">This is the first recorded run -- no previous run to compare against yet.</p>
+
+  <div class="chart-section">
+    <div class="chart-card">
+      <h2>Findings by Rule (top 12)</h2>
+      
+    <svg viewBox="0 0 670 416" class="rules-chart" role="img" aria-label="Findings by rule">
+      
+          <text x="0" y="15.0" class="chart-row-label">og-title-length</text>
+          <rect x="230" y="0" width="380.0" height="22" rx="4" fill="#898781">
+            <title>og-title-length: 65 finding(s)</title>
+          </rect>
+          <text x="618.0" y="15.0" class="chart-value-label">65</text>
+        
+          <text x="0" y="47.0" class="chart-row-label">title-length</text>
+          <rect x="230" y="32" width="374.2" height="22" rx="4" fill="#fab219">
+            <title>title-length: 64 finding(s)</title>
+          </rect>
+          <text x="612.2" y="47.0" class="chart-value-label">64</text>
+        
+          <text x="0" y="79.0" class="chart-row-label">meta-description-length</text>
+          <rect x="230" y="64" width="350.8" height="22" rx="4" fill="#fab219">
+            <title>meta-description-length: 60 finding(s)</title>
+          </rect>
+          <text x="588.8" y="79.0" class="chart-value-label">60</text>
+        
+          <text x="0" y="111.0" class="chart-row-label">js-rendering-content-differs</text>
+          <rect x="230" y="96" width="298.2" height="22" rx="4" fill="#fab219">
+            <title>js-rendering-content-differs: 51 finding(s)</title>
+          </rect>
+          <text x="536.2" y="111.0" class="chart-value-label">51</text>
+        
+          <text x="0" y="143.0" class="chart-row-label">og-description-length</text>
+          <rect x="230" y="128" width="268.9" height="22" rx="4" fill="#898781">
+            <title>og-description-length: 46 finding(s)</title>
+          </rect>
+          <text x="506.9" y="143.0" class="chart-value-label">46</text>
+        
+          <text x="0" y="175.0" class="chart-row-label">js-added-internal-links</text>
+          <rect x="230" y="160" width="163.7" height="22" rx="4" fill="#898781">
+            <title>js-added-internal-links: 28 finding(s)</title>
+          </rect>
+          <text x="401.7" y="175.0" class="chart-value-label">28</text>
+        
+          <text x="0" y="207.0" class="chart-row-label">twitter-description-length</text>
+          <rect x="230" y="192" width="163.7" height="22" rx="4" fill="#898781">
+            <title>twitter-description-length: 28 finding(s)</title>
+          </rect>
+          <text x="401.7" y="207.0" class="chart-value-label">28</text>
+        
+          <text x="0" y="239.0" class="chart-row-label">twitter-title-missing</text>
+          <rect x="230" y="224" width="122.8" height="22" rx="4" fill="#898781">
+            <title>twitter-title-missing: 21 finding(s)</title>
+          </rect>
+          <text x="360.8" y="239.0" class="chart-value-label">21</text>
+        
+          <text x="0" y="271.0" class="chart-row-label">twitter-description-missing</text>
+          <rect x="230" y="256" width="122.8" height="22" rx="4" fill="#898781">
+            <title>twitter-description-missing: 21 finding(s)</title>
+          </rect>
+          <text x="360.8" y="271.0" class="chart-value-label">21</text>
+        
+          <text x="0" y="303.0" class="chart-row-label">url-too-long</text>
+          <rect x="230" y="288" width="122.8" height="22" rx="4" fill="#898781">
+            <title>url-too-long: 21 finding(s)</title>
+          </rect>
+          <text x="360.8" y="303.0" class="chart-value-label">21</text>
+        
+          <text x="0" y="335.0" class="chart-row-label">internal-link-unverified</text>
+          <rect x="230" y="320" width="81.8" height="22" rx="4" fill="#898781">
+            <title>internal-link-unverified: 14 finding(s)</title>
+          </rect>
+          <text x="319.8" y="335.0" class="chart-value-label">14</text>
+        
+          <text x="0" y="367.0" class="chart-row-label">orphan-page</text>
+          <rect x="230" y="352" width="76.0" height="22" rx="4" fill="#fab219">
+            <title>orphan-page: 13 finding(s)</title>
+          </rect>
+          <text x="314.0" y="367.0" class="chart-value-label">13</text>
+        
+          <text x="0" y="399.0" class="chart-row-label">Other rules (combined)</text>
+          <rect x="230" y="384" width="40.9" height="22" rx="4" fill="#898781">
+            <title>Other rules (combined): 7 finding(s)</title>
+          </rect>
+          <text x="278.9" y="399.0" class="chart-value-label">7</text>
+        
+    </svg>
     
+    </div>
+    <div class="chart-card">
+      <h2>Findings Over Time</h2>
+      
+    <svg viewBox="0 0 320 234" class="history-chart" role="img" aria-label="Findings over time by severity">
+      
+              <rect x="0" y="196.0" width="44" height="2.0" rx="3" fill="#d03b3b">
+                <title>Run #1 (Jul 27): Critical = 4</title>
+              </rect>
+            
+              <rect x="0" y="109.4" width="44" height="84.6" rx="3" fill="#fab219">
+                <title>Run #1 (Jul 27): Warning = 190</title>
+              </rect>
+            
+              <rect x="0" y="-2.2" width="44" height="109.6" rx="3" fill="#898781">
+                <title>Run #1 (Jul 27): Info = 245</title>
+              </rect>
+            
+          <text x="22.0" y="216" class="chart-axis-label" text-anchor="middle">Jul 27</text>
+          <text x="22.0" y="230" class="chart-axis-label" text-anchor="middle">(439)</text>
+        
+    </svg>
+    <div class="chart-legend"><span class="chart-legend-item"><span class="chart-legend-swatch" style="background:#d03b3b"></span>⛔ Critical</span><span class="chart-legend-item"><span class="chart-legend-swatch" style="background:#fab219"></span>⚠ Warning</span><span class="chart-legend-item"><span class="chart-legend-swatch" style="background:#898781"></span>ℹ Info</span></div>
+    
+    </div>
+  </div>
 
   <div class="filter-bar">
     <button class="filter-button active" data-filter="all">All</button><button class="filter-button" data-filter="critical">⛔ Critical</button><button class="filter-button" data-filter="warning">⚠ Warning</button><button class="filter-button" data-filter="info">ℹ Info</button>
@@ -3686,19 +3818,63 @@
       </tbody>
     </table>
   </div>
+
+  <div class="pagination-bar">
+    <button id="prev-page" class="filter-button">&larr; Prev</button>
+    <span id="page-indicator"></span>
+    <button id="next-page" class="filter-button">Next &rarr;</button>
+  </div>
 </div>
 
 <script>
-  document.querySelectorAll(".filter-button").forEach(function (button) {
-    button.addEventListener("click", function () {
-      document.querySelectorAll(".filter-button").forEach(function (b) { b.classList.remove("active"); });
-      button.classList.add("active");
-      var filter = button.getAttribute("data-filter");
-      document.querySelectorAll("#findings-table tbody tr").forEach(function (row) {
-        row.style.display = (filter === "all" || row.getAttribute("data-severity") === filter) ? "" : "none";
+  (function () {
+    var rowsPerPage = 25;
+    var currentPage = 1;
+    var currentFilter = "all";
+    var allRows = Array.from(document.querySelectorAll("#findings-table tbody tr"));
+
+    function getFilteredRows() {
+      return allRows.filter(function (row) {
+        return currentFilter === "all" || row.getAttribute("data-severity") === currentFilter;
+      });
+    }
+
+    function render() {
+      var filteredRows = getFilteredRows();
+      var totalPages = Math.max(1, Math.ceil(filteredRows.length / rowsPerPage));
+      if (currentPage > totalPages) { currentPage = totalPages; }
+
+      allRows.forEach(function (row) { row.style.display = "none"; });
+      var startIndex = (currentPage - 1) * rowsPerPage;
+      filteredRows.slice(startIndex, startIndex + rowsPerPage).forEach(function (row) {
+        row.style.display = "";
+      });
+
+      document.getElementById("page-indicator").textContent =
+        "Page " + currentPage + " of " + totalPages + " (" + filteredRows.length + " findings)";
+      document.getElementById("prev-page").disabled = currentPage <= 1;
+      document.getElementById("next-page").disabled = currentPage >= totalPages;
+    }
+
+    document.querySelectorAll(".filter-button[data-filter]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        document.querySelectorAll(".filter-button[data-filter]").forEach(function (b) { b.classList.remove("active"); });
+        button.classList.add("active");
+        currentFilter = button.getAttribute("data-filter");
+        currentPage = 1;
+        render();
       });
     });
-  });
+
+    document.getElementById("prev-page").addEventListener("click", function () {
+      if (currentPage > 1) { currentPage -= 1; render(); }
+    });
+    document.getElementById("next-page").addEventListener("click", function () {
+      currentPage += 1; render();
+    });
+
+    render();
+  })();
 </script>
 </body>
 </html>
