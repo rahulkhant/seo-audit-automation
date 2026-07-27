@@ -214,6 +214,16 @@ def _fetch_raw_html(url):
         # HTML page with every SEO tag missing -- which would be misleading
         # when Agent 3 checks it against our rules later.
         content_type = response.headers.get("Content-Type", "")
+
+        # By default, the "requests" library falls back to an old
+        # HTTP-spec default (ISO-8859-1) when a server's Content-Type
+        # header doesn't explicitly state a character encoding -- even
+        # though the real content is almost always UTF-8 on the modern
+        # web. Without this fix, special characters (curly quotes,
+        # em-dashes, accented letters) get scrambled, which would show up
+        # as a fake "content differs after JavaScript" finding later, even
+        # though nothing is actually wrong with the page.
+        response.encoding = "utf-8"
         return {
             "status_code": response.status_code,
             "final_url": response.url,

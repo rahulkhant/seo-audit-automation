@@ -65,6 +65,7 @@ CREATE TABLE IF NOT EXISTS pages (
     raw_content_type TEXT,
     is_html INTEGER,
     raw_error TEXT,
+    ssl_valid INTEGER,
     redirect_chain_json TEXT,
 
     rendered_status_code INTEGER,
@@ -90,6 +91,21 @@ CREATE TABLE IF NOT EXISTS pages (
 )
 """
 
+# Agent 3 (validation) writes its results here -- one row per rule
+# violation it finds, linked back to the run that produced it.
+CREATE_FINDINGS_TABLE_SQL = """
+CREATE TABLE IF NOT EXISTS findings (
+    finding_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    run_id INTEGER NOT NULL REFERENCES runs(run_id),
+    page_url TEXT NOT NULL,
+    rule TEXT NOT NULL,
+    issue TEXT NOT NULL,
+    expected TEXT,
+    actual TEXT,
+    severity TEXT NOT NULL
+)
+"""
+
 
 def _to_json_or_none(value):
     """Converts a Python list/dict into a JSON string for storage, or
@@ -106,10 +122,41 @@ def get_connection(db_path=DB_FILE_PATH):
     """
     db_path.parent.mkdir(parents=True, exist_ok=True)
     connection = sqlite3.connect(db_path)
+    # Row objects let callers access columns by name (e.g. row["title"])
+    # and convert cleanly to dictionaries -- Agent 3's checks rely on this.
+    connection.row_factory = sqlite3.Row
     connection.execute(CREATE_RUNS_TABLE_SQL)
     connection.execute(CREATE_PAGES_TABLE_SQL)
+    connection.execute(CREATE_FINDINGS_TABLE_SQL)
     connection.commit()
     return connection
+
+
+def save_findings(connection, run_id, findings):
+    """
+    Saves Agent 3's validation findings for one run. Each finding
+    dictionary (produced by page_checks.py / site_checks.py) becomes one
+    row, linked back to the run it was found in.
+    """
+    connection.executemany(
+        """
+        INSERT INTO findings (run_id, page_url, rule, issue, expected, actual, severity)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+        """,
+        [
+            (
+                run_id,
+                finding["page_url"],
+                finding["rule"],
+                finding["issue"],
+                finding["expected"],
+                finding["actual"],
+                finding["severity"],
+            )
+            for finding in findings
+        ],
+    )
+    connection.commit()
 
 
 def save_crawl_result(connection, crawl_result):
@@ -152,7 +199,7 @@ def save_crawl_result(connection, crawl_result):
             """
             INSERT INTO pages (
                 run_id, url,
-                raw_status_code, raw_content_type, is_html, raw_error, redirect_chain_json,
+                raw_status_code, raw_content_type, is_html, raw_error, ssl_valid, redirect_chain_json,
                 rendered_status_code, rendered_error,
                 redirected_http_to_https,
                 title, meta_description, og_title, og_description,
@@ -160,7 +207,7 @@ def save_crawl_result(connection, crawl_result):
                 canonical_urls_json, h1_texts_json, images_json,
                 internal_links_json, external_links_json, schema_blocks_json,
                 mixed_content_urls_json, js_rendering_comparison_json
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 run_id,
@@ -169,6 +216,7 @@ def save_crawl_result(connection, crawl_result):
                 raw_fetch.get("content_type"),
                 raw_fetch.get("is_html"),
                 raw_fetch.get("error"),
+                raw_fetch.get("ssl_valid"),
                 _to_json_or_none(raw_fetch.get("redirect_chain")),
                 rendered_fetch.get("status_code"),
                 rendered_fetch.get("error"),
