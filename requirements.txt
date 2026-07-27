@@ -10,3 +10,8 @@ beautifulsoup4>=4.12.0
 # playwright: runs a real (headless) browser so we can see the page the way
 # a user's browser -- and Google -- would see it after JavaScript has run.
 playwright>=1.44.0
+
+# python-dotenv: loads secrets (email app password, etc.) from a local .env
+# file into environment variables, so credentials never need to be typed
+# directly into any Python file.
+python-dotenv>=1.0.0

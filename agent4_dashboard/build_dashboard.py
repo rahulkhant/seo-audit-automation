@@ -49,19 +49,19 @@ def _format_timestamp(iso_timestamp):
     return parsed.strftime("%b %d, %Y, %I:%M %p UTC")
 
 
-def _load_run_info(connection, run_id):
+def load_run_info(connection, run_id):
     row = connection.execute("SELECT * FROM runs WHERE run_id = ?", (run_id,)).fetchone()
     return dict(row) if row else None
 
 
-def _load_findings(connection, run_id):
+def load_findings(connection, run_id):
     rows = connection.execute(
         "SELECT * FROM findings WHERE run_id = ? ORDER BY page_url", (run_id,)
     ).fetchall()
     return [dict(row) for row in rows]
 
 
-def _compute_trend(connection, current_run_id):
+def compute_trend(connection, current_run_id):
     """
     Compares this run's findings against the immediately previous run (if
     one exists), to show what's new and what's been resolved since then.
@@ -150,9 +150,9 @@ def _render_findings_table(findings):
 
 
 def generate_dashboard_html(connection, run_id):
-    run_info = _load_run_info(connection, run_id)
-    findings = _load_findings(connection, run_id)
-    trend = _compute_trend(connection, run_id)
+    run_info = load_run_info(connection, run_id)
+    findings = load_findings(connection, run_id)
+    trend = compute_trend(connection, run_id)
 
     filter_buttons = ['<button class="filter-button active" data-filter="all">All</button>']
     for severity in SEVERITY_ORDER:
