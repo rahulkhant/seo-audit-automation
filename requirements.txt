@@ -1,0 +1,12 @@
+# requests: used to fetch robots.txt, sitemap.xml, and raw (pre-JavaScript) HTML.
+# We use plain HTTP fetches (instead of a browser) for these because they are
+# small, fast, and don't need JavaScript to be rendered correctly.
+requests>=2.31.0
+
+# beautifulsoup4: parses HTML so we can pull out specific tags (title, meta
+# tags, links, images, etc.) by name instead of searching raw text manually.
+beautifulsoup4>=4.12.0
+
+# playwright: runs a real (headless) browser so we can see the page the way
+# a user's browser -- and Google -- would see it after JavaScript has run.
+playwright>=1.44.0
