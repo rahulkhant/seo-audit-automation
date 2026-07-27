@@ -38,9 +38,7 @@ from notifications.send_digest_email import send_digest_email
 # different URL as a command-line argument (see the usage note above).
 SITE_ROOT_URL = "https://simprosys.com"
 
-# Placeholder until Phase 3 sets up GitHub Pages -- once the dashboard has
-# a real published URL, this becomes that URL instead.
-DASHBOARD_URL = "(dashboard link will go here once GitHub Pages is set up)"
+DASHBOARD_URL = "https://rahulkhant.github.io/seo-audit-automation/"
 
 
 def run_full_audit(site_root_url):

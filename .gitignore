@@ -2,5 +2,12 @@
 __pycache__/
 *.pyc
 .env
-*.db
-data/
+
+# The crawl JSON is just an intermediate debugging artifact -- it's fully
+# captured in the database, so it doesn't need to be tracked.
+data/latest_crawl.json
+
+# NOTE: data/seo_audit_history.db is intentionally NOT ignored. GitHub
+# Actions runs start from a fresh checkout each time, so the database
+# needs to be committed back to the repo after every run, or history
+# (and trend tracking) would be lost between scheduled runs.
