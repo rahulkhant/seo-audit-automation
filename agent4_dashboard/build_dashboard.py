@@ -249,9 +249,17 @@ def _render_trend_section(trend):
 def _render_findings_table_rows(findings):
     """
     Renders one <tr> per finding, tagged with data attributes the
-    dashboard's JavaScript uses to filter by category, search by page URL,
-    and paginate -- all three filters are just CSS display:none/"" toggles
+    dashboard's JavaScript uses to filter by category, search, and
+    paginate -- all three filters are just CSS display:none/"" toggles
     driven by these attributes, no server involved.
+
+    The "data-search" attribute is a global, lowercased blob of every
+    visible column's text (severity label, page URL, issue, expected,
+    actual) -- not just the page URL. Several columns already embed page
+    metadata worth searching (e.g. the "Actual" column for a title-length
+    finding literally contains the page's real title text), so a true
+    global search naturally covers title/meta/description content too,
+    without needing separate hidden fields for each.
     """
     severity_rank = {severity: index for index, severity in enumerate(SEVERITY_ORDER)}
     sorted_findings = sorted(findings, key=lambda f: severity_rank.get(f["severity"], 99))
@@ -259,9 +267,17 @@ def _render_findings_table_rows(findings):
     rows_html = []
     for finding in sorted_findings:
         meta = SEVERITY_DISPLAY.get(finding["severity"], SEVERITY_DISPLAY["info"])
-        category_id, _ = _categorize_rule(finding["rule"])
+        category_id, category_label = _categorize_rule(finding["rule"])
+        searchable_text = " ".join([
+            meta["label"],
+            finding["page_url"],
+            finding["issue"],
+            finding["expected"] or "",
+            finding["actual"] or "",
+            category_label,
+        ]).lower()
         rows_html.append(f"""
-        <tr data-severity="{html.escape(finding['severity'])}" data-category="{category_id}" data-page="{html.escape(finding['page_url'].lower())}">
+        <tr data-severity="{html.escape(finding['severity'])}" data-category="{category_id}" data-search="{html.escape(searchable_text)}">
           <td><span class="severity-badge" style="--badge-color: {meta['color']}">{meta['icon']} {meta['label']}</span></td>
           <td><a href="{html.escape(finding['page_url'])}" target="_blank" rel="noopener">{html.escape(finding['page_url'])}</a></td>
           <td>{html.escape(finding['issue'])}</td>
@@ -491,7 +507,7 @@ def generate_dashboard_html(connection, run_id):
     {_render_trend_section(trend)}
 
     <div class="search-bar">
-      <input type="search" id="search-input" placeholder="Search by page URL...">
+      <input type="search" id="search-input" placeholder="Search page, issue, severity, expected/actual values...">
     </div>
 
     <div class="table-wrap">
@@ -528,7 +544,7 @@ def generate_dashboard_html(connection, run_id):
     function getFilteredRows() {{
       return allRows.filter(function (row) {{
         var matchesCategory = currentCategory === "all" || row.getAttribute("data-category") === currentCategory;
-        var matchesSearch = currentSearch === "" || row.getAttribute("data-page").indexOf(currentSearch) !== -1;
+        var matchesSearch = currentSearch === "" || row.getAttribute("data-search").indexOf(currentSearch) !== -1;
         return matchesCategory && matchesSearch;
       }});
     }}
