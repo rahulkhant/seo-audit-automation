@@ -44,7 +44,9 @@ seo-audit-automation/
 │   ├── seo_audit_history.db         # SQLite -- COMMITTED to git (see §7, persistence)
 │   └── latest_crawl.json            # Intermediate debug artifact -- gitignored
 ├── docs/
-│   └── index.html                   # The dashboard -- served by GitHub Pages
+│   ├── index.html                   # Main Dashboard -- category sidebar, search, donut chart (served by GitHub Pages)
+│   ├── history.html                 # Report History -- one line per past run, PDF download only
+│   └── reports/run-XXXX.pdf         # Permanent PDF archive, one file per run
 ├── agent1_crawl/
 │   ├── sitemap_discovery.py         # Reads robots.txt + sitemap.xml -> list of URLs to crawl
 │   ├── page_extractor.py            # Fetches ONE page (raw + Playwright-rendered), extracts SEO data
@@ -53,11 +55,11 @@ seo-audit-automation/
 │   └── database.py                  # SQLite schema (runs/pages/findings tables) + save functions
 ├── agent3_validation/
 │   ├── rules_config.py              # All thresholds (title length, meta length, etc.)
-│   ├── page_checks.py               # Per-page rule checks (28 rules)
+│   ├── page_checks.py               # Per-page rule checks (37 rules)
 │   ├── site_checks.py               # Cross-page rule checks (6 rules)
 │   └── run_validation.py            # Runs all checks, saves findings to DB
 ├── agent4_dashboard/
-│   └── build_dashboard.py           # Builds docs/index.html from findings (stat tiles, trend, paginated table)
+│   └── build_dashboard.py           # Builds docs/index.html + docs/history.html + PDF archive
 ├── notifications/
 │   └── send_digest_email.py         # Sends the summary email via Gmail SMTP
 ├── .github/
@@ -90,13 +92,24 @@ seo-audit-automation/
 
 **Deliberately scoped to 100% mechanical, deterministic checks only** — no AI/LLM judgment calls, no external paid APIs. This was a considered decision to prove the pipeline's accuracy first (see §2).
 
-### 34 rules currently implemented
+### 43 rules currently implemented
 
-**Per-page checks** (`agent3_validation/page_checks.py`):
-`page-fetch-failed`, `page-not-200`, `url-underscore`, `url-uppercase`, `url-unnecessary-date`, `url-too-long`, `title-missing`, `title-length`, `meta-description-missing`, `meta-description-length`, `og-title-missing`, `og-title-length`, `og-description-missing`, `og-description-length`, `twitter-title-missing`, `twitter-description-missing`, `twitter-description-length`, `canonical-missing`, `canonical-duplicate`, `canonical-not-absolute`, `canonical-not-https`, `robots-conflicting-directives`, `robots-noindex-in-sitemap`, `sitemap-non-html-entry`, `image-alt-missing`, `schema-invalid-json`, `schema-missing`, `mixed-content`, `ssl-invalid`, `https-not-enforced`, `redirect-chain`, `redirect-loop`, `sitemap-url-redirects`, `js-rendering-content-differs`, `js-added-internal-links`
+**Per-page checks** (`agent3_validation/page_checks.py`, 37 rules):
+`page-fetch-failed`, `page-not-200`, `url-underscore`, `url-uppercase`, `url-unnecessary-date`, `url-too-long`, `title-missing`, `title-length`, `meta-description-missing`, `meta-description-length`, `og-title-missing`, `og-title-length`, `og-description-missing`, `og-description-length`, `twitter-title-missing`, `twitter-description-missing`, `twitter-description-length`, `canonical-missing`, `canonical-duplicate`, `canonical-not-absolute`, `canonical-not-https`, `h1-missing`, `h1-multiple`, `robots-conflicting-directives`, `robots-noindex-in-sitemap`, `sitemap-non-html-entry`, `image-alt-missing`, `schema-invalid-json`, `schema-missing`, `mixed-content`, `ssl-invalid`, `https-not-enforced`, `redirect-chain`, `redirect-loop`, `sitemap-url-redirects`, `js-rendering-content-differs`, `js-added-internal-links`
 
-**Cross-page checks** (`agent3_validation/site_checks.py`):
+**Cross-page checks** (`agent3_validation/site_checks.py`, 6 rules):
 `internal-link-broken`, `internal-link-unverified`, `orphan-page`, `duplicate-title`, `duplicate-meta-description`, `canonical-target-broken`
+
+**`h1-missing`/`h1-multiple` added 2026-07-28** — previously H1 text was only used internally for the JS-rendering comparison, never checked as its own rule; added so the dashboard's "Headings" category has real content.
+
+### Dashboard organization (redesigned 2026-07-28)
+
+The Main Dashboard (`docs/index.html`) is organized by **SEO checklist category**, not severity. Every rule above is mapped to one of 12 categories (`CATEGORIES` list in `agent4_dashboard/build_dashboard.py`): Meta Title & Description, Headings, Social Tags (OG & Twitter), URL Structure, Canonical Tags, Robots & Indexability, Images & Alt Text, Structured Data (Schema), HTTPS & Security, Redirects, Internal Linking, JavaScript Rendering. A rule not found in the mapping falls back to an "Other" category rather than silently disappearing — check `_categorize_rule` if a future rule seems to be missing from the sidebar.
+
+- **Left sidebar**: "All Issues" + each category, with a live issue count, clickable to filter the table (pure client-side JS, no page reload).
+- **Search box**: filters the currently-selected view by page URL substring match; combines with category selection and pagination.
+- **Health overview**: a single SVG donut chart (critical/warning/info proportions, total count in the center) replaced the four stat tiles — hand-rolled SVG (stroke-dasharray technique), no charting library, so the page stays fully self-contained.
+- **History page** (`docs/history.html`): one row per past run (date, pages audited, severity summary, Download PDF button) — deliberately no link into an interactive view of old runs, per the explicit requirement that historical reports are downloadable only, never browsable in the dashboard.
 
 ### Severity tiers
 - **Critical** — real, broken, likely-blocking issues (missing canonical, duplicate title/meta, broken links, invalid schema, SSL/HTTPS failures, redirect loops).
@@ -143,13 +156,13 @@ These were identified early on as needing subjective/semantic judgment rather th
 
 - **Website #2**: `support.simprosys.com` (Frappe backend, ~334 pages) — add once Phase 1 accuracy is proven on the main site.
 - **Multiple email recipients** — currently just `rahulkhant@simprosys.com`; Rahul said to add more later if needed.
-- **Dashboard redesign (charts)** — charts (findings-by-rule bar chart, findings-over-time trend chart) were built, then explicitly removed at Rahul's request ("not relatable for our actual output for now"). Pagination was kept. Rahul intends to specify an exact desired dashboard design in a future session rather than have it guessed at.
-- **PDF report archiving — DONE (2026-07-28)**: every run now gets a permanent PDF snapshot at `docs/reports/run-XXXX.pdf` (filename zero-padded, derived from `run_id`, so runs never overwrite each other), with a "Download PDF" link on the dashboard header for the current run. Built via Playwright's `page.pdf()` against a simplified, non-paginated print-HTML variant (`_generate_print_html` in `build_dashboard.py`) — reuses the same stat-tile/trend/table renderers as the interactive dashboard rather than duplicating them.
-- **Login-gated dashboard + Report History page — designed, not yet built.** Rahul wants a real login wall (starting with just himself, extensible to teammates later) plus a Report History page listing every past PDF (download-only, no in-dashboard viewing of old reports). **Important finding from this design discussion, still true whenever this gets built**: the repo is currently *public* (required for free-tier GitHub Pages on a private repo), which means the underlying data (database, all PDFs) is already reachable directly through the repo regardless of any login wall placed in front of a *hosted* view — a login wall only matters once the repo goes back to private. The recommended path (agreed in principle, not yet implemented): migrate hosting from GitHub Pages to **Cloudflare Pages** (deploys fine from a private repo, still free, no code changes to what Agent 4 generates), make the **repo private again**, then add **Cloudflare Access** in front of the Cloudflare Pages site (real login via Google/Microsoft/email-OTP, email allow-list starting with just `rahulkhant@simprosys.com`). Cloudflare Access needs to sit in front of a domain Cloudflare controls — a `*.github.io` address doesn't qualify, but a Cloudflare Pages site's own `*.pages.dev` address does, without needing any custom domain or Simprosys IT/DNS involvement. Rahul deliberately postponed this whole piece to prioritize proving rule accuracy first — do this once that's solid, likely alongside or after the Claude API phase.
+- **PDF report archiving — DONE (2026-07-28)**: every run gets a permanent PDF snapshot at `docs/reports/run-XXXX.pdf`, with a "Download PDF" link on the dashboard for the current run.
+- **Dashboard redesign — DONE (2026-07-28)**: category-based sidebar (replacing severity tabs), search box, donut health chart (replacing stat tiles), and the History page — see §6 "Dashboard organization" for full detail. An earlier findings-by-rule/findings-over-time chart pairing was built and then explicitly removed at Rahul's request before this redesign; the donut chart is a fresh, different design choice made *for* this redesign, not a restoration of that earlier pair.
+- **Login-gated dashboard access — designed, not yet built.** Rahul wants a real login wall (starting with just himself, extensible to teammates later). **Important finding from this design discussion, still true whenever this gets built**: the repo is currently *public* (required for free-tier GitHub Pages on a private repo), which means the underlying data (database, all PDFs) is already reachable directly through the repo regardless of any login wall placed in front of a *hosted* view — a login wall only matters once the repo goes back to private. The recommended path (agreed in principle, not yet implemented): migrate hosting from GitHub Pages to **Cloudflare Pages** (deploys fine from a private repo, still free, no code changes to what Agent 4 generates), make the **repo private again**, then add **Cloudflare Access** in front of the Cloudflare Pages site (real login via Google/Microsoft/email-OTP, email allow-list starting with just `rahulkhant@simprosys.com`). Cloudflare Access needs to sit in front of a domain Cloudflare controls — a `*.github.io` address doesn't qualify, but a Cloudflare Pages site's own `*.pages.dev` address does, without needing any custom domain or Simprosys IT/DNS involvement. Rahul deliberately postponed this to prioritize proving rule accuracy first — do this once that's solid, likely alongside or after the Claude API phase. (Note: the History page itself is already built per the redesign above; this remaining item is *only* the login wall.)
 
 ## 11. Current live status (as of this report)
 
-- Latest confirmed successful run: Run #1 via manual cloud trigger — 76 pages, 4 critical / 189 warning / 246 info findings, dashboard live, email delivered, PDF archived.
+- Latest confirmed successful run: Run #2 — 76 pages, 4 critical / 190 warning / 246 info findings, dashboard live (new category/sidebar/search/donut design), History page live, email delivered, PDF archived.
 - All four agents + orchestrator + notification step individually tested and verified against real site data before being wired together.
 - Weekly schedule is live and will run unattended starting the next Monday 06:00 UTC.
 - Current priority (per Rahul, 2026-07-28): validate accuracy/reliability of the existing mechanical rule set over real weekly runs before adding the Claude API phase or the login-gated dashboard redesign.
