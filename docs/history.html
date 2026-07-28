@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SEO Audit Report History</title>
+<style>
+
+  :root {
+    color-scheme: light;
+    --surface-page: #f9f9f7;
+    --surface-card: #fcfcfb;
+    --text-primary: #0b0b0b;
+    --text-secondary: #52514e;
+    --text-muted: #898781;
+    --border-hairline: rgba(11,11,11,0.10);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:where(:not([data-theme="light"])) {
+      color-scheme: dark;
+      --surface-page: #0d0d0d;
+      --surface-card: #1a1a19;
+      --text-primary: #ffffff;
+      --text-secondary: #c3c2b7;
+      --text-muted: #898781;
+      --border-hairline: rgba(255,255,255,0.10);
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --surface-page: #0d0d0d;
+    --surface-card: #1a1a19;
+    --text-primary: #ffffff;
+    --text-secondary: #c3c2b7;
+    --text-muted: #898781;
+    --border-hairline: rgba(255,255,255,0.10);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--surface-page);
+    color: var(--text-primary);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    padding: 24px;
+  }
+  a { color: inherit; }
+
+  .top-nav { display: flex; gap: 8px; margin-bottom: 20px; }
+  .top-nav a {
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 8px 14px;
+    border-radius: 999px;
+    border: 1px solid var(--border-hairline);
+    background: var(--surface-card);
+  }
+  .top-nav a.active { background: var(--text-primary); color: var(--surface-page); }
+
+  table { width: 100%; table-layout: fixed; border-collapse: collapse; background: var(--surface-card); }
+  th, td {
+    text-align: left; padding: 10px 12px; font-size: 0.9rem; vertical-align: top;
+    word-wrap: break-word; overflow-wrap: break-word;
+    border: 1px solid var(--border-hairline);
+  }
+  th { color: var(--text-secondary); font-weight: 600; font-size: 0.8rem; text-transform: uppercase; }
+  td.muted { color: var(--text-secondary); }
+  .table-wrap { overflow-x: auto; border: 1px solid var(--border-hairline); border-radius: 8px; }
+  .table-wrap table { border: none; }
+
+  .severity-badge {
+    display: inline-flex; align-items: center; gap: 4px; font-size: 0.8rem; font-weight: 600;
+    color: var(--badge-color); white-space: nowrap;
+  }
+
+  .download-pdf-link {
+    display: inline-flex; align-items: center; gap: 6px; font-size: 0.85rem; font-weight: 600;
+    text-decoration: none; padding: 8px 14px; border-radius: 999px; border: 1px solid var(--border-hairline);
+    background: var(--surface-card); color: var(--text-primary); white-space: nowrap;
+  }
+
+  .page-wrap { max-width: 1100px; margin: 0 auto; }
+  h1 { font-size: 1.4rem; margin-bottom: 4px; }
+  header p { color: var(--text-secondary); margin-top: 0; margin-bottom: 20px; }
+  col.col-run { width: 12%; }
+  col.col-date { width: 24%; }
+  col.col-pages { width: 14%; }
+  col.col-severity { width: 30%; }
+  col.col-download { width: 20%; }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+  <div class="top-nav">
+    <a href="index.html">Main Dashboard</a>
+    <a href="history.html" class="active">History</a>
+  </div>
+
+  <header>
+    <h1>Report History</h1>
+    <p>Every past audit run. Older reports are downloadable as PDF only -- they aren't viewable directly here.</p>
+  </header>
+
+  <div class="table-wrap">
+    <table>
+      <colgroup>
+        <col class="col-run"><col class="col-date"><col class="col-pages">
+        <col class="col-severity"><col class="col-download">
+      </colgroup>
+      <thead>
+        <tr><th>Run</th><th>Date</th><th>Pages Audited</th><th>Severity Summary</th><th>Report</th></tr>
+      </thead>
+      <tbody>
+        
+        <tr>
+          <td>Run #2</td>
+          <td>Jul 28, 2026, 08:39 AM UTC</td>
+          <td>76</td>
+          <td><span class="severity-badge" style="--badge-color: #d03b3b">⛔ 4</span> &nbsp; <span class="severity-badge" style="--badge-color: #fab219">⚠ 190</span> &nbsp; <span class="severity-badge" style="--badge-color: #898781">ℹ 246</span></td>
+          <td><a class="download-pdf-link" href="reports/run-0002.pdf">&#8681; Download PDF</a></td>
+        </tr>
+        
+        <tr>
+          <td>Run #1</td>
+          <td>Jul 27, 2026, 01:07 PM UTC</td>
+          <td>76</td>
+          <td><span class="severity-badge" style="--badge-color: #d03b3b">⛔ 4</span> &nbsp; <span class="severity-badge" style="--badge-color: #fab219">⚠ 189</span> &nbsp; <span class="severity-badge" style="--badge-color: #898781">ℹ 246</span></td>
+          <td><a class="download-pdf-link" href="reports/run-0001.pdf">&#8681; Download PDF</a></td>
+        </tr>
+        
+      </tbody>
+    </table>
+  </div>
+</div>
+</body>
+</html>

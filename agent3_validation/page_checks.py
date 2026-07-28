@@ -232,6 +232,26 @@ def _check_canonical(page):
     return findings
 
 
+# --- Headings (H1) ---
+def _check_headings(page):
+    findings = []
+    url = page["url"]
+    h1_texts = page["h1_texts"]
+
+    if len(h1_texts) == 0:
+        findings.append(make_finding(
+            url, "h1-missing", "Page has no H1 heading.",
+            "Exactly one H1 heading", "None", rules.SEVERITY_WARNING,
+        ))
+    elif len(h1_texts) > 1:
+        findings.append(make_finding(
+            url, "h1-multiple", "Page has more than one H1 heading.",
+            "Exactly one H1 heading", f"{len(h1_texts)} H1 headings", rules.SEVERITY_WARNING,
+        ))
+
+    return findings
+
+
 # --- Robots meta tag ---
 def _check_robots_meta(page):
     findings = []
@@ -418,6 +438,7 @@ ALL_PAGE_CHECKS = [
     _check_meta_description,
     _check_social_tags,
     _check_canonical,
+    _check_headings,
     _check_robots_meta,
     _check_is_html,
     _check_image_alt_text,
