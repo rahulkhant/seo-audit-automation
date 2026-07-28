@@ -46,6 +46,21 @@
   .page-wrap { max-width: 1100px; margin: 0 auto; }
   header h1 { font-size: 1.4rem; margin-bottom: 4px; }
   header p { color: var(--text-secondary); margin-top: 0; }
+  .header-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  .download-pdf-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-decoration: none;
+    padding: 8px 14px;
+    border-radius: 999px;
+    border: 1px solid var(--border-hairline);
+    background: var(--surface-card);
+    color: var(--text-primary);
+    white-space: nowrap;
+  }
 
   .stat-tiles {
     display: grid;
@@ -123,8 +138,13 @@
 <body>
 <div class="page-wrap">
   <header>
-    <h1>SEO Audit Dashboard</h1>
-    <p>https://simprosys.com &middot; Run #1 &middot; Jul 27, 2026, 01:07 PM UTC</p>
+    <div class="header-row">
+      <div>
+        <h1>SEO Audit Dashboard</h1>
+        <p>https://simprosys.com &middot; Run #1 &middot; Jul 27, 2026, 01:07 PM UTC</p>
+      </div>
+      <a class="download-pdf-link" href="reports/run-0001.pdf">&#8681; Download PDF</a>
+    </div>
   </header>
 
   <div class="stat-tiles">
