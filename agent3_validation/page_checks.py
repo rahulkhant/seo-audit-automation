@@ -34,6 +34,7 @@ what happens to this list afterward.
 
 import json
 import re
+from urllib.parse import urlparse
 
 from agent3_validation import rules_config as rules
 
@@ -72,6 +73,17 @@ def load_page_for_checks(page_row):
     page["mixed_content_urls"] = _decode(page.get("mixed_content_urls_json")) or []
     page["js_rendering_comparison"] = _decode(page.get("js_rendering_comparison_json"))
     return page
+
+
+def _is_excluded_from_full_audit(url):
+    """True for pages under one of rules.EXCLUDED_URL_PATH_PREFIXES (e.g.
+    /job-description) -- intentionally temporary pages that shouldn't be
+    checked against evergreen-content rules. See rules_config.py for why."""
+    path = urlparse(url).path.rstrip("/")
+    return any(
+        path == prefix or path.startswith(prefix + "/")
+        for prefix in rules.EXCLUDED_URL_PATH_PREFIXES
+    )
 
 
 # --- URL structure ---
@@ -466,6 +478,11 @@ def check_page(page_row):
     # non-HTML status itself, just skip the rest.
     if page.get("raw_status_code") is None or page.get("is_html") == 0:
         return _check_status_code(page) + _check_is_html(page)
+
+    # Temporary pages (e.g. job postings) skip the evergreen-content rules
+    # -- only fetch-status and schema still apply. See _is_excluded_from_full_audit.
+    if _is_excluded_from_full_audit(page["url"]):
+        return _check_status_code(page) + _check_schema_markup(page)
 
     findings = []
     for check_function in ALL_PAGE_CHECKS:

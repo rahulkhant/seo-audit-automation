@@ -2,6 +2,7 @@
 __pycache__/
 *.pyc
 .env
+.DS_Store
 
 # The crawl JSON is just an intermediate debugging artifact -- it's fully
 # captured in the database, so it doesn't need to be tracked.

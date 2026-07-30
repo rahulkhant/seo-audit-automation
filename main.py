@@ -8,7 +8,7 @@ This is the single command that runs a complete SEO audit, start to finish:
   Agent 1 (crawl)      -> collects raw data from every page on the site
   Agent 2 (storage)    -> saves that data into the database as a new run
   Agent 3 (validation) -> checks the stored data against our SEO rules
-  Agent 4 (dashboard)  -> builds the HTML report from the findings
+  Agent 4 (dashboard)  -> builds the HTML dashboard + PDF archive from the findings
   Notification         -> emails a short summary of what was found
 
 Each agent still works independently and can be run on its own (as we did
@@ -31,7 +31,8 @@ import time
 from agent1_crawl.crawl_runner import run_full_crawl, save_crawl_result
 from agent2_storage.database import get_connection, save_crawl_result as save_crawl_result_to_db
 from agent3_validation.run_validation import run_validation_and_save
-from agent4_dashboard.build_dashboard import build_and_save_dashboard, compute_trend
+from agent4_dashboard.build_dashboard import build_and_save_pdf_report, compute_trend
+from agent4_dashboard.build_dashboard_metronic import build_and_save_dashboard
 from notifications.send_digest_email import send_digest_email
 
 # The site this audit runs against by default. Override by passing a
@@ -67,6 +68,8 @@ def run_full_audit(site_root_url):
     print("\n[4/5] Agent 4: Building the dashboard...")
     dashboard_run_id, dashboard_path = build_and_save_dashboard(run_id)
     print(f"    -> Dashboard saved to {dashboard_path}")
+    pdf_run_id, pdf_path = build_and_save_pdf_report(run_id)
+    print(f"    -> PDF report archived to {pdf_path}")
 
     print("\n[5/5] Sending summary email...")
     connection = get_connection()

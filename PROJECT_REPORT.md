@@ -27,8 +27,9 @@ An automated, unattended weekly technical + on-page SEO audit for the company we
 Four independent, modular "agents" (really: pipeline stages), each with a single responsibility, tied together by one orchestrator:
 
 ```
-Agent 1 (Crawl)  ->  Agent 2 (Storage)  ->  Agent 3 (Validation)  ->  Agent 4 (Dashboard)  ->  Notification
-  crawl_runner.py      database.py          run_validation.py         build_dashboard.py       send_digest_email.py
+Agent 1 (Crawl)  ->  Agent 2 (Storage)  ->  Agent 3 (Validation)  ->  Agent 4 (Dashboard)     ->  Notification
+  crawl_runner.py      database.py          run_validation.py         build_dashboard_metronic.py  send_digest_email.py
+                                                                       (+ build_dashboard.py for PDF archive)
 ```
 
 `main.py` runs all five steps in sequence. Each stage also works standalone (useful for testing/debugging without re-running the whole pipeline).
@@ -44,7 +45,7 @@ seo-audit-automation/
 │   ├── seo_audit_history.db         # SQLite -- COMMITTED to git (see §7, persistence)
 │   └── latest_crawl.json            # Intermediate debug artifact -- gitignored
 ├── docs/
-│   ├── index.html                   # Main Dashboard -- category sidebar, search, donut chart (served by GitHub Pages)
+│   ├── index.html                   # Main Dashboard -- Metronic-styled (served by GitHub Pages)
 │   ├── history.html                 # Report History -- one line per past run, PDF download only
 │   └── reports/run-XXXX.pdf         # Permanent PDF archive, one file per run
 ├── agent1_crawl/
@@ -54,12 +55,13 @@ seo-audit-automation/
 ├── agent2_storage/
 │   └── database.py                  # SQLite schema (runs/pages/findings tables) + save functions
 ├── agent3_validation/
-│   ├── rules_config.py              # All thresholds (title length, meta length, etc.)
+│   ├── rules_config.py              # All thresholds (title length, meta length, etc.) + EXCLUDED_URL_PATH_PREFIXES
 │   ├── page_checks.py               # Per-page rule checks (37 rules)
 │   ├── site_checks.py               # Cross-page rule checks (6 rules)
 │   └── run_validation.py            # Runs all checks, saves findings to DB
 ├── agent4_dashboard/
-│   └── build_dashboard.py           # Builds docs/index.html + docs/history.html + PDF archive
+│   ├── build_dashboard.py           # Shared data-loading helpers + PDF archive builder (build_and_save_pdf_report)
+│   └── build_dashboard_metronic.py  # Builds docs/index.html + docs/history.html (Metronic-styled dashboard)
 ├── notifications/
 │   └── send_digest_email.py         # Sends the summary email via Gmail SMTP
 ├── .github/
@@ -102,14 +104,30 @@ seo-audit-automation/
 
 **`h1-missing`/`h1-multiple` added 2026-07-28** — previously H1 text was only used internally for the JS-rendering comparison, never checked as its own rule; added so the dashboard's "Headings" category has real content.
 
-### Dashboard organization (redesigned 2026-07-28)
+### Excluded URL patterns (added 2026-07-30)
 
-The Main Dashboard (`docs/index.html`) is organized by **SEO checklist category**, not severity. Every rule above is mapped to one of 12 categories (`CATEGORIES` list in `agent4_dashboard/build_dashboard.py`): Meta Title & Description, Headings, Social Tags (OG & Twitter), URL Structure, Canonical Tags, Robots & Indexability, Images & Alt Text, Structured Data (Schema), HTTPS & Security, Redirects, Internal Linking, JavaScript Rendering. A rule not found in the mapping falls back to an "Other" category rather than silently disappearing — check `_categorize_rule` if a future rule seems to be missing from the sidebar.
+`agent3_validation/rules_config.py` defines `EXCLUDED_URL_PATH_PREFIXES = ["/job-description"]` — pages under this path (Simprosys's job-posting pages) are intentionally temporary: created when a role opens, removed entirely when it closes. Applying evergreen-content rules (title/meta/OG length, duplicate-title, etc.) to pages designed to disappear just creates noise.
 
-- **Left sidebar**: "All Issues" + each category, with a live issue count, clickable to filter the table (pure client-side JS, no page reload).
-- **Search box**: global search — matches against every visible column's text per row (severity label, page URL, issue, expected, actual, category), not just the page URL (fixed 2026-07-28, was originally URL-only). Since several findings already embed real page content in their Expected/Actual text (e.g. a title-length finding's Actual column contains the page's actual title), this naturally covers searching by title/meta-description content too, without separate hidden fields. Combines with category selection and pagination. Note: only *displayed* text is searchable — internal rule slugs never shown in the UI (e.g. `orphan-page`) intentionally don't match.
-- **Health overview**: a single SVG donut chart (critical/warning/info proportions, total count in the center) replaced the four stat tiles — hand-rolled SVG (stroke-dasharray technique), no charting library, so the page stays fully self-contained.
-- **History page** (`docs/history.html`): one row per past run (date, pages audited, severity summary, Download PDF button) — deliberately no link into an interactive view of old runs, per the explicit requirement that historical reports are downloadable only, never browsable in the dashboard.
+What still runs on excluded pages vs. what doesn't:
+- **Skipped**: title, meta description, OG/Twitter, canonical, H1, images, robots meta, mixed content, SSL, redirects, JS-rendering, URL structure — see `page_checks.py`'s `check_page()`.
+- **Kept**: fetch-status checks (`page-fetch-failed`, `page-not-200`) — so if a job closes and its URL is removed from the live site while `sitemap.xml` still lists it, that stale-sitemap-entry problem still gets caught — and schema checks (`schema-missing`, `schema-invalid-json`), since job postings use `JobPosting` structured data for Google for Jobs visibility.
+- **Cross-page checks** (`site_checks.py`): excluded pages are never reported as the *subject* of `duplicate-title`/`duplicate-meta-description`/`canonical-target-broken`, but still count as valid comparison targets — a permanent page that happens to duplicate an excluded page's text still gets flagged correctly. This mattered in practice: `/work-at-simprosys` and `/job-description` share an identical title/meta today, and the fix had to preserve the finding on `/work-at-simprosys` while suppressing it on `/job-description`. `orphan-page` and the internal-link-integrity checks are left running on excluded pages unchanged.
+
+**Still under discussion, not yet implemented** (as of 2026-07-30): excluding `/simprotips/search` (a blog search-results utility page, not indexable, no schema needed — agreed direction, but still need to confirm whether `noindex` is actually live on it yet before deciding whether to keep the robots-meta check running on it) and excluding `simprosys.com/sitemap.xml` itself from being crawled as a page at all (a build-artifact self-reference, not real content — recommended fix is at the Agent 1 discovery stage, not a post-hoc suppression like the two rules above, since there's no "hygiene" signal worth preserving for it the way there is for job postings).
+
+### Dashboard organization (redesigned 2026-07-30, Metronic-inspired)
+
+The dashboard was redesigned twice: first (2026-07-28) into a category-sidebar/donut-chart layout, then (2026-07-30) into a full **Metronic-style** admin dashboard (Keenthemes' visual language — sidebar app nav, topbar, KPI cards, card-wrapped tables, pill badges), at Rahul's explicit request to replace the classic look entirely. This is a hand-rolled look-alike, not an import of Metronic's actual paid CSS/JS — same approach as the earlier hand-rolled donut chart.
+
+Built by `agent4_dashboard/build_dashboard_metronic.py` (writes `docs/index.html` + `docs/history.html` directly — there is no separate "classic" version anymore, it was fully removed, not kept as an option). `agent4_dashboard/build_dashboard.py` now only holds shared data-loading helpers (`load_run_info`, `load_findings`, `compute_trend`, `CATEGORIES`/`_categorize_rule`, etc.) and the PDF-archive builder (`build_and_save_pdf_report`) — both modules import from it so there's no duplicated DB logic.
+
+- **Sidebar**: true primary navigation now — just **Dashboard** and **History** — not a category-filter rail like the previous design.
+- **Topbar**: page title, run info, Download PDF button.
+- **KPI tile row**: Total / Critical / Warning / Info counts as four cards.
+- **Health chart**: a real **ApexCharts** donut (loaded via one CDN `<script>` tag — the same charting library Metronic itself uses) replaced the earlier hand-rolled SVG donut, paired with a Trend card (new/resolved/recurring since last run).
+- **Findings card**: category filtering moved here as a dropdown (replacing the old sidebar rail), alongside the global search box and the paginated findings table — same underlying search/filter/pagination JS logic as before, just restyled. Search still matches every visible column's text per row (severity, page URL, issue, expected, actual, category), not just the URL.
+- **Severity badges**: pill-shaped, pastel background via CSS `color-mix()`, matching Metronic's signature "light" badge style.
+- **History page** (`docs/history.html`): same sidebar/topbar shell, one row per past run (date, pages audited, severity summary, Download PDF button) — still deliberately no link into an interactive view of old runs.
 
 ### Severity tiers
 - **Critical** — real, broken, likely-blocking issues (missing canonical, duplicate title/meta, broken links, invalid schema, SSL/HTTPS failures, redirect loops).
@@ -127,6 +145,8 @@ Title 40–50 chars, meta description 140–150, OG title ≤50, OG description 
 - **Duplicate-link findings bug (found and fixed):** a page linking to the same URL twice (e.g., header nav + footer) was generating duplicate findings per occurrence instead of per unique link. Fixed by de-duplicating link targets per page before checking. Unverified (not-in-sitemap) links were further consolidated from "one finding per page" to "one finding per unique target URL, listing which pages reference it" — otherwise a single shared nav link outside the sitemap generated ~75 near-identical low-value findings.
 - **Non-HTML sitemap entries:** the site's own sitemap.xml lists itself (`https://simprosys.com/sitemap.xml`) as a page — a real, genuine finding, not a crawler bug. The crawler now checks `Content-Type` and skips browser-rendering for non-HTML entries, and Agent 3 reports it distinctly from a real "missing title tag" bug.
 - **Minimum chart segment height:** (relevant if charts are ever re-added) a proportionally-tiny-but-real count (e.g., 4 critical findings out of 439) can visually round down to 0px in a bar chart and look like zero — enforce a minimum visible height for any non-zero value.
+- **Local code changes have zero effect on scheduled/manually-triggered cloud runs until pushed.** GitHub Actions always runs whatever is currently on `origin/main`, not whatever is sitting uncommitted on the local machine. This caused real confusion on 2026-07-30: a rule change (the `/job-description` exclusion) was written and tested locally, then `/seo-audit` was run expecting to see it reflected — but the workflow used the old, unpushed rules, so nothing changed. **Lesson: after any Agent 3 rule change, commit + push *before* triggering a real audit run, or the run will silently use stale logic.**
+- **Regenerating the dashboard locally can accidentally overwrite a "permanent" archived PDF.** `_save_pdf_report` always writes to the same `run-XXXX.pdf` filename for a given `run_id` — there's no protection against re-running it against an already-archived run. This happened once during local testing (re-running `build_dashboard` for run #2 while testing an unrelated change silently regenerated `run-0002.pdf`); caught via `git diff`/`git checkout` before it was committed. **Lesson: avoid re-running the dashboard/PDF builder locally against an old `run_id` unless you intend to regenerate that historical PDF.**
 
 ## 8. Deployment / operations
 
@@ -157,15 +177,18 @@ These were identified early on as needing subjective/semantic judgment rather th
 - **Website #2**: `support.simprosys.com` (Frappe backend, ~334 pages) — add once Phase 1 accuracy is proven on the main site.
 - **Multiple email recipients** — currently just `rahulkhant@simprosys.com`; Rahul said to add more later if needed.
 - **PDF report archiving — DONE (2026-07-28)**: every run gets a permanent PDF snapshot at `docs/reports/run-XXXX.pdf`, with a "Download PDF" link on the dashboard for the current run.
-- **Dashboard redesign — DONE (2026-07-28)**: category-based sidebar (replacing severity tabs), search box, donut health chart (replacing stat tiles), and the History page — see §6 "Dashboard organization" for full detail. An earlier findings-by-rule/findings-over-time chart pairing was built and then explicitly removed at Rahul's request before this redesign; the donut chart is a fresh, different design choice made *for* this redesign, not a restoration of that earlier pair.
+- **Dashboard redesign — DONE (2026-07-28, then fully replaced 2026-07-30)**: first a category-sidebar/donut-chart design, then a full Metronic-style redesign (KPI tiles, ApexCharts donut, sidebar app nav, pill badges) at Rahul's explicit request — the classic design was removed entirely, not kept as an alternative. See §6 "Dashboard organization" for full detail. (An initial version of the Metronic redesign was shipped as a side-by-side `/metronic-preview` comparison so Rahul could evaluate it against the classic design before committing; once approved, it was promoted to be the only dashboard and the preview subfolder was deleted.)
 - **Login-gated dashboard access — designed, not yet built.** Rahul wants a real login wall (starting with just himself, extensible to teammates later). **Important finding from this design discussion, still true whenever this gets built**: the repo is currently *public* (required for free-tier GitHub Pages on a private repo), which means the underlying data (database, all PDFs) is already reachable directly through the repo regardless of any login wall placed in front of a *hosted* view — a login wall only matters once the repo goes back to private. The recommended path (agreed in principle, not yet implemented): migrate hosting from GitHub Pages to **Cloudflare Pages** (deploys fine from a private repo, still free, no code changes to what Agent 4 generates), make the **repo private again**, then add **Cloudflare Access** in front of the Cloudflare Pages site (real login via Google/Microsoft/email-OTP, email allow-list starting with just `rahulkhant@simprosys.com`). Cloudflare Access needs to sit in front of a domain Cloudflare controls — a `*.github.io` address doesn't qualify, but a Cloudflare Pages site's own `*.pages.dev` address does, without needing any custom domain or Simprosys IT/DNS involvement. Rahul deliberately postponed this to prioritize proving rule accuracy first — do this once that's solid, likely alongside or after the Claude API phase. (Note: the History page itself is already built per the redesign above; this remaining item is *only* the login wall.)
 
-## 11. Current live status (as of this report)
+## 11. Current live status (as of this report, 2026-07-30)
 
-- Latest confirmed successful run: Run #2 — 76 pages, 4 critical / 190 warning / 246 info findings, dashboard live (new category/sidebar/search/donut design), History page live, email delivered, PDF archived.
+- Latest confirmed successful run: Run #3 — 76 pages, 4 critical / 190 warning / 246 info findings, PDF archived, email delivered. This run used the *old* rules (pre-`/job-description`-exclusion) and the *old* dashboard code, since both were still local/uncommitted at run time.
+- **Local working tree currently has uncommitted, unpushed work**: the `/job-description` exclusion rule, the full Metronic dashboard promotion (classic dashboard removed), and this report's updates. None of this is live on GitHub or reflected in Run #3 yet — it needs to be committed, pushed, and then a fresh audit run triggered before it actually shows up on the live dashboard (see the "local code has zero effect until pushed" gotcha in §7).
+- **Known blocker (2026-07-30)**: `git commit`/`git push` were being denied by the Claude Code session's permission system even after explicit user approval and an added allow-rule in `.claude/settings.local.json` — suspected to need a session reload to pick up the new permission rule. Unresolved as of this report; whoever picks this up next should check whether the commit/push finally went through, and if not, try a fresh session.
 - All four agents + orchestrator + notification step individually tested and verified against real site data before being wired together.
-- Weekly schedule is live and will run unattended starting the next Monday 06:00 UTC.
-- Current priority (per Rahul, 2026-07-28): validate accuracy/reliability of the existing mechanical rule set over real weekly runs before adding the Claude API phase or the login-gated dashboard redesign.
+- Weekly schedule is live and will continue running unattended every Monday 06:00 UTC (using whatever is on `origin/main` at the time).
+- Current priority (per Rahul, 2026-07-28, still true): validate accuracy/reliability of the existing mechanical rule set over real weekly runs before adding the Claude API phase or the login-gated dashboard redesign. The `/job-description`, `/simprotips/search`, and `sitemap.xml` exclusions (§6) are part of this same accuracy-hardening effort, not new scope.
+- **Broader context (2026-07-30)**: Rahul's long-term goal is a full internal SEO automation platform (technical/on-page audits, keyword research, competitor analysis, SWOT, content calendar, reporting, etc.), built module-by-module with the same rule-based-first philosophy, eventually usable by multiple people at Simprosys. See `roadmap_discussion.md` for the (not-yet-finalized) phased plan.
 
 ---
 

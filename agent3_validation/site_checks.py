@@ -27,9 +27,21 @@ it live, to keep Agent 3 a pure "check the stored data" step.
 
 import re
 from collections import defaultdict
+from urllib.parse import urlparse
 
 from agent3_validation import rules_config as rules
 from agent3_validation.page_checks import load_page_for_checks, make_finding
+
+
+def _is_excluded_from_full_audit(url):
+    """Same rule as page_checks.py's _is_excluded_from_full_audit --
+    duplicated locally rather than imported across modules, since it's a
+    tiny predicate over the same rules.EXCLUDED_URL_PATH_PREFIXES config."""
+    path = urlparse(url).path.rstrip("/")
+    return any(
+        path == prefix or path.startswith(prefix + "/")
+        for prefix in rules.EXCLUDED_URL_PATH_PREFIXES
+    )
 
 
 def _normalize_url(url):
@@ -138,6 +150,12 @@ def _check_duplicate_text(pages, field_name, rule_name, human_label):
     Shared logic for finding duplicate titles / duplicate meta descriptions
     across the site. Groups pages by their exact text for the given field,
     then flags every page in any group with 2 or more members.
+
+    Excluded pages (e.g. temporary job postings, see rules_config.py) still
+    count toward the group -- a permanent page that happens to duplicate a
+    job posting's text is still a real, reportable problem on that
+    permanent page -- but the excluded page itself is never the one
+    reported, since it isn't meant to be audited.
     """
     pages_by_text = defaultdict(list)
     for page in pages:
@@ -150,6 +168,8 @@ def _check_duplicate_text(pages, field_name, rule_name, human_label):
         if len(urls_sharing_it) < 2:
             continue
         for url in urls_sharing_it:
+            if _is_excluded_from_full_audit(url):
+                continue
             other_urls = [u for u in urls_sharing_it if u != url]
             findings.append(make_finding(
                 url, rule_name, f"This page's {human_label} is identical to {len(other_urls)} other page(s).",
@@ -166,11 +186,17 @@ def _check_canonical_targets(pages):
     same run, verifies that the canonical target actually loaded
     successfully (200 OK). A canonical pointing to a broken or redirecting
     page defeats its purpose.
+
+    Excluded pages (e.g. temporary job postings) are still valid canonical
+    TARGETS for this lookup, but are never reported as the subject -- see
+    _check_duplicate_text for the same reasoning.
     """
     status_by_url = {_normalize_url(page["url"]): page.get("raw_status_code") for page in pages}
 
     findings = []
     for page in pages:
+        if _is_excluded_from_full_audit(page["url"]):
+            continue
         for canonical_url in page["canonical_urls"]:
             normalized_canonical = _normalize_url(canonical_url)
             target_status = status_by_url.get(normalized_canonical)
@@ -195,6 +221,12 @@ def check_site(page_rows):
     # data, so we work from the full list but each check internally skips
     # non-HTML entries where relevant.
     html_pages = [page for page in pages if page.get("is_html") != 0]
+    # Temporary pages (e.g. job postings, see rules_config.py) are excluded
+    # from being the SUBJECT of the duplicate-content/canonical-target
+    # checks -- but they still count toward detecting a duplicate/broken
+    # target on a PERMANENT page (see _check_duplicate_text and
+    # _check_canonical_targets), so we pass the full html_pages list, not a
+    # pre-filtered one.
 
     findings = []
     findings.extend(_check_broken_internal_links(html_pages))

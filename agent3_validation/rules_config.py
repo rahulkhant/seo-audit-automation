@@ -75,3 +75,16 @@ URL_MAX_RECOMMENDED_LENGTH = 75
 # A "chain" here means more than one redirect hop before reaching the
 # final page.
 MAX_ACCEPTABLE_REDIRECT_HOPS = 1
+
+# --- Pages excluded from the full content-quality audit ---
+# Job-posting pages under /job-description are intentionally temporary --
+# created when a role opens, removed entirely when it closes. Applying the
+# evergreen-content rules (title/meta/OG length, duplicate-title,
+# canonical-target-broken, etc.) to pages designed to disappear just
+# creates noise. Pages matching one of these path prefixes still get their
+# fetch-status check (page-fetch-failed / page-not-200 -- so a closed job
+# still listed in sitemap.xml gets caught as a real stale-sitemap-entry
+# problem) and their schema check (job postings use JobPosting structured
+# data for Google for Jobs) -- see page_checks.py's check_page() and
+# site_checks.py's check_site() for exactly what's skipped.
+EXCLUDED_URL_PATH_PREFIXES = ["/job-description"]
