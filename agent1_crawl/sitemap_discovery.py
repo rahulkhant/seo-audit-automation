@@ -29,6 +29,7 @@ list of pages to visit.
 
 import urllib.robotparser
 import xml.etree.ElementTree as ElementTree
+from urllib.parse import urlparse
 
 import requests
 
@@ -44,6 +45,24 @@ CRAWLER_USER_AGENT = "SimprosysSEOAuditBot/1.0"
 # Python's XML parser won't find the tags. This is a technical detail of how
 # the sitemaps.org standard is written, not something specific to our site.
 SITEMAP_XML_NAMESPACE = {"sm": "http://www.sitemaps.org/schemas/sitemap/0.9"}
+
+# URL path prefixes to drop from the crawl plan entirely, even though the
+# site's sitemap lists them -- these are utility pages with no real content
+# to audit, so there's no "hygiene" signal worth preserving by crawling and
+# then suppressing findings for them (unlike /job-description, which is
+# still crawled and partially checked -- see agent3_validation/rules_config.py).
+#
+# /simprotips/search (added 2026-07-30): the blog's internal search-results
+# page, not indexable content -- excluded per Rahul's explicit request.
+EXCLUDED_URL_PATH_PREFIXES = ["/simprotips/search"]
+
+
+def _is_excluded_url(url):
+    path = urlparse(url).path.rstrip("/")
+    return any(
+        path == prefix or path.startswith(prefix + "/")
+        for prefix in EXCLUDED_URL_PATH_PREFIXES
+    )
 
 
 def _fetch_robots_txt_info(site_root_url, user_agent):
@@ -158,6 +177,8 @@ def discover_urls_to_crawl(site_root_url, user_agent=CRAWLER_USER_AGENT):
     disallowed_but_in_sitemap = []
     robots_parser = robots_info["parser"]
     for page_url in all_sitemap_page_urls:
+        if _is_excluded_url(page_url):
+            continue
         if robots_parser.can_fetch(user_agent, page_url):
             urls_to_crawl.append(page_url)
         else:
