@@ -38,24 +38,23 @@ SEVERITY_WARNING = "warning"
 SEVERITY_INFO = "info"
 
 
-# --- Meta Title (from your document: "Keep it 40-50 characters") ---
-TITLE_MIN_LENGTH = 40
-TITLE_MAX_LENGTH = 50
+# --- Meta Title (updated 2026-07-30: max-only, no min) ---
+TITLE_MAX_LENGTH = 55
 
-# --- Meta Description (from your document: "Keep it 140-150 characters") ---
-META_DESCRIPTION_MIN_LENGTH = 140
-META_DESCRIPTION_MAX_LENGTH = 150
+# --- Meta Description (updated 2026-07-30: max-only, no min) ---
+META_DESCRIPTION_MAX_LENGTH = 155
 
-# --- Open Graph title (from your document: "Keep under 50 characters") ---
-OG_TITLE_MAX_LENGTH = 50
+# --- Open Graph title (updated 2026-07-30: max-only, no min) ---
+OG_TITLE_MAX_LENGTH = 55
 
-# --- Open Graph description (from your document: "Around 110-150 characters") ---
-OG_DESCRIPTION_MIN_LENGTH = 110
-OG_DESCRIPTION_MAX_LENGTH = 150
+# --- Open Graph description (updated 2026-07-30: max-only, no min) ---
+OG_DESCRIPTION_MAX_LENGTH = 155
 
-# --- Twitter description (from your document: "Around 100-150 characters") ---
-TWITTER_DESCRIPTION_MIN_LENGTH = 100
-TWITTER_DESCRIPTION_MAX_LENGTH = 150
+# --- Twitter title (added + updated 2026-07-30: max-only, no min) ---
+TWITTER_TITLE_MAX_LENGTH = 55
+
+# --- Twitter description (updated 2026-07-30: max-only, no min) ---
+TWITTER_DESCRIPTION_MAX_LENGTH = 155
 
 # --- Internal link count per page (from your document: "5-15 relevant links") ---
 # Your document notes this "depends on page length", so we treat pages

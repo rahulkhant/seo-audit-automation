@@ -140,11 +140,11 @@ def _check_title(page):
         return findings
 
     length = len(title)
-    if not (rules.TITLE_MIN_LENGTH <= length <= rules.TITLE_MAX_LENGTH):
+    if length > rules.TITLE_MAX_LENGTH:
         findings.append(make_finding(
             page["url"], "title-length",
-            "Title length is outside the recommended range.",
-            f"{rules.TITLE_MIN_LENGTH}-{rules.TITLE_MAX_LENGTH} characters",
+            "Title is longer than recommended.",
+            f"Under {rules.TITLE_MAX_LENGTH} characters",
             f"{length} characters (\"{title}\")", rules.SEVERITY_WARNING,
         ))
     return findings
@@ -163,11 +163,11 @@ def _check_meta_description(page):
         return findings
 
     length = len(description)
-    if not (rules.META_DESCRIPTION_MIN_LENGTH <= length <= rules.META_DESCRIPTION_MAX_LENGTH):
+    if length > rules.META_DESCRIPTION_MAX_LENGTH:
         findings.append(make_finding(
             page["url"], "meta-description-length",
-            "Meta description length is outside the recommended range.",
-            f"{rules.META_DESCRIPTION_MIN_LENGTH}-{rules.META_DESCRIPTION_MAX_LENGTH} characters",
+            "Meta description is longer than recommended.",
+            f"Under {rules.META_DESCRIPTION_MAX_LENGTH} characters",
             f"{length} characters", rules.SEVERITY_WARNING,
         ))
     return findings
@@ -191,22 +191,28 @@ def _check_social_tags(page):
 
     if not page.get("og_description"):
         findings.append(make_finding(url, "og-description-missing", "Missing Open Graph description.", "Present", "None", rules.SEVERITY_INFO))
-    elif not (rules.OG_DESCRIPTION_MIN_LENGTH <= len(page["og_description"]) <= rules.OG_DESCRIPTION_MAX_LENGTH):
+    elif len(page["og_description"]) > rules.OG_DESCRIPTION_MAX_LENGTH:
         findings.append(make_finding(
-            url, "og-description-length", "Open Graph description length is outside the recommended range.",
-            f"{rules.OG_DESCRIPTION_MIN_LENGTH}-{rules.OG_DESCRIPTION_MAX_LENGTH} characters",
+            url, "og-description-length", "Open Graph description is longer than recommended.",
+            f"Under {rules.OG_DESCRIPTION_MAX_LENGTH} characters",
             f"{len(page['og_description'])} characters", rules.SEVERITY_INFO,
         ))
 
     if not page.get("twitter_title"):
         findings.append(make_finding(url, "twitter-title-missing", "Missing Twitter title.", "Present", "None", rules.SEVERITY_INFO))
+    elif len(page["twitter_title"]) > rules.TWITTER_TITLE_MAX_LENGTH:
+        findings.append(make_finding(
+            url, "twitter-title-length", "Twitter title is longer than recommended.",
+            f"Under {rules.TWITTER_TITLE_MAX_LENGTH} characters",
+            f"{len(page['twitter_title'])} characters", rules.SEVERITY_INFO,
+        ))
 
     if not page.get("twitter_description"):
         findings.append(make_finding(url, "twitter-description-missing", "Missing Twitter description.", "Present", "None", rules.SEVERITY_INFO))
-    elif not (rules.TWITTER_DESCRIPTION_MIN_LENGTH <= len(page["twitter_description"]) <= rules.TWITTER_DESCRIPTION_MAX_LENGTH):
+    elif len(page["twitter_description"]) > rules.TWITTER_DESCRIPTION_MAX_LENGTH:
         findings.append(make_finding(
-            url, "twitter-description-length", "Twitter description length is outside the recommended range.",
-            f"{rules.TWITTER_DESCRIPTION_MIN_LENGTH}-{rules.TWITTER_DESCRIPTION_MAX_LENGTH} characters",
+            url, "twitter-description-length", "Twitter description is longer than recommended.",
+            f"Under {rules.TWITTER_DESCRIPTION_MAX_LENGTH} characters",
             f"{len(page['twitter_description'])} characters", rules.SEVERITY_INFO,
         ))
 

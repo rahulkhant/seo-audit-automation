@@ -134,8 +134,8 @@ Built by `agent4_dashboard/build_dashboard_metronic.py` (writes `docs/index.html
 - **Warning** — real best-practice violations, not fatal alone (length issues, mixed content, orphan pages, JS-rendering content differences).
 - **Info** — low-urgency or can't-be-fully-certain findings (OG/Twitter tag issues, missing schema, unverified external-to-crawl links, minor JS-added-link gaps).
 
-### Thresholds (from the source SEO checklist document, "SEO Skils" Google Doc)
-Title 40–50 chars, meta description 140–150, OG title ≤50, OG description 110–150, Twitter description 100–150, internal links 5–15/page. URL length (75 chars) is Rahul's own default — the source doc didn't specify an exact number.
+### Thresholds
+Title ≤55 chars, meta description ≤155, OG title ≤55, OG description ≤155, Twitter title ≤55, Twitter description ≤155 (updated 2026-07-30 to max-only limits, no minimums, per Rahul's revised numbers). Internal links 5–15/page. URL length (75 chars) is Rahul's own default — the source doc didn't specify an exact number.
 
 ## 7. Key decisions and non-obvious gotchas
 
