@@ -54,7 +54,13 @@ SITEMAP_XML_NAMESPACE = {"sm": "http://www.sitemaps.org/schemas/sitemap/0.9"}
 #
 # /simprotips/search (added 2026-07-30): the blog's internal search-results
 # page, not indexable content -- excluded per Rahul's explicit request.
-EXCLUDED_URL_PATH_PREFIXES = ["/simprotips/search"]
+#
+# /sitemap.xml (added 2026-07-30): the sitemap lists itself as one of its
+# own <loc> entries -- a build artifact, not real content, so it shouldn't
+# be crawled/checked as a page. URLs that exist on the site but are missing
+# from the sitemap are still caught separately by the existing
+# internal-link-unverified rule (agent3_validation/site_checks.py).
+EXCLUDED_URL_PATH_PREFIXES = ["/simprotips/search", "/sitemap.xml"]
 
 
 def _is_excluded_url(url):
