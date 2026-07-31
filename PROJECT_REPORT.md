@@ -135,7 +135,7 @@ Built by `agent4_dashboard/build_dashboard_metronic.py` (writes `docs/index.html
 - **Info** — low-urgency or can't-be-fully-certain findings (OG/Twitter tag issues, missing schema, unverified external-to-crawl links, minor JS-added-link gaps).
 
 ### Thresholds
-Title ≤55 chars, meta description ≤155, OG title ≤55, OG description ≤155, Twitter title ≤55, Twitter description ≤155 (updated 2026-07-30 to max-only limits, no minimums, per Rahul's revised numbers). Internal links 5–15/page. URL length (75 chars) is Rahul's own default — the source doc didn't specify an exact number.
+Title ≤60 chars, meta description ≤160, OG title ≤60, OG description ≤160, Twitter title ≤60, Twitter description ≤160 (max-only limits, no minimums; set to 55/155 on 2026-07-30, raised by 5 chars each on 2026-07-31, both per Rahul's numbers). Internal links 5–15/page. URL length (75 chars) is Rahul's own default — the source doc didn't specify an exact number.
 
 ## 7. Key decisions and non-obvious gotchas
 

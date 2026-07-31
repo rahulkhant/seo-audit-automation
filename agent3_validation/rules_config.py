@@ -38,23 +38,23 @@ SEVERITY_WARNING = "warning"
 SEVERITY_INFO = "info"
 
 
-# --- Meta Title (updated 2026-07-30: max-only, no min) ---
-TITLE_MAX_LENGTH = 55
+# --- Meta Title (max-only, no min; updated 2026-07-31) ---
+TITLE_MAX_LENGTH = 60
 
-# --- Meta Description (updated 2026-07-30: max-only, no min) ---
-META_DESCRIPTION_MAX_LENGTH = 155
+# --- Meta Description (max-only, no min; updated 2026-07-31) ---
+META_DESCRIPTION_MAX_LENGTH = 160
 
-# --- Open Graph title (updated 2026-07-30: max-only, no min) ---
-OG_TITLE_MAX_LENGTH = 55
+# --- Open Graph title (max-only, no min; updated 2026-07-31) ---
+OG_TITLE_MAX_LENGTH = 60
 
-# --- Open Graph description (updated 2026-07-30: max-only, no min) ---
-OG_DESCRIPTION_MAX_LENGTH = 155
+# --- Open Graph description (max-only, no min; updated 2026-07-31) ---
+OG_DESCRIPTION_MAX_LENGTH = 160
 
-# --- Twitter title (added + updated 2026-07-30: max-only, no min) ---
-TWITTER_TITLE_MAX_LENGTH = 55
+# --- Twitter title (max-only, no min; updated 2026-07-31) ---
+TWITTER_TITLE_MAX_LENGTH = 60
 
-# --- Twitter description (updated 2026-07-30: max-only, no min) ---
-TWITTER_DESCRIPTION_MAX_LENGTH = 155
+# --- Twitter description (max-only, no min; updated 2026-07-31) ---
+TWITTER_DESCRIPTION_MAX_LENGTH = 160
 
 # --- Internal link count per page (from your document: "5-15 relevant links") ---
 # Your document notes this "depends on page length", so we treat pages
