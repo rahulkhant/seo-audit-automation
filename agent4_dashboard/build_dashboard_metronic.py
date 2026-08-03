@@ -127,10 +127,7 @@ def _mx_shared_style():
     padding: 22px 24px; font-size: 1.05rem; font-weight: 700; color: #ffffff;
     display: flex; align-items: center; gap: 10px;
   }
-  .brand-badge {
-    width: 32px; height: 32px; border-radius: 8px; background: var(--mx-primary);
-    display: flex; align-items: center; justify-content: center; font-weight: 700; color: #fff; font-size: 0.9rem;
-  }
+  .brand-logo { height: 34px; width: auto; display: block; }
   .sidebar-nav { padding: 8px 12px; display: flex; flex-direction: column; gap: 2px; flex: 1; }
   .sidebar-link {
     display: flex; align-items: center; gap: 12px; padding: 11px 14px; border-radius: 8px;
@@ -374,8 +371,7 @@ def _render_sidebar_nav(active_page):
     return f"""
     <aside class="sidebar">
       <div class="sidebar-brand">
-        <span class="brand-badge">S</span>
-        <span>Simprosys SEO</span>
+        <img class="brand-logo" src="assets/logo.png" alt="Simprosys">
       </div>
       <nav class="sidebar-nav">
         <a class="{dashboard_class}" href="index.html">{ICON_HOME}<span>Dashboard</span></a>
