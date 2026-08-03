@@ -30,6 +30,7 @@ Four independent, modular "agents" (really: pipeline stages), each with a single
 Agent 1 (Crawl)  ->  Agent 2 (Storage)  ->  Agent 3 (Validation)  ->  Agent 4 (Dashboard)     ->  Notification
   crawl_runner.py      database.py          run_validation.py         build_dashboard_metronic.py  send_digest_email.py
                                                                        (+ build_dashboard.py for PDF archive)
+                                                                       (+ build_reporting_hub.py for trends page)
 ```
 
 `main.py` runs all five steps in sequence. Each stage also works standalone (useful for testing/debugging without re-running the whole pipeline).
@@ -47,7 +48,10 @@ seo-audit-automation/
 ├── docs/
 │   ├── index.html                   # Main Dashboard -- Metronic-styled (served by GitHub Pages)
 │   ├── history.html                 # Report History -- one line per past run, PDF download only
-│   └── reports/run-XXXX.pdf         # Permanent PDF archive, one file per run
+│   ├── reporting.html                # Reporting Hub -- trend charts + category-by-run table across all runs
+│   └── reports/
+│       ├── run-XXXX.pdf              # Permanent PDF archive, one file per run
+│       └── reporting-hub-latest.pdf  # Trend summary PDF -- overwritten every run, not archived per-run
 ├── agent1_crawl/
 │   ├── sitemap_discovery.py         # Reads robots.txt + sitemap.xml -> list of URLs to crawl
 │   ├── page_extractor.py            # Fetches ONE page (raw + Playwright-rendered), extracts SEO data
@@ -61,7 +65,8 @@ seo-audit-automation/
 │   └── run_validation.py            # Runs all checks, saves findings to DB
 ├── agent4_dashboard/
 │   ├── build_dashboard.py           # Shared data-loading helpers + PDF archive builder (build_and_save_pdf_report)
-│   └── build_dashboard_metronic.py  # Builds docs/index.html + docs/history.html (Metronic-styled dashboard)
+│   ├── build_dashboard_metronic.py  # Builds docs/index.html + docs/history.html (Metronic-styled dashboard)
+│   └── build_reporting_hub.py       # Builds docs/reporting.html + reporting-hub-latest.pdf (trends across all runs)
 ├── notifications/
 │   └── send_digest_email.py         # Sends the summary email via Gmail SMTP
 ├── .github/
@@ -128,6 +133,15 @@ Built by `agent4_dashboard/build_dashboard_metronic.py` (writes `docs/index.html
 - **Findings card**: category filtering moved here as a dropdown (replacing the old sidebar rail), alongside the global search box and the paginated findings table — same underlying search/filter/pagination JS logic as before, just restyled. Search still matches every visible column's text per row (severity, page URL, issue, expected, actual, category), not just the URL.
 - **Severity badges**: pill-shaped, pastel background via CSS `color-mix()`, matching Metronic's signature "light" badge style.
 - **History page** (`docs/history.html`): same sidebar/topbar shell, one row per past run (date, pages audited, severity summary, Download PDF button) — still deliberately no link into an interactive view of old runs.
+
+### Reporting Hub (added 2026-08-03) — the platform's first "rule-based script → dashboard" module
+
+Built by `agent4_dashboard/build_reporting_hub.py`, writing `docs/reporting.html` (third sidebar item, same shell/shared CSS as the other two pages) + `docs/reports/reporting-hub-latest.pdf`. Where the main Dashboard only ever shows the *latest* run, Reporting Hub answers "are we actually improving over time?" by aggregating every run recorded so far — pure aggregation of data Agent 3 already saved, no new data collection, no judgment calls (the first concrete build from the platform roadmap's "rule-based first" phase — see `roadmap_discussion.md`).
+
+- **Findings Over Time**: a stacked ApexCharts area chart (critical/warning/info) across every run, x-axis labeled by run number (not date) — runs have been bunched together this week from manual triggers rather than the normal weekly cadence, so per-run labeling was chosen deliberately over calendar-week grouping to keep the first version simple; worth revisiting once run cadence settles back to weekly.
+- **New / Resolved / Recurring by Run**: a grouped bar chart generalizing the Dashboard's existing "Since Last Run" trend card (`compute_trend()`, `build_dashboard.py`) across the whole run history instead of just the latest two runs.
+- **Category Breakdown by Run**: a plain table, one row per SEO checklist category (same `CATEGORIES` list the Dashboard uses) and one column per run — deliberately just the raw numbers, no computed "improving/declining" verdict, matching the project's rule-based-not-judgment philosophy.
+- **PDF export** (`reporting-hub-latest.pdf`): same three tables, but deliberately **no charts** — the live page's charts render client-side via the ApexCharts CDN script in the visitor's own browser, which is fine, but baking that into an unattended Playwright PDF render would add a CDN network dependency to the automated pipeline for little benefit. Plain tables keep the PDF fully self-contained, consistent with the existing per-run PDF report's design. Unlike `run-XXXX.pdf` (archived permanently, one per run), this file is **overwritten every run** — it always summarizes the full history to date, so there's no single "point in time" version worth keeping.
 
 ### Severity tiers
 - **Critical** — real, broken, likely-blocking issues (missing canonical, duplicate title/meta, broken links, invalid schema, SSL/HTTPS failures, redirect loops).

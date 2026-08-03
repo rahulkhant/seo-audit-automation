@@ -33,6 +33,7 @@ from agent2_storage.database import get_connection, save_crawl_result as save_cr
 from agent3_validation.run_validation import run_validation_and_save
 from agent4_dashboard.build_dashboard import build_and_save_pdf_report, compute_trend
 from agent4_dashboard.build_dashboard_metronic import build_and_save_dashboard
+from agent4_dashboard.build_reporting_hub import build_and_save_reporting_hub
 from notifications.send_digest_email import send_digest_email
 
 # The site this audit runs against by default. Override by passing a
@@ -70,6 +71,8 @@ def run_full_audit(site_root_url):
     print(f"    -> Dashboard saved to {dashboard_path}")
     pdf_run_id, pdf_path = build_and_save_pdf_report(run_id)
     print(f"    -> PDF report archived to {pdf_path}")
+    reporting_html_path, reporting_pdf_path = build_and_save_reporting_hub()
+    print(f"    -> Reporting Hub saved to {reporting_html_path} (PDF: {reporting_pdf_path})")
 
     print("\n[5/5] Sending summary email...")
     connection = get_connection()

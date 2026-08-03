@@ -76,6 +76,17 @@ Work continued within Phase 1 (rule-accuracy hardening) and on the dashboard its
 - **Real-world reminder of the "local code has no effect until pushed" gotcha**: a rule change was tested locally, then a real audit run was triggered expecting to see it reflected — it wasn't, because the change hadn't been committed/pushed yet. Worth keeping in mind for every future module: nothing is "live" until it's on `origin/main` and a fresh run has happened after that.
 - As of this update, the `/job-description` fix and the Metronic dashboard promotion are sitting locally, not yet committed/pushed (see `PROJECT_REPORT.md` §11 for the current blocker).
 
+## 5b. Decision: build the "rule-based only" modules first (2026-08-03)
+
+Rahul confirmed the priority order among Phases 2-7 (previously left open, §5 above): start with whichever modules are **fully rule-based and can just write into the existing static dashboard**, deferring anything that needs the Phase 0 multi-user foundation (real writes/auth/backend). Identified as fitting that bar, in build order:
+
+1. **Reporting Hub** (was Phase 3) — pure aggregation of data already in `data/seo_audit_history.db`, zero new infrastructure. **Built 2026-08-03** — see `PROJECT_REPORT.md` §6, `agent4_dashboard/build_reporting_hub.py`.
+2. **Competitor Analysis** (was Phase 5) — reuses Agent 1's crawler against a competitor sitemap, same mechanical checks side-by-side. Not started yet.
+3. **Keyword Research — mechanical slice only** (was Phase 4) — Search Console query/impression/click data, Trends, autocomplete/PAA. Needs a new GSC API credential but no live-write backend. Not started yet.
+4. **Off-Page SEO — owned-data slice only** (was Phase 6) — GSC's own inbound-links report, same credential as #3. The full paid-tool-dependent backlink index stays out of scope. Not started yet.
+
+Explicitly excluded from this "rule-based, no new infra" bucket: **Content Calendar** (Phase 2, needs real multi-user writes → needs Phase 0) and **SWOT** (Phase 7, inherently judgment-based, not rule-based).
+
 ## 5. Open questions / not yet decided
 
 - No priority order confirmed yet among Phases 2-7 (explicitly deferred by Rahul, 2026-07-30).

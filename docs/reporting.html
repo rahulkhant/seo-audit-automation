@@ -4,7 +4,7 @@
 
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>SEO Audit Report History</title>
+<title>SEO Reporting Hub</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -202,8 +202,8 @@
       </div>
       <nav class="sidebar-nav">
         <a class="sidebar-link" href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11.5 12 4l8 7.5"/><path d="M6 10v9a1 1 0 0 0 1 1h4v-6h2v6h4a1 1 0 0 0 1-1v-9"/></svg><span>Dashboard</span></a>
-        <a class="sidebar-link active" href="history.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg><span>History</span></a>
-        <a class="sidebar-link" href="reporting.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5h16"/><path d="M7 16v-4"/><path d="M12 16V8"/><path d="M17 16v-6.5"/></svg><span>Reporting</span></a>
+        <a class="sidebar-link" href="history.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg><span>History</span></a>
+        <a class="sidebar-link active" href="reporting.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5h16"/><path d="M7 16v-4"/><path d="M12 16V8"/><path d="M17 16v-6.5"/></svg><span>Reporting</span></a>
       </nav>
     </aside>
     
@@ -211,87 +211,80 @@
     
     <header class="topbar">
       <div>
-        <div class="topbar-title">Report History</div>
-        <div class="topbar-sub">Every past audit run. Older reports are downloadable as PDF only.</div>
+        <div class="topbar-title">Reporting Hub</div>
+        <div class="topbar-sub">7 run(s) recorded &middot; latest: Run #7, Jul 31, 2026, 04:47 AM UTC</div>
       </div>
-      
+      <a class="btn btn-primary" href="reports/reporting-hub-latest.pdf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11"/><path d="M7.5 11 12 15.5 16.5 11"/><path d="M5 18.5h14"/></svg><span>Download PDF</span></a>
     </header>
     
     <main class="content">
-      <section class="card">
+      
+    <div class="card">
+      <div class="card-header"><div class="card-header-title">Findings Over Time</div></div>
+      <div class="card-body"><div id="trendChart"></div></div>
+    </div>
+    
+      
+    <div class="card">
+      <div class="card-header"><div class="card-header-title">New / Resolved / Recurring by Run</div></div>
+      <div class="card-body"><div id="changeChart"></div></div>
+    </div>
+    
+      
+    <div class="card">
+      <div class="card-header"><div class="card-header-title">Category Breakdown by Run</div></div>
+      
         <div class="table-wrap">
-          <table>
-            <colgroup>
-              <col class="col-run"><col class="col-date"><col class="col-pages">
-              <col class="col-hist-severity"><col class="col-download">
-            </colgroup>
-            <thead>
-              <tr><th>Run</th><th>Date</th><th>Pages Audited</th><th>Severity Summary</th><th>Report</th></tr>
-            </thead>
-            <tbody>
-              
-        <tr>
-          <td>Run #7</td>
-          <td>Jul 31, 2026, 04:47 AM UTC</td>
-          <td>74</td>
-          <td><span class="severity-badge" style="--badge-color: #f1416c">⛔ 2</span> &nbsp; <span class="severity-badge" style="--badge-color: #ffc700">⚠ 140</span> &nbsp; <span class="severity-badge" style="--badge-color: #7239ea">ℹ 206</span></td>
-          <td><a class="btn btn-light" href="reports/run-0007.pdf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11"/><path d="M7.5 11 12 15.5 16.5 11"/><path d="M5 18.5h14"/></svg><span>Download PDF</span></a></td>
-        </tr>
-        
-        <tr>
-          <td>Run #6</td>
-          <td>Jul 30, 2026, 03:41 PM UTC</td>
-          <td>74</td>
-          <td><span class="severity-badge" style="--badge-color: #f1416c">⛔ 2</span> &nbsp; <span class="severity-badge" style="--badge-color: #ffc700">⚠ 155</span> &nbsp; <span class="severity-badge" style="--badge-color: #7239ea">ℹ 226</span></td>
-          <td><a class="btn btn-light" href="reports/run-0006.pdf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11"/><path d="M7.5 11 12 15.5 16.5 11"/><path d="M5 18.5h14"/></svg><span>Download PDF</span></a></td>
-        </tr>
-        
-        <tr>
-          <td>Run #5</td>
-          <td>Jul 30, 2026, 02:40 PM UTC</td>
-          <td>75</td>
-          <td><span class="severity-badge" style="--badge-color: #f1416c">⛔ 2</span> &nbsp; <span class="severity-badge" style="--badge-color: #ffc700">⚠ 156</span> &nbsp; <span class="severity-badge" style="--badge-color: #7239ea">ℹ 226</span></td>
-          <td><a class="btn btn-light" href="reports/run-0005.pdf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11"/><path d="M7.5 11 12 15.5 16.5 11"/><path d="M5 18.5h14"/></svg><span>Download PDF</span></a></td>
-        </tr>
-        
-        <tr>
-          <td>Run #4</td>
-          <td>Jul 30, 2026, 09:28 AM UTC</td>
-          <td>76</td>
-          <td><span class="severity-badge" style="--badge-color: #f1416c">⛔ 2</span> &nbsp; <span class="severity-badge" style="--badge-color: #ffc700">⚠ 188</span> &nbsp; <span class="severity-badge" style="--badge-color: #7239ea">ℹ 241</span></td>
-          <td><a class="btn btn-light" href="reports/run-0004.pdf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11"/><path d="M7.5 11 12 15.5 16.5 11"/><path d="M5 18.5h14"/></svg><span>Download PDF</span></a></td>
-        </tr>
-        
-        <tr>
-          <td>Run #3</td>
-          <td>Jul 30, 2026, 08:09 AM UTC</td>
-          <td>76</td>
-          <td><span class="severity-badge" style="--badge-color: #f1416c">⛔ 4</span> &nbsp; <span class="severity-badge" style="--badge-color: #ffc700">⚠ 190</span> &nbsp; <span class="severity-badge" style="--badge-color: #7239ea">ℹ 246</span></td>
-          <td><a class="btn btn-light" href="reports/run-0003.pdf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11"/><path d="M7.5 11 12 15.5 16.5 11"/><path d="M5 18.5h14"/></svg><span>Download PDF</span></a></td>
-        </tr>
-        
-        <tr>
-          <td>Run #2</td>
-          <td>Jul 28, 2026, 08:39 AM UTC</td>
-          <td>76</td>
-          <td><span class="severity-badge" style="--badge-color: #f1416c">⛔ 4</span> &nbsp; <span class="severity-badge" style="--badge-color: #ffc700">⚠ 190</span> &nbsp; <span class="severity-badge" style="--badge-color: #7239ea">ℹ 246</span></td>
-          <td><a class="btn btn-light" href="reports/run-0002.pdf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11"/><path d="M7.5 11 12 15.5 16.5 11"/><path d="M5 18.5h14"/></svg><span>Download PDF</span></a></td>
-        </tr>
-        
-        <tr>
-          <td>Run #1</td>
-          <td>Jul 27, 2026, 01:07 PM UTC</td>
-          <td>76</td>
-          <td><span class="severity-badge" style="--badge-color: #f1416c">⛔ 4</span> &nbsp; <span class="severity-badge" style="--badge-color: #ffc700">⚠ 189</span> &nbsp; <span class="severity-badge" style="--badge-color: #7239ea">ℹ 246</span></td>
-          <td><a class="btn btn-light" href="reports/run-0001.pdf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11"/><path d="M7.5 11 12 15.5 16.5 11"/><path d="M5 18.5h14"/></svg><span>Download PDF</span></a></td>
-        </tr>
-        
-            </tbody>
+          <table style="table-layout: auto">
+            <thead><tr><th>Category</th><th>Run #1</th><th>Run #2</th><th>Run #3</th><th>Run #4</th><th>Run #5</th><th>Run #6</th><th>Run #7</th></tr></thead>
+            <tbody><tr><td>Meta Title &amp; Description</td><td>128</td><td>128</td><td>128</td><td>125</td><td>95</td><td>95</td><td>80</td></tr><tr><td>Headings</td><td>0</td><td>1</td><td>1</td><td>1</td><td>0</td><td>0</td><td>0</td></tr><tr><td>Social Tags (OG &amp; Twitter)</td><td>181</td><td>181</td><td>181</td><td>177</td><td>160</td><td>160</td><td>143</td></tr><tr><td>URL Structure</td><td>21</td><td>21</td><td>21</td><td>21</td><td>21</td><td>21</td><td>21</td></tr><tr><td>Canonical Tags</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr><tr><td>Robots &amp; Indexability</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>0</td><td>0</td></tr><tr><td>Images &amp; Alt Text</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td></tr><tr><td>Structured Data (Schema)</td><td>1</td><td>1</td><td>1</td><td>1</td><td>0</td><td>0</td><td>0</td></tr><tr><td>HTTPS &amp; Security</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr><tr><td>Redirects</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr><tr><td>Internal Linking</td><td>27</td><td>27</td><td>27</td><td>27</td><td>26</td><td>26</td><td>26</td></tr><tr><td>JavaScript Rendering</td><td>79</td><td>79</td><td>79</td><td>77</td><td>77</td><td>77</td><td>77</td></tr><tr><td><strong>Total</strong></td><td><strong>439</strong></td><td><strong>440</strong></td><td><strong>440</strong></td><td><strong>431</strong></td><td><strong>384</strong></td><td><strong>383</strong></td><td><strong>348</strong></td></tr></tbody>
           </table>
         </div>
-      </section>
+        
+    </div>
+    
     </main>
   </div>
 </div>
+<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+<script>
+
+var trendChartEl = document.querySelector("#trendChart");
+if (trendChartEl && window.ApexCharts) {
+  var trendChart = new ApexCharts(trendChartEl, {
+    chart: { type: "area", height: 300, fontFamily: "Inter, sans-serif", stacked: true, toolbar: { show: false } },
+    series: [
+      { name: "Critical", data: [4, 4, 4, 2, 2, 2, 2] },
+      { name: "Warning", data: [189, 190, 190, 188, 156, 155, 140] },
+      { name: "Info", data: [246, 246, 246, 241, 226, 226, 206] }
+    ],
+    xaxis: { categories: ["Run #1", "Run #2", "Run #3", "Run #4", "Run #5", "Run #6", "Run #7"] },
+    colors: ["#f1416c", "#ffc700", "#7239ea"],
+    legend: { position: "bottom" },
+    dataLabels: { enabled: false },
+    stroke: { curve: "smooth", width: 2 }
+  });
+  trendChart.render();
+}
+
+var changeChartEl = document.querySelector("#changeChart");
+if (changeChartEl && window.ApexCharts) {
+  var changeChart = new ApexCharts(changeChartEl, {
+    chart: { type: "bar", height: 300, fontFamily: "Inter, sans-serif", toolbar: { show: false } },
+    series: [
+      { name: "New", data: [1, 0, 0, 3, 0, 0] },
+      { name: "Resolved", data: [0, 0, 9, 50, 1, 35] },
+      { name: "Recurring", data: [439, 440, 431, 381, 383, 348] }
+    ],
+    xaxis: { categories: ["Run #2", "Run #3", "Run #4", "Run #5", "Run #6", "Run #7"] },
+    colors: ["#f1416c", "#50cd89", "#7239ea"],
+    legend: { position: "bottom" },
+    dataLabels: { enabled: false },
+    plotOptions: { bar: { columnWidth: "55%" } }
+  });
+  changeChart.render();
+}
+
+</script>
 </body>
 </html>
