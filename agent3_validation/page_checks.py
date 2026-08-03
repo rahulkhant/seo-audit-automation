@@ -71,7 +71,6 @@ def load_page_for_checks(page_row):
     page["external_links"] = _decode(page.get("external_links_json")) or []
     page["schema_blocks"] = _decode(page.get("schema_blocks_json")) or []
     page["mixed_content_urls"] = _decode(page.get("mixed_content_urls_json")) or []
-    page["js_rendering_comparison"] = _decode(page.get("js_rendering_comparison_json"))
     return page
 
 
@@ -396,42 +395,6 @@ def _check_redirects(page):
     return findings
 
 
-# --- JS rendering / SSR vs CSR ---
-def _check_js_rendering(page):
-    findings = []
-    url = page["url"]
-    comparison = page["js_rendering_comparison"]
-    if not comparison:
-        return findings
-
-    core_content_differs = not (
-        comparison.get("title_matches") and comparison.get("meta_description_matches") and comparison.get("h1_matches")
-    )
-    if core_content_differs:
-        findings.append(make_finding(
-            url, "js-rendering-content-differs",
-            "Title, meta description, or H1 differs between the raw HTML and the JavaScript-rendered version.",
-            "Identical core content before and after JavaScript runs",
-            "Content differs -- may rely on JavaScript for key SEO content",
-            rules.SEVERITY_WARNING,
-        ))
-
-    raw_links = comparison.get("raw_internal_link_count", 0)
-    rendered_links = comparison.get("rendered_internal_link_count", 0)
-    # A reasonable default of our own (not from your document): a rendered
-    # link count at least 50% higher than the raw count suggests a
-    # meaningful number of links are added only by JavaScript.
-    if raw_links and rendered_links > raw_links * 1.5:
-        findings.append(make_finding(
-            url, "js-added-internal-links",
-            "A significant number of internal links only appear after JavaScript runs.",
-            "Similar internal link count before and after JavaScript",
-            f"{raw_links} raw vs {rendered_links} rendered", rules.SEVERITY_INFO,
-        ))
-
-    return findings
-
-
 # --- Crawlability (status code) ---
 def _check_status_code(page):
     status_code = page.get("raw_status_code")
@@ -464,7 +427,6 @@ ALL_PAGE_CHECKS = [
     _check_mixed_content,
     _check_https_ssl,
     _check_redirects,
-    _check_js_rendering,
 ]
 
 

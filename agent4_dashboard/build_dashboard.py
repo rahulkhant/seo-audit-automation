@@ -74,7 +74,6 @@ CATEGORIES = [
     ("https-security", "HTTPS & Security", {"ssl-invalid", "https-not-enforced", "mixed-content"}),
     ("redirects", "Redirects", {"redirect-chain", "redirect-loop", "sitemap-url-redirects"}),
     ("internal-linking", "Internal Linking", {"internal-link-broken", "internal-link-unverified", "orphan-page"}),
-    ("js-rendering", "JavaScript Rendering", {"js-rendering-content-differs", "js-added-internal-links"}),
 ]
 
 # Reverse lookup: rule name -> (category_id, category_label). Any rule not

@@ -60,7 +60,7 @@ seo-audit-automation/
 │   └── database.py                  # SQLite schema (runs/pages/findings tables) + save functions
 ├── agent3_validation/
 │   ├── rules_config.py              # All thresholds (title length, meta length, etc.) + EXCLUDED_URL_PATH_PREFIXES
-│   ├── page_checks.py               # Per-page rule checks (37 rules)
+│   ├── page_checks.py               # Per-page rule checks (35 rules)
 │   ├── site_checks.py               # Cross-page rule checks (6 rules)
 │   └── run_validation.py            # Runs all checks, saves findings to DB
 ├── agent4_dashboard/
@@ -88,7 +88,7 @@ seo-audit-automation/
 | Choice | Reasoning |
 |---|---|
 | Python | Simple, readable, well-commented easily — good fit for a non-coder to review. |
-| Playwright (headless Chromium) | Needed to render JS-dependent content and to compare raw vs. rendered HTML for the JS-rendering checks. |
+| Playwright (headless Chromium) | Renders JS-dependent content -- the rendered HTML is the source of truth for every check, since that's what a real visitor/Google ultimately sees. The raw (pre-JS) fetch is kept for status-code checks and speed, not for a JS-rendering comparison rule (removed 2026-08-03, see §6). |
 | `requests` for raw fetches | Faster than a full browser load when we only need the pre-JS HTML/status code. |
 | SQLite | Single-file database, no server to manage, trivial to run both locally and in GitHub Actions. |
 | GitHub Actions | Free scheduled automation, no server to maintain, ties directly to the repo. |
@@ -99,22 +99,24 @@ seo-audit-automation/
 
 **Deliberately scoped to 100% mechanical, deterministic checks only** — no AI/LLM judgment calls, no external paid APIs. This was a considered decision to prove the pipeline's accuracy first (see §2).
 
-### 43 rules currently implemented
+### 41 rules currently implemented
 
-**Per-page checks** (`agent3_validation/page_checks.py`, 37 rules):
-`page-fetch-failed`, `page-not-200`, `url-underscore`, `url-uppercase`, `url-unnecessary-date`, `url-too-long`, `title-missing`, `title-length`, `meta-description-missing`, `meta-description-length`, `og-title-missing`, `og-title-length`, `og-description-missing`, `og-description-length`, `twitter-title-missing`, `twitter-description-missing`, `twitter-description-length`, `canonical-missing`, `canonical-duplicate`, `canonical-not-absolute`, `canonical-not-https`, `h1-missing`, `h1-multiple`, `robots-conflicting-directives`, `robots-noindex-in-sitemap`, `sitemap-non-html-entry`, `image-alt-missing`, `schema-invalid-json`, `schema-missing`, `mixed-content`, `ssl-invalid`, `https-not-enforced`, `redirect-chain`, `redirect-loop`, `sitemap-url-redirects`, `js-rendering-content-differs`, `js-added-internal-links`
+**Per-page checks** (`agent3_validation/page_checks.py`, 35 rules):
+`page-fetch-failed`, `page-not-200`, `url-underscore`, `url-uppercase`, `url-unnecessary-date`, `url-too-long`, `title-missing`, `title-length`, `meta-description-missing`, `meta-description-length`, `og-title-missing`, `og-title-length`, `og-description-missing`, `og-description-length`, `twitter-title-missing`, `twitter-description-missing`, `twitter-description-length`, `canonical-missing`, `canonical-duplicate`, `canonical-not-absolute`, `canonical-not-https`, `h1-missing`, `h1-multiple`, `robots-conflicting-directives`, `robots-noindex-in-sitemap`, `sitemap-non-html-entry`, `image-alt-missing`, `schema-invalid-json`, `schema-missing`, `mixed-content`, `ssl-invalid`, `https-not-enforced`, `redirect-chain`, `redirect-loop`, `sitemap-url-redirects`
 
 **Cross-page checks** (`agent3_validation/site_checks.py`, 6 rules):
 `internal-link-broken`, `internal-link-unverified`, `orphan-page`, `duplicate-title`, `duplicate-meta-description`, `canonical-target-broken`
 
 **`h1-missing`/`h1-multiple` added 2026-07-28** — previously H1 text was only used internally for the JS-rendering comparison, never checked as its own rule; added so the dashboard's "Headings" category has real content.
 
+**JS-rendering checks removed (2026-08-03), per Rahul's request** — `js-rendering-content-differs` and `js-added-internal-links` (and the "JavaScript Rendering" dashboard category) were dropped entirely, along with `_check_js_rendering()` in `page_checks.py`. This is a validation-layer-only change: Agent 1 still fetches every page twice (raw + Playwright-rendered) and still uses the rendered version as the source of truth for every other check -- that part of the crawler was deliberately left untouched. The raw-vs-rendered comparison data (`js_rendering_comparison_json`) is still collected and stored by Agent 1/2; it's simply no longer read by Agent 3.
+
 ### Excluded URL patterns (added 2026-07-30)
 
 `agent3_validation/rules_config.py` defines `EXCLUDED_URL_PATH_PREFIXES = ["/job-description"]` — pages under this path (Simprosys's job-posting pages) are intentionally temporary: created when a role opens, removed entirely when it closes. Applying evergreen-content rules (title/meta/OG length, duplicate-title, etc.) to pages designed to disappear just creates noise.
 
 What still runs on excluded pages vs. what doesn't:
-- **Skipped**: title, meta description, OG/Twitter, canonical, H1, images, robots meta, mixed content, SSL, redirects, JS-rendering, URL structure — see `page_checks.py`'s `check_page()`.
+- **Skipped**: title, meta description, OG/Twitter, canonical, H1, images, robots meta, mixed content, SSL, redirects, URL structure — see `page_checks.py`'s `check_page()`.
 - **Kept**: fetch-status checks (`page-fetch-failed`, `page-not-200`) — so if a job closes and its URL is removed from the live site while `sitemap.xml` still lists it, that stale-sitemap-entry problem still gets caught — and schema checks (`schema-missing`, `schema-invalid-json`), since job postings use `JobPosting` structured data for Google for Jobs visibility.
 - **Cross-page checks** (`site_checks.py`): excluded pages are never reported as the *subject* of `duplicate-title`/`duplicate-meta-description`/`canonical-target-broken`, but still count as valid comparison targets — a permanent page that happens to duplicate an excluded page's text still gets flagged correctly. This mattered in practice: `/work-at-simprosys` and `/job-description` share an identical title/meta today, and the fix had to preserve the finding on `/work-at-simprosys` while suppressing it on `/job-description`. `orphan-page` and the internal-link-integrity checks are left running on excluded pages unchanged.
 
@@ -145,7 +147,7 @@ Built by `agent4_dashboard/build_reporting_hub.py`, writing `docs/reporting.html
 
 ### Severity tiers
 - **Critical** — real, broken, likely-blocking issues (missing canonical, duplicate title/meta, broken links, invalid schema, SSL/HTTPS failures, redirect loops).
-- **Warning** — real best-practice violations, not fatal alone (length issues, mixed content, orphan pages, JS-rendering content differences).
+- **Warning** — real best-practice violations, not fatal alone (length issues, mixed content, orphan pages).
 - **Info** — low-urgency or can't-be-fully-certain findings (OG/Twitter tag issues, missing schema, unverified external-to-crawl links, minor JS-added-link gaps).
 
 ### Thresholds
