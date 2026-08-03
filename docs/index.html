@@ -64,10 +64,7 @@
     padding: 22px 24px; font-size: 1.05rem; font-weight: 700; color: #ffffff;
     display: flex; align-items: center; gap: 10px;
   }
-  .brand-badge {
-    width: 32px; height: 32px; border-radius: 8px; background: var(--mx-primary);
-    display: flex; align-items: center; justify-content: center; font-weight: 700; color: #fff; font-size: 0.9rem;
-  }
+  .brand-logo { height: 34px; width: auto; display: block; }
   .sidebar-nav { padding: 8px 12px; display: flex; flex-direction: column; gap: 2px; flex: 1; }
   .sidebar-link {
     display: flex; align-items: center; gap: 12px; padding: 11px 14px; border-radius: 8px;
@@ -197,8 +194,7 @@
   
     <aside class="sidebar">
       <div class="sidebar-brand">
-        <span class="brand-badge">S</span>
-        <span>Simprosys SEO</span>
+        <img class="brand-logo" src="assets/logo.png" alt="Simprosys">
       </div>
       <nav class="sidebar-nav">
         <a class="sidebar-link active" href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11.5 12 4l8 7.5"/><path d="M6 10v9a1 1 0 0 0 1 1h4v-6h2v6h4a1 1 0 0 0 1-1v-9"/></svg><span>Dashboard</span></a>
@@ -298,7 +294,7 @@
         <div class="card-header-title">Findings</div>
         <div class="card-header-controls">
           <select id="category-select">
-            <option value="all">All Issues (348)</option><option value="meta-title-description">Meta Title &amp; Description (80)</option><option value="headings">Headings (0)</option><option value="social-tags">Social Tags (OG &amp; Twitter) (143)</option><option value="url-structure">URL Structure (21)</option><option value="canonical-tags">Canonical Tags (0)</option><option value="robots-indexability">Robots &amp; Indexability (0)</option><option value="images-alt-text">Images &amp; Alt Text (1)</option><option value="structured-data">Structured Data (Schema) (0)</option><option value="https-security">HTTPS &amp; Security (0)</option><option value="redirects">Redirects (0)</option><option value="internal-linking">Internal Linking (26)</option><option value="js-rendering">JavaScript Rendering (77)</option>
+            <option value="all">All Issues (348)</option><option value="meta-title-description">Meta Title &amp; Description (80)</option><option value="headings">Headings (0)</option><option value="social-tags">Social Tags (OG &amp; Twitter) (143)</option><option value="url-structure">URL Structure (21)</option><option value="canonical-tags">Canonical Tags (0)</option><option value="robots-indexability">Robots &amp; Indexability (0)</option><option value="images-alt-text">Images &amp; Alt Text (1)</option><option value="structured-data">Structured Data (Schema) (0)</option><option value="https-security">HTTPS &amp; Security (0)</option><option value="redirects">Redirects (0)</option><option value="internal-linking">Internal Linking (26)</option>
           </select>
           <input type="search" id="search-input" placeholder="Search page, issue, severity, expected/actual values...">
         </div>
@@ -578,7 +574,7 @@
           <td class="muted">171 characters</td>
         </tr>
         
-        <tr data-severity="warning" data-category="js-rendering" data-search="warning https://simprosys.com/simprotips/10-best-practices-to-optimize-google-search-ads title, meta description, or h1 differs between the raw html and the javascript-rendered version. identical core content before and after javascript runs content differs -- may rely on javascript for key seo content javascript rendering">
+        <tr data-severity="warning" data-category="other" data-search="warning https://simprosys.com/simprotips/10-best-practices-to-optimize-google-search-ads title, meta description, or h1 differs between the raw html and the javascript-rendered version. identical core content before and after javascript runs content differs -- may rely on javascript for key seo content other">
           <td><span class="severity-badge" style="--badge-color: #ffc700">⚠ Warning</span></td>
           <td><a href="https://simprosys.com/simprotips/10-best-practices-to-optimize-google-search-ads" target="_blank" rel="noopener">https://simprosys.com/simprotips/10-best-practices-to-optimize-google-search-ads</a></td>
           <td>Title, meta description, or H1 differs between the raw HTML and the JavaScript-rendered version.</td>
@@ -610,7 +606,7 @@
           <td class="muted">179 characters</td>
         </tr>
         
-        <tr data-severity="warning" data-category="js-rendering" data-search="warning https://simprosys.com/simprotips/5-google-shopping-tips-for-holiday-season title, meta description, or h1 differs between the raw html and the javascript-rendered version. identical core content before and after javascript runs content differs -- may rely on javascript for key seo content javascript rendering">
+        <tr data-severity="warning" data-category="other" data-search="warning https://simprosys.com/simprotips/5-google-shopping-tips-for-holiday-season title, meta description, or h1 differs between the raw html and the javascript-rendered version. identical core content before and after javascript runs content differs -- may rely on javascript for key seo content other">
           <td><span class="severity-badge" style="--badge-color: #ffc700">⚠ Warning</span></td>
           <td><a href="https://simprosys.com/simprotips/5-google-shopping-tips-for-holiday-season" target="_blank" rel="noopener">https://simprosys.com/simprotips/5-google-shopping-tips-for-holiday-season</a></td>
           <td>Title, meta description, or H1 differs between the raw HTML and the JavaScript-rendered version.</td>
@@ -626,7 +622,7 @@
           <td class="muted">61 characters (&quot;5 Reasons to Implement Site Reviews for your E-commerce store&quot;)</td>
         </tr>
         
-        <tr data-severity="warning" data-category="js-rendering" data-search="warning https://simprosys.com/simprotips/5-reasons-to-implement-site-reviews title, meta description, or h1 differs between the raw html and the javascript-rendered version. identical core content before and after javascript runs content differs -- may rely on javascript for key seo content javascript rendering">
+        <tr data-severity="warning" data-category="other" data-search="warning https://simprosys.com/simprotips/5-reasons-to-implement-site-reviews title, meta description, or h1 differs between the raw html and the javascript-rendered version. identical core content before and after javascript runs content differs -- may rely on javascript for key seo content other">
           <td><span class="severity-badge" style="--badge-color: #ffc700">⚠ Warning</span></td>
           <td><a href="https://simprosys.com/simprotips/5-reasons-to-implement-site-reviews" target="_blank" rel="noopener">https://simprosys.com/simprotips/5-reasons-to-implement-site-reviews</a></td>
           <td>Title, meta description, or H1 differs between the raw HTML and the JavaScript-rendered version.</td>
@@ -642,7 +638,7 @@
           <td class="muted">0 internal links found</td>
         </tr>
         
-        <tr data-severity="warning" data-category="js-rendering" data-search="warning https://simprosys.com/simprotips/6-best-practices-for-shopping-campaigns title, meta description, or h1 differs between the raw html and the javascript-rendered version. identical core content before and after javascript runs content differs -- may rely on javascript for key seo content javascript rendering">
+        <tr data-severity="warning" data-category="other" data-search="warning https://simprosys.com/simprotips/6-best-practices-for-shopping-campaigns title, meta description, or h1 differs between the raw html and the javascript-rendered version. identical core content before and after javascript runs content differs -- may rely on javascript for key seo content other">
           <td><span class="severity-badge" style="--badge-color: #ffc700">⚠ Warning</span></td>
           <td><a href="https://simprosys.com/simprotips/6-best-practices-for-shopping-campaigns" target="_blank" rel="noopener">https://simprosys.com/simprotips/6-best-practices-for-shopping-campaigns</a></td>
           <td>Title, meta description, or H1 differs between the raw HTML and the JavaScript-rendered version.</td>
@@ -666,7 +662,7 @@
           <td class="muted">62 characters (&quot;Google Shopping ADS: 7 Fundamentals for Efficient Optimisation&quot;)</td>
         </tr>
         
-        <tr data-severity="warning" data-category="js-rendering" data-search="warning https://simprosys.com/simprotips/7-fundamentals-to-optimize-shopping-ads title, meta description, or h1 differs between the raw html and the javascript-rendered version. identical core content before and after javascript runs content differs -- may rely on javascript for key seo content javascript rendering">
+        <tr data-severity="warning" data-category="other" data-search="warning https://simprosys.com/simprotips/7-fundamentals-to-optimize-shopping-ads title, meta description, or h1 differs between the raw html and the javascript-rendered version. identical core content before and after javascript runs content differs -- may rely on javascript for key seo content other">
           <td><span class="severity-badge" style="--badge-color: #ffc700">⚠ Warning</span></td>
           <td><a href="https://simprosys.com/simprotips/7-fundamentals-to-optimize-shopping-ads" target="_blank" rel="noopener">https://simprosys.com/simprotips/7-fundamentals-to-optimize-shopping-ads</a></td>
           <td>Title, meta description, or H1 differs between the raw HTML and the JavaScript-rendered version.</td>
@@ -682,7 +678,7 @@
           <td class="muted">0 internal links found</td>
         </tr>
         
-        <tr data-severity="warning" data-category="js-rendering" data-search="warning https://simprosys.com/simprotips/8-best-practices-to-optimize-display-ads title, meta description, or h1 differs between the raw html and the javascript-rendered version. identical core content before and after javascript runs content differs -- may rely on javascript for key seo content javascript rendering">
+        <tr data-severity="warning" data-category="other" data-search="warning https://simprosys.com/simprotips/8-best-practices-to-optimize-display-ads title, meta description, or h1 differs between the raw html and the javascript-rendered version. identical core content before and after javascript runs content differs -- may rely on javascript for key seo content other">
           <td><span class="severity-badge" style="--badge-color: #ffc700">⚠ Warning</span></td>
           <td><a href="https://simprosys.com/simprotips/8-best-practices-to-optimize-display-ads" target="_blank" rel="noopener">https://simprosys.com/simprotips/8-best-practices-to-optimize-display-ads</a></td>
           <td>Title, meta description, or H1 differs between the raw HTML and the JavaScript-rendered version.</td>
@@ -698,7 +694,7 @@
           <td class="muted">0 internal links found</td>
         </tr>
         
-        <tr data-severity="warning" data-category="js-rendering" data-search="warning https://simprosys.com/simprotips/ad-assets-in-performance-max-campaigns title, meta description, or h1 differs between the raw html and the javascript-rendered version. identical core content before and after javascript runs content differs -- may rely on javascript for key seo content javascript rendering">
+        <tr data-severity="warning" data-category="other" data-search="warning https://simprosys.com/simprotips/ad-assets-in-performance-max-campaigns title, meta description, or h1 differs between the raw html and the javascript-rendered version. identical core content before and after javascript runs content differs -- may rely on javascript for key seo content other">
           <td><span class="severity-badge" style="--badge-color: #ffc700">⚠ Warning</span></td>
           <td><a href="https://simprosys.com/simprotips/ad-assets-in-performance-max-campaigns" target="_blank" rel="noopener">https://simprosys.com/simprotips/ad-assets-in-performance-max-campaigns</a></td>
           <td>Title, meta description, or H1 differs between the raw HTML and the JavaScript-rendered version.</td>
@@ -722,7 +718,7 @@
           <td class="muted">164 characters</td>
         </tr>
         
-        <tr data-severity="warning" data-category="js-rendering" data-search="warning https://simprosys.com/simprotips/best-practices-for-ad-assets-optimisation title, meta description, or h1 differs between the raw html and the javascript-rendered version. identical core content before and after javascript runs content differs -- may rely on javascript for key seo content javascript rendering">
+        <tr data-severity="warning" data-category="other" data-search="warning https://simprosys.com/simprotips/best-practices-for-ad-assets-optimisation title, meta description, or h1 differs between the raw html and the javascript-rendered version. identical core content before and after javascript runs content differs -- may rely on javascript for key seo content other">
           <td><span class="severity-badge" style="--badge-color: #ffc700">⚠ Warning</span></td>
           <td><a href="https://simprosys.com/simprotips/best-practices-for-ad-assets-optimisation" target="_blank" rel="noopener">https://simprosys.com/simprotips/best-practices-for-ad-assets-optimisation</a></td>
           <td>Title, meta description, or H1 differs between the raw HTML and the JavaScript-rendered version.</td>
@@ -738,7 +734,7 @@
           <td class="muted">69 characters (&quot;Product Title Optimisation in Google Shopping Feed - 6 Best Practices&quot;)</td>
         </tr>
         
-        <tr data-severity="warning" data-category="js-rendering" data-search="warning https://simprosys.com/simprotips/best-practices-for-title-optimization title, meta description, or h1 differs between the raw html and the javascript-rendered version. identical core content before and after javascript runs content differs -- may rely on javascript for key seo content javascript rendering">
+        <tr data-severity="warning" data-category="other" data-search="warning https://simprosys.com/simprotips/best-practices-for-title-optimization title, meta description, or h1 differs between the raw html and the javascript-rendered version. identical core content before and after javascript runs content differs -- may rely on javascript for key seo content other">
           <td><span class="severity-badge" style="--badge-color: #ffc700">⚠ Warning</span></td>
           <td><a href="https://simprosys.com/simprotips/best-practices-for-title-optimization" target="_blank" rel="noopener">https://simprosys.com/simprotips/best-practices-for-title-optimization</a></td>
           <td>Title, meta description, or H1 differs between the raw HTML and the JavaScript-rendered version.</td>
@@ -762,7 +758,7 @@
           <td class="muted">171 characters</td>
         </tr>
         
-        <tr data-severity="warning" data-category="js-rendering" data-search="warning https://simprosys.com/simprotips/create-microsoft-performance-max-campaigns title, meta description, or h1 differs between the raw html and the javascript-rendered version. identical core content before and after javascript runs content differs -- may rely on javascript for key seo content javascript rendering">
+        <tr data-severity="warning" data-category="other" data-search="warning https://simprosys.com/simprotips/create-microsoft-performance-max-campaigns title, meta description, or h1 differs between the raw html and the javascript-rendered version. identical core content before and after javascript runs content differs -- may rely on javascript for key seo content other">
           <td><span class="severity-badge" style="--badge-color: #ffc700">⚠ Warning</span></td>
           <td><a href="https://simprosys.com/simprotips/create-microsoft-performance-max-campaigns" target="_blank" rel="noopener">https://simprosys.com/simprotips/create-microsoft-performance-max-campaigns</a></td>
           <td>Title, meta description, or H1 differs between the raw HTML and the JavaScript-rendered version.</td>
@@ -778,7 +774,7 @@
           <td class="muted">175 characters</td>
         </tr>
         
-        <tr data-severity="warning" data-category="js-rendering" data-search="warning https://simprosys.com/simprotips/drive-your-holiday-season-sales-with-microsoft-advertising title, meta description, or h1 differs between the raw html and the javascript-rendered version. identical core content before and after javascript runs content differs -- may rely on javascript for key seo content javascript rendering">
+        <tr data-severity="warning" data-category="other" data-search="warning https://simprosys.com/simprotips/drive-your-holiday-season-sales-with-microsoft-advertising title, meta description, or h1 differs between the raw html and the javascript-rendered version. identical core content before and after javascript runs content differs -- may rely on javascript for key seo content other">
           <td><span class="severity-badge" style="--badge-color: #ffc700">⚠ Warning</span></td>
           <td><a href="https://simprosys.com/simprotips/drive-your-holiday-season-sales-with-microsoft-advertising" target="_blank" rel="noopener">https://simprosys.com/simprotips/drive-your-holiday-season-sales-with-microsoft-advertising</a></td>
           <td>Title, meta description, or H1 differs between the raw HTML and the JavaScript-rendered version.</td>
@@ -786,7 +782,7 @@
           <td class="muted">Content differs -- may rely on JavaScript for key SEO content</td>
         </tr>
         
-        <tr data-severity="warning" data-category="js-rendering" data-search="warning https://simprosys.com/simprotips/empower-brand-with-manufacturer-center title, meta description, or h1 differs between the raw html and the javascript-rendered version. identical core content before and after javascript runs content differs -- may rely on javascript for key seo content javascript rendering">
+        <tr data-severity="warning" data-category="other" data-search="warning https://simprosys.com/simprotips/empower-brand-with-manufacturer-center title, meta description, or h1 differs between the raw html and the javascript-rendered version. identical core content before and after javascript runs content differs -- may rely on javascript for key seo content other">
           <td><span class="severity-badge" style="--badge-color: #ffc700">⚠ Warning</span></td>
           <td><a href="https://simprosys.com/simprotips/empower-brand-with-manufacturer-center" target="_blank" rel="noopener">https://simprosys.com/simprotips/empower-brand-with-manufacturer-center</a></td>
           <td>Title, meta description, or H1 differs between the raw HTML and the JavaScript-rendered version.</td>
@@ -794,7 +790,7 @@
           <td class="muted">Content differs -- may rely on JavaScript for key SEO content</td>
         </tr>
         
-        <tr data-severity="warning" data-category="js-rendering" data-search="warning https://simprosys.com/simprotips/evaluate-google-performance-max-campaign title, meta description, or h1 differs between the raw html and the javascript-rendered version. identical core content before and after javascript runs content differs -- may rely on javascript for key seo content javascript rendering">
+        <tr data-severity="warning" data-category="other" data-search="warning https://simprosys.com/simprotips/evaluate-google-performance-max-campaign title, meta description, or h1 differs between the raw html and the javascript-rendered version. identical core content before and after javascript runs content differs -- may rely on javascript for key seo content other">
           <td><span class="severity-badge" style="--badge-color: #ffc700">⚠ Warning</span></td>
           <td><a href="https://simprosys.com/simprotips/evaluate-google-performance-max-campaign" target="_blank" rel="noopener">https://simprosys.com/simprotips/evaluate-google-performance-max-campaign</a></td>
           <td>Title, meta description, or H1 differs between the raw HTML and the JavaScript-rendered version.</td>
@@ -810,7 +806,7 @@
           <td class="muted">71 characters (&quot;Microsoft Advertising 2025: Ad Types, Copilot &amp; ROI Tips for E-commerce&quot;)</td>
         </tr>
         
-        <tr data-severity="warning" data-category="js-rendering" data-search="warning https://simprosys.com/simprotips/everything-you-should-know-about-microsoft-advertising title, meta description, or h1 differs between the raw html and the javascript-rendered version. identical core content before and after javascript runs content differs -- may rely on javascript for key seo content javascript rendering">
+        <tr data-severity="warning" data-category="other" data-search="warning https://simprosys.com/simprotips/everything-you-should-know-about-microsoft-advertising title, meta description, or h1 differs between the raw html and the javascript-rendered version. identical core content before and after javascript runs content differs -- may rely on javascript for key seo content other">
           <td><span class="severity-badge" style="--badge-color: #ffc700">⚠ Warning</span></td>
           <td><a href="https://simprosys.com/simprotips/everything-you-should-know-about-microsoft-advertising" target="_blank" rel="noopener">https://simprosys.com/simprotips/everything-you-should-know-about-microsoft-advertising</a></td>
           <td>Title, meta description, or H1 differs between the raw HTML and the JavaScript-rendered version.</td>
@@ -826,7 +822,7 @@
           <td class="muted">62 characters (&quot;Google Manufacturer Center Insights - Gain a Competitive Edge!&quot;)</td>
         </tr>
         
-        <tr data-severity="warning" data-category="js-rendering" data-search="warning https://simprosys.com/simprotips/gain-a-competitive-edge-with-manufacturer-centers-insights title, meta description, or h1 differs between the raw html and the javascript-rendered version. identical core content before and after javascript runs content differs -- may rely on javascript for key seo content javascript rendering">
+        <tr data-severity="warning" data-category="other" data-search="warning https://simprosys.com/simprotips/gain-a-competitive-edge-with-manufacturer-centers-insights title, meta description, or h1 differs between the raw html and the javascript-rendered version. identical core content before and after javascript runs content differs -- may rely on javascript for key seo content other">
           <td><span class="severity-badge" style="--badge-color: #ffc700">⚠ Warning</span></td>
           <td><a href="https://simprosys.com/simprotips/gain-a-competitive-edge-with-manufacturer-centers-insights" target="_blank" rel="noopener">https://simprosys.com/simprotips/gain-a-competitive-edge-with-manufacturer-centers-insights</a></td>
           <td>Title, meta description, or H1 differs between the raw HTML and the JavaScript-rendered version.</td>
@@ -850,7 +846,7 @@
           <td class="muted">167 characters</td>
         </tr>
         
-        <tr data-severity="warning" data-category="js-rendering" data-search="warning https://simprosys.com/simprotips/get-ahead-with-google-calculated-delivery-speed-estimates title, meta description, or h1 differs between the raw html and the javascript-rendered version. identical core content before and after javascript runs content differs -- may rely on javascript for key seo content javascript rendering">
+        <tr data-severity="warning" data-category="other" data-search="warning https://simprosys.com/simprotips/get-ahead-with-google-calculated-delivery-speed-estimates title, meta description, or h1 differs between the raw html and the javascript-rendered version. identical core content before and after javascript runs content differs -- may rely on javascript for key seo content other">
           <td><span class="severity-badge" style="--badge-color: #ffc700">⚠ Warning</span></td>
           <td><a href="https://simprosys.com/simprotips/get-ahead-with-google-calculated-delivery-speed-estimates" target="_blank" rel="noopener">https://simprosys.com/simprotips/get-ahead-with-google-calculated-delivery-speed-estimates</a></td>
           <td>Title, meta description, or H1 differs between the raw HTML and the JavaScript-rendered version.</td>
@@ -858,7 +854,7 @@
           <td class="muted">Content differs -- may rely on JavaScript for key SEO content</td>
         </tr>
         
-        <tr data-severity="warning" data-category="js-rendering" data-search="warning https://simprosys.com/simprotips/getting-started-performance-max-campaigns title, meta description, or h1 differs between the raw html and the javascript-rendered version. identical core content before and after javascript runs content differs -- may rely on javascript for key seo content javascript rendering">
+        <tr data-severity="warning" data-category="other" data-search="warning https://simprosys.com/simprotips/getting-started-performance-max-campaigns title, meta description, or h1 differs between the raw html and the javascript-rendered version. identical core content before and after javascript runs content differs -- may rely on javascript for key seo content other">
           <td><span class="severity-badge" style="--badge-color: #ffc700">⚠ Warning</span></td>
           <td><a href="https://simprosys.com/simprotips/getting-started-performance-max-campaigns" target="_blank" rel="noopener">https://simprosys.com/simprotips/getting-started-performance-max-campaigns</a></td>
           <td>Title, meta description, or H1 differs between the raw HTML and the JavaScript-rendered version.</td>
@@ -882,7 +878,7 @@
           <td class="muted">214 characters</td>
         </tr>
         
-        <tr data-severity="warning" data-category="js-rendering" data-search="warning https://simprosys.com/simprotips/global-product-feeds-multi-currency-multi-language title, meta description, or h1 differs between the raw html and the javascript-rendered version. identical core content before and after javascript runs content differs -- may rely on javascript for key seo content javascript rendering">
+        <tr data-severity="warning" data-category="other" data-search="warning https://simprosys.com/simprotips/global-product-feeds-multi-currency-multi-language title, meta description, or h1 differs between the raw html and the javascript-rendered version. identical core content before and after javascript runs content differs -- may rely on javascript for key seo content other">
           <td><span class="severity-badge" style="--badge-color: #ffc700">⚠ Warning</span></td>
           <td><a href="https://simprosys.com/simprotips/global-product-feeds-multi-currency-multi-language" target="_blank" rel="noopener">https://simprosys.com/simprotips/global-product-feeds-multi-currency-multi-language</a></td>
           <td>Title, meta description, or H1 differs between the raw HTML and the JavaScript-rendered version.</td>
@@ -906,7 +902,7 @@
           <td class="muted">162 characters</td>
         </tr>
         
-        <tr data-severity="warning" data-category="js-rendering" data-search="warning https://simprosys.com/simprotips/google-ads-audience-segments-guide-for-better-targeting title, meta description, or h1 differs between the raw html and the javascript-rendered version. identical core content before and after javascript runs content differs -- may rely on javascript for key seo content javascript rendering">
+        <tr data-severity="warning" data-category="other" data-search="warning https://simprosys.com/simprotips/google-ads-audience-segments-guide-for-better-targeting title, meta description, or h1 differs between the raw html and the javascript-rendered version. identical core content before and after javascript runs content differs -- may rely on javascript for key seo content other">
           <td><span class="severity-badge" style="--badge-color: #ffc700">⚠ Warning</span></td>
           <td><a href="https://simprosys.com/simprotips/google-ads-audience-segments-guide-for-better-targeting" target="_blank" rel="noopener">https://simprosys.com/simprotips/google-ads-audience-segments-guide-for-better-targeting</a></td>
           <td>Title, meta description, or H1 differs between the raw HTML and the JavaScript-rendered version.</td>
@@ -922,7 +918,7 @@
           <td class="muted">63 characters (&quot;Your Ultimate Google Ads Holiday Checklist for E-commerce Store&quot;)</td>
         </tr>
         
-        <tr data-severity="warning" data-category="js-rendering" data-search="warning https://simprosys.com/simprotips/google-ads-holiday-season-strategies-for-e-commerce-store title, meta description, or h1 differs between the raw html and the javascript-rendered version. identical core content before and after javascript runs content differs -- may rely on javascript for key seo content javascript rendering">
+        <tr data-severity="warning" data-category="other" data-search="warning https://simprosys.com/simprotips/google-ads-holiday-season-strategies-for-e-commerce-store title, meta description, or h1 differs between the raw html and the javascript-rendered version. identical core content before and after javascript runs content differs -- may rely on javascript for key seo content other">
           <td><span class="severity-badge" style="--badge-color: #ffc700">⚠ Warning</span></td>
           <td><a href="https://simprosys.com/simprotips/google-ads-holiday-season-strategies-for-e-commerce-store" target="_blank" rel="noopener">https://simprosys.com/simprotips/google-ads-holiday-season-strategies-for-e-commerce-store</a></td>
           <td>Title, meta description, or H1 differs between the raw HTML and the JavaScript-rendered version.</td>
@@ -930,7 +926,7 @@
           <td class="muted">Content differs -- may rely on JavaScript for key SEO content</td>
         </tr>
         
-        <tr data-severity="warning" data-category="js-rendering" data-search="warning https://simprosys.com/simprotips/google-analytics-4-guide-for-online-store title, meta description, or h1 differs between the raw html and the javascript-rendered version. identical core content before and after javascript runs content differs -- may rely on javascript for key seo content javascript rendering">
+        <tr data-severity="warning" data-category="other" data-search="warning https://simprosys.com/simprotips/google-analytics-4-guide-for-online-store title, meta description, or h1 differs between the raw html and the javascript-rendered version. identical core content before and after javascript runs content differs -- may rely on javascript for key seo content other">
           <td><span class="severity-badge" style="--badge-color: #ffc700">⚠ Warning</span></td>
           <td><a href="https://simprosys.com/simprotips/google-analytics-4-guide-for-online-store" target="_blank" rel="noopener">https://simprosys.com/simprotips/google-analytics-4-guide-for-online-store</a></td>
           <td>Title, meta description, or H1 differs between the raw HTML and the JavaScript-rendered version.</td>
@@ -954,7 +950,7 @@
           <td class="muted">164 characters</td>
         </tr>
         
-        <tr data-severity="warning" data-category="js-rendering" data-search="warning https://simprosys.com/simprotips/google-automated-discounts-vs-merchant-promotions title, meta description, or h1 differs between the raw html and the javascript-rendered version. identical core content before and after javascript runs content differs -- may rely on javascript for key seo content javascript rendering">
+        <tr data-severity="warning" data-category="other" data-search="warning https://simprosys.com/simprotips/google-automated-discounts-vs-merchant-promotions title, meta description, or h1 differs between the raw html and the javascript-rendered version. identical core content before and after javascript runs content differs -- may rely on javascript for key seo content other">
           <td><span class="severity-badge" style="--badge-color: #ffc700">⚠ Warning</span></td>
           <td><a href="https://simprosys.com/simprotips/google-automated-discounts-vs-merchant-promotions" target="_blank" rel="noopener">https://simprosys.com/simprotips/google-automated-discounts-vs-merchant-promotions</a></td>
           <td>Title, meta description, or H1 differs between the raw HTML and the JavaScript-rendered version.</td>
@@ -978,7 +974,7 @@
           <td class="muted">221 characters</td>
         </tr>
         
-        <tr data-severity="warning" data-category="js-rendering" data-search="warning https://simprosys.com/simprotips/google-manufacturer-center-insights title, meta description, or h1 differs between the raw html and the javascript-rendered version. identical core content before and after javascript runs content differs -- may rely on javascript for key seo content javascript rendering">
+        <tr data-severity="warning" data-category="other" data-search="warning https://simprosys.com/simprotips/google-manufacturer-center-insights title, meta description, or h1 differs between the raw html and the javascript-rendered version. identical core content before and after javascript runs content differs -- may rely on javascript for key seo content other">
           <td><span class="severity-badge" style="--badge-color: #ffc700">⚠ Warning</span></td>
           <td><a href="https://simprosys.com/simprotips/google-manufacturer-center-insights" target="_blank" rel="noopener">https://simprosys.com/simprotips/google-manufacturer-center-insights</a></td>
           <td>Title, meta description, or H1 differs between the raw HTML and the JavaScript-rendered version.</td>
@@ -994,7 +990,7 @@
           <td class="muted">165 characters</td>
         </tr>
         
-        <tr data-severity="warning" data-category="js-rendering" data-search="warning https://simprosys.com/simprotips/google-merchant-center-errors-and-fixes title, meta description, or h1 differs between the raw html and the javascript-rendered version. identical core content before and after javascript runs content differs -- may rely on javascript for key seo content javascript rendering">
+        <tr data-severity="warning" data-category="other" data-search="warning https://simprosys.com/simprotips/google-merchant-center-errors-and-fixes title, meta description, or h1 differs between the raw html and the javascript-rendered version. identical core content before and after javascript runs content differs -- may rely on javascript for key seo content other">
           <td><span class="severity-badge" style="--badge-color: #ffc700">⚠ Warning</span></td>
           <td><a href="https://simprosys.com/simprotips/google-merchant-center-errors-and-fixes" target="_blank" rel="noopener">https://simprosys.com/simprotips/google-merchant-center-errors-and-fixes</a></td>
           <td>Title, meta description, or H1 differs between the raw HTML and the JavaScript-rendered version.</td>
@@ -1002,7 +998,7 @@
           <td class="muted">Content differs -- may rely on JavaScript for key SEO content</td>
         </tr>
         
-        <tr data-severity="warning" data-category="js-rendering" data-search="warning https://simprosys.com/simprotips/google-performance-max-campaign-updates-2025 title, meta description, or h1 differs between the raw html and the javascript-rendered version. identical core content before and after javascript runs content differs -- may rely on javascript for key seo content javascript rendering">
+        <tr data-severity="warning" data-category="other" data-search="warning https://simprosys.com/simprotips/google-performance-max-campaign-updates-2025 title, meta description, or h1 differs between the raw html and the javascript-rendered version. identical core content before and after javascript runs content differs -- may rely on javascript for key seo content other">
           <td><span class="severity-badge" style="--badge-color: #ffc700">⚠ Warning</span></td>
           <td><a href="https://simprosys.com/simprotips/google-performance-max-campaign-updates-2025" target="_blank" rel="noopener">https://simprosys.com/simprotips/google-performance-max-campaign-updates-2025</a></td>
           <td>Title, meta description, or H1 differs between the raw HTML and the JavaScript-rendered version.</td>
@@ -1010,7 +1006,7 @@
           <td class="muted">Content differs -- may rely on JavaScript for key SEO content</td>
         </tr>
         
-        <tr data-severity="warning" data-category="js-rendering" data-search="warning https://simprosys.com/simprotips/guide-to-improve-google-merchant-centers-store-quality title, meta description, or h1 differs between the raw html and the javascript-rendered version. identical core content before and after javascript runs content differs -- may rely on javascript for key seo content javascript rendering">
+        <tr data-severity="warning" data-category="other" data-search="warning https://simprosys.com/simprotips/guide-to-improve-google-merchant-centers-store-quality title, meta description, or h1 differs between the raw html and the javascript-rendered version. identical core content before and after javascript runs content differs -- may rely on javascript for key seo content other">
           <td><span class="severity-badge" style="--badge-color: #ffc700">⚠ Warning</span></td>
           <td><a href="https://simprosys.com/simprotips/guide-to-improve-google-merchant-centers-store-quality" target="_blank" rel="noopener">https://simprosys.com/simprotips/guide-to-improve-google-merchant-centers-store-quality</a></td>
           <td>Title, meta description, or H1 differs between the raw HTML and the JavaScript-rendered version.</td>
@@ -1018,7 +1014,7 @@
           <td class="muted">Content differs -- may rely on JavaScript for key SEO content</td>
         </tr>
         
-        <tr data-severity="warning" data-category="js-rendering" data-search="warning https://simprosys.com/simprotips/holiday-season-strategies-online-store title, meta description, or h1 differs between the raw html and the javascript-rendered version. identical core content before and after javascript runs content differs -- may rely on javascript for key seo content javascript rendering">
+        <tr data-severity="warning" data-category="other" data-search="warning https://simprosys.com/simprotips/holiday-season-strategies-online-store title, meta description, or h1 differs between the raw html and the javascript-rendered version. identical core content before and after javascript runs content differs -- may rely on javascript for key seo content other">
           <td><span class="severity-badge" style="--badge-color: #ffc700">⚠ Warning</span></td>
           <td><a href="https://simprosys.com/simprotips/holiday-season-strategies-online-store" target="_blank" rel="noopener">https://simprosys.com/simprotips/holiday-season-strategies-online-store</a></td>
           <td>Title, meta description, or H1 differs between the raw HTML and the JavaScript-rendered version.</td>
@@ -1034,7 +1030,7 @@
           <td class="muted">97 characters (&quot;Decoding GTINs, MPNs &amp; Brand: Impact of Unique Product Identifiers on boosting product visibility&quot;)</td>
         </tr>
         
-        <tr data-severity="warning" data-category="js-rendering" data-search="warning https://simprosys.com/simprotips/impact-of-product-identifiers title, meta description, or h1 differs between the raw html and the javascript-rendered version. identical core content before and after javascript runs content differs -- may rely on javascript for key seo content javascript rendering">
+        <tr data-severity="warning" data-category="other" data-search="warning https://simprosys.com/simprotips/impact-of-product-identifiers title, meta description, or h1 differs between the raw html and the javascript-rendered version. identical core content before and after javascript runs content differs -- may rely on javascript for key seo content other">
           <td><span class="severity-badge" style="--badge-color: #ffc700">⚠ Warning</span></td>
           <td><a href="https://simprosys.com/simprotips/impact-of-product-identifiers" target="_blank" rel="noopener">https://simprosys.com/simprotips/impact-of-product-identifiers</a></td>
           <td>Title, meta description, or H1 differs between the raw HTML and the JavaScript-rendered version.</td>
@@ -1042,7 +1038,7 @@
           <td class="muted">Content differs -- may rely on JavaScript for key SEO content</td>
         </tr>
         
-        <tr data-severity="warning" data-category="js-rendering" data-search="warning https://simprosys.com/simprotips/importance-of-submitting-product-reviews title, meta description, or h1 differs between the raw html and the javascript-rendered version. identical core content before and after javascript runs content differs -- may rely on javascript for key seo content javascript rendering">
+        <tr data-severity="warning" data-category="other" data-search="warning https://simprosys.com/simprotips/importance-of-submitting-product-reviews title, meta description, or h1 differs between the raw html and the javascript-rendered version. identical core content before and after javascript runs content differs -- may rely on javascript for key seo content other">
           <td><span class="severity-badge" style="--badge-color: #ffc700">⚠ Warning</span></td>
           <td><a href="https://simprosys.com/simprotips/importance-of-submitting-product-reviews" target="_blank" rel="noopener">https://simprosys.com/simprotips/importance-of-submitting-product-reviews</a></td>
           <td>Title, meta description, or H1 differs between the raw HTML and the JavaScript-rendered version.</td>
@@ -1058,7 +1054,7 @@
           <td class="muted">0 internal links found</td>
         </tr>
         
-        <tr data-severity="warning" data-category="js-rendering" data-search="warning https://simprosys.com/simprotips/landing-page-experience title, meta description, or h1 differs between the raw html and the javascript-rendered version. identical core content before and after javascript runs content differs -- may rely on javascript for key seo content javascript rendering">
+        <tr data-severity="warning" data-category="other" data-search="warning https://simprosys.com/simprotips/landing-page-experience title, meta description, or h1 differs between the raw html and the javascript-rendered version. identical core content before and after javascript runs content differs -- may rely on javascript for key seo content other">
           <td><span class="severity-badge" style="--badge-color: #ffc700">⚠ Warning</span></td>
           <td><a href="https://simprosys.com/simprotips/landing-page-experience" target="_blank" rel="noopener">https://simprosys.com/simprotips/landing-page-experience</a></td>
           <td>Title, meta description, or H1 differs between the raw HTML and the JavaScript-rendered version.</td>
@@ -1074,7 +1070,7 @@
           <td class="muted">92 characters (&quot;Mastering Microsoft Advertising’s Auction Insights Tool | 6 Key Metrics and their Importance&quot;)</td>
         </tr>
         
-        <tr data-severity="warning" data-category="js-rendering" data-search="warning https://simprosys.com/simprotips/mastering-microsoft-advertisings-auction-insights-and-its-6-key-metrics title, meta description, or h1 differs between the raw html and the javascript-rendered version. identical core content before and after javascript runs content differs -- may rely on javascript for key seo content javascript rendering">
+        <tr data-severity="warning" data-category="other" data-search="warning https://simprosys.com/simprotips/mastering-microsoft-advertisings-auction-insights-and-its-6-key-metrics title, meta description, or h1 differs between the raw html and the javascript-rendered version. identical core content before and after javascript runs content differs -- may rely on javascript for key seo content other">
           <td><span class="severity-badge" style="--badge-color: #ffc700">⚠ Warning</span></td>
           <td><a href="https://simprosys.com/simprotips/mastering-microsoft-advertisings-auction-insights-and-its-6-key-metrics" target="_blank" rel="noopener">https://simprosys.com/simprotips/mastering-microsoft-advertisings-auction-insights-and-its-6-key-metrics</a></td>
           <td>Title, meta description, or H1 differs between the raw HTML and the JavaScript-rendered version.</td>
@@ -1098,7 +1094,7 @@
           <td class="muted">219 characters</td>
         </tr>
         
-        <tr data-severity="warning" data-category="js-rendering" data-search="warning https://simprosys.com/simprotips/microsoft-advertisings-feed-based-audience-campaigns title, meta description, or h1 differs between the raw html and the javascript-rendered version. identical core content before and after javascript runs content differs -- may rely on javascript for key seo content javascript rendering">
+        <tr data-severity="warning" data-category="other" data-search="warning https://simprosys.com/simprotips/microsoft-advertisings-feed-based-audience-campaigns title, meta description, or h1 differs between the raw html and the javascript-rendered version. identical core content before and after javascript runs content differs -- may rely on javascript for key seo content other">
           <td><span class="severity-badge" style="--badge-color: #ffc700">⚠ Warning</span></td>
           <td><a href="https://simprosys.com/simprotips/microsoft-advertisings-feed-based-audience-campaigns" target="_blank" rel="noopener">https://simprosys.com/simprotips/microsoft-advertisings-feed-based-audience-campaigns</a></td>
           <td>Title, meta description, or H1 differs between the raw HTML and the JavaScript-rendered version.</td>
@@ -1114,7 +1110,7 @@
           <td class="muted">108 characters (&quot;Turn Your Storefront Into a Smart Sales Associate with Microsoft Clarity Brand Agents - Learn With Simprosys&quot;)</td>
         </tr>
         
-        <tr data-severity="warning" data-category="js-rendering" data-search="warning https://simprosys.com/simprotips/microsoft-clarity-setup-guide-for-shopify-and-woocommerce title, meta description, or h1 differs between the raw html and the javascript-rendered version. identical core content before and after javascript runs content differs -- may rely on javascript for key seo content javascript rendering">
+        <tr data-severity="warning" data-category="other" data-search="warning https://simprosys.com/simprotips/microsoft-clarity-setup-guide-for-shopify-and-woocommerce title, meta description, or h1 differs between the raw html and the javascript-rendered version. identical core content before and after javascript runs content differs -- may rely on javascript for key seo content other">
           <td><span class="severity-badge" style="--badge-color: #ffc700">⚠ Warning</span></td>
           <td><a href="https://simprosys.com/simprotips/microsoft-clarity-setup-guide-for-shopify-and-woocommerce" target="_blank" rel="noopener">https://simprosys.com/simprotips/microsoft-clarity-setup-guide-for-shopify-and-woocommerce</a></td>
           <td>Title, meta description, or H1 differs between the raw HTML and the JavaScript-rendered version.</td>
@@ -1130,7 +1126,7 @@
           <td class="muted">67 characters (&quot;Microsoft Feed-based vs Performance Max Campaigns: E-commerce Guide&quot;)</td>
         </tr>
         
-        <tr data-severity="warning" data-category="js-rendering" data-search="warning https://simprosys.com/simprotips/microsoft-feed-based-audience-campaigns-vs-performance-max-campaigns title, meta description, or h1 differs between the raw html and the javascript-rendered version. identical core content before and after javascript runs content differs -- may rely on javascript for key seo content javascript rendering">
+        <tr data-severity="warning" data-category="other" data-search="warning https://simprosys.com/simprotips/microsoft-feed-based-audience-campaigns-vs-performance-max-campaigns title, meta description, or h1 differs between the raw html and the javascript-rendered version. identical core content before and after javascript runs content differs -- may rely on javascript for key seo content other">
           <td><span class="severity-badge" style="--badge-color: #ffc700">⚠ Warning</span></td>
           <td><a href="https://simprosys.com/simprotips/microsoft-feed-based-audience-campaigns-vs-performance-max-campaigns" target="_blank" rel="noopener">https://simprosys.com/simprotips/microsoft-feed-based-audience-campaigns-vs-performance-max-campaigns</a></td>
           <td>Title, meta description, or H1 differs between the raw HTML and the JavaScript-rendered version.</td>
@@ -1146,7 +1142,7 @@
           <td class="muted">72 characters (&quot;6 Key Elements to Optimise Your Product Feed for Google Shopping Filters&quot;)</td>
         </tr>
         
-        <tr data-severity="warning" data-category="js-rendering" data-search="warning https://simprosys.com/simprotips/optimise-your-product-feed-for-google-shopping-filters title, meta description, or h1 differs between the raw html and the javascript-rendered version. identical core content before and after javascript runs content differs -- may rely on javascript for key seo content javascript rendering">
+        <tr data-severity="warning" data-category="other" data-search="warning https://simprosys.com/simprotips/optimise-your-product-feed-for-google-shopping-filters title, meta description, or h1 differs between the raw html and the javascript-rendered version. identical core content before and after javascript runs content differs -- may rely on javascript for key seo content other">
           <td><span class="severity-badge" style="--badge-color: #ffc700">⚠ Warning</span></td>
           <td><a href="https://simprosys.com/simprotips/optimise-your-product-feed-for-google-shopping-filters" target="_blank" rel="noopener">https://simprosys.com/simprotips/optimise-your-product-feed-for-google-shopping-filters</a></td>
           <td>Title, meta description, or H1 differs between the raw HTML and the JavaScript-rendered version.</td>
@@ -1154,7 +1150,7 @@
           <td class="muted">Content differs -- may rely on JavaScript for key SEO content</td>
         </tr>
         
-        <tr data-severity="warning" data-category="js-rendering" data-search="warning https://simprosys.com/simprotips/optimize-google-performance-max-campaign title, meta description, or h1 differs between the raw html and the javascript-rendered version. identical core content before and after javascript runs content differs -- may rely on javascript for key seo content javascript rendering">
+        <tr data-severity="warning" data-category="other" data-search="warning https://simprosys.com/simprotips/optimize-google-performance-max-campaign title, meta description, or h1 differs between the raw html and the javascript-rendered version. identical core content before and after javascript runs content differs -- may rely on javascript for key seo content other">
           <td><span class="severity-badge" style="--badge-color: #ffc700">⚠ Warning</span></td>
           <td><a href="https://simprosys.com/simprotips/optimize-google-performance-max-campaign" target="_blank" rel="noopener">https://simprosys.com/simprotips/optimize-google-performance-max-campaign</a></td>
           <td>Title, meta description, or H1 differs between the raw HTML and the JavaScript-rendered version.</td>
@@ -1170,7 +1166,7 @@
           <td class="muted">76 characters (&quot;6 Best Practices for Product Description Optimization - Learn with Simprosys&quot;)</td>
         </tr>
         
-        <tr data-severity="warning" data-category="js-rendering" data-search="warning https://simprosys.com/simprotips/product-description-optimization title, meta description, or h1 differs between the raw html and the javascript-rendered version. identical core content before and after javascript runs content differs -- may rely on javascript for key seo content javascript rendering">
+        <tr data-severity="warning" data-category="other" data-search="warning https://simprosys.com/simprotips/product-description-optimization title, meta description, or h1 differs between the raw html and the javascript-rendered version. identical core content before and after javascript runs content differs -- may rely on javascript for key seo content other">
           <td><span class="severity-badge" style="--badge-color: #ffc700">⚠ Warning</span></td>
           <td><a href="https://simprosys.com/simprotips/product-description-optimization" target="_blank" rel="noopener">https://simprosys.com/simprotips/product-description-optimization</a></td>
           <td>Title, meta description, or H1 differs between the raw HTML and the JavaScript-rendered version.</td>
@@ -1186,7 +1182,7 @@
           <td class="muted">183 characters</td>
         </tr>
         
-        <tr data-severity="warning" data-category="js-rendering" data-search="warning https://simprosys.com/simprotips/product-feed-optimisation-checklist title, meta description, or h1 differs between the raw html and the javascript-rendered version. identical core content before and after javascript runs content differs -- may rely on javascript for key seo content javascript rendering">
+        <tr data-severity="warning" data-category="other" data-search="warning https://simprosys.com/simprotips/product-feed-optimisation-checklist title, meta description, or h1 differs between the raw html and the javascript-rendered version. identical core content before and after javascript runs content differs -- may rely on javascript for key seo content other">
           <td><span class="severity-badge" style="--badge-color: #ffc700">⚠ Warning</span></td>
           <td><a href="https://simprosys.com/simprotips/product-feed-optimisation-checklist" target="_blank" rel="noopener">https://simprosys.com/simprotips/product-feed-optimisation-checklist</a></td>
           <td>Title, meta description, or H1 differs between the raw HTML and the JavaScript-rendered version.</td>
@@ -1202,7 +1198,7 @@
           <td class="muted">175 characters</td>
         </tr>
         
-        <tr data-severity="warning" data-category="js-rendering" data-search="warning https://simprosys.com/simprotips/reasons-to-adopt-microsoft-performance-max-campaign title, meta description, or h1 differs between the raw html and the javascript-rendered version. identical core content before and after javascript runs content differs -- may rely on javascript for key seo content javascript rendering">
+        <tr data-severity="warning" data-category="other" data-search="warning https://simprosys.com/simprotips/reasons-to-adopt-microsoft-performance-max-campaign title, meta description, or h1 differs between the raw html and the javascript-rendered version. identical core content before and after javascript runs content differs -- may rely on javascript for key seo content other">
           <td><span class="severity-badge" style="--badge-color: #ffc700">⚠ Warning</span></td>
           <td><a href="https://simprosys.com/simprotips/reasons-to-adopt-microsoft-performance-max-campaign" target="_blank" rel="noopener">https://simprosys.com/simprotips/reasons-to-adopt-microsoft-performance-max-campaign</a></td>
           <td>Title, meta description, or H1 differs between the raw HTML and the JavaScript-rendered version.</td>
@@ -1210,7 +1206,7 @@
           <td class="muted">Content differs -- may rely on JavaScript for key SEO content</td>
         </tr>
         
-        <tr data-severity="warning" data-category="js-rendering" data-search="warning https://simprosys.com/simprotips/steps-to-launching-facebook-ads-campaigns title, meta description, or h1 differs between the raw html and the javascript-rendered version. identical core content before and after javascript runs content differs -- may rely on javascript for key seo content javascript rendering">
+        <tr data-severity="warning" data-category="other" data-search="warning https://simprosys.com/simprotips/steps-to-launching-facebook-ads-campaigns title, meta description, or h1 differs between the raw html and the javascript-rendered version. identical core content before and after javascript runs content differs -- may rely on javascript for key seo content other">
           <td><span class="severity-badge" style="--badge-color: #ffc700">⚠ Warning</span></td>
           <td><a href="https://simprosys.com/simprotips/steps-to-launching-facebook-ads-campaigns" target="_blank" rel="noopener">https://simprosys.com/simprotips/steps-to-launching-facebook-ads-campaigns</a></td>
           <td>Title, meta description, or H1 differs between the raw HTML and the JavaScript-rendered version.</td>
@@ -1242,7 +1238,7 @@
           <td class="muted">172 characters</td>
         </tr>
         
-        <tr data-severity="warning" data-category="js-rendering" data-search="warning https://simprosys.com/simprotips/understanding-customer-match-lists title, meta description, or h1 differs between the raw html and the javascript-rendered version. identical core content before and after javascript runs content differs -- may rely on javascript for key seo content javascript rendering">
+        <tr data-severity="warning" data-category="other" data-search="warning https://simprosys.com/simprotips/understanding-customer-match-lists title, meta description, or h1 differs between the raw html and the javascript-rendered version. identical core content before and after javascript runs content differs -- may rely on javascript for key seo content other">
           <td><span class="severity-badge" style="--badge-color: #ffc700">⚠ Warning</span></td>
           <td><a href="https://simprosys.com/simprotips/understanding-customer-match-lists" target="_blank" rel="noopener">https://simprosys.com/simprotips/understanding-customer-match-lists</a></td>
           <td>Title, meta description, or H1 differs between the raw HTML and the JavaScript-rendered version.</td>
@@ -1266,7 +1262,7 @@
           <td class="muted">239 characters</td>
         </tr>
         
-        <tr data-severity="warning" data-category="js-rendering" data-search="warning https://simprosys.com/simprotips/unlock-google-ads-auction-insights title, meta description, or h1 differs between the raw html and the javascript-rendered version. identical core content before and after javascript runs content differs -- may rely on javascript for key seo content javascript rendering">
+        <tr data-severity="warning" data-category="other" data-search="warning https://simprosys.com/simprotips/unlock-google-ads-auction-insights title, meta description, or h1 differs between the raw html and the javascript-rendered version. identical core content before and after javascript runs content differs -- may rely on javascript for key seo content other">
           <td><span class="severity-badge" style="--badge-color: #ffc700">⚠ Warning</span></td>
           <td><a href="https://simprosys.com/simprotips/unlock-google-ads-auction-insights" target="_blank" rel="noopener">https://simprosys.com/simprotips/unlock-google-ads-auction-insights</a></td>
           <td>Title, meta description, or H1 differs between the raw HTML and the JavaScript-rendered version.</td>
@@ -1282,7 +1278,7 @@
           <td class="muted">67 characters (&quot;WH Family Strategy In Digital Marketing: HOW - Learn With Simprosys&quot;)</td>
         </tr>
         
-        <tr data-severity="warning" data-category="js-rendering" data-search="warning https://simprosys.com/simprotips/wh-family-strategy-digital-marketing-how title, meta description, or h1 differs between the raw html and the javascript-rendered version. identical core content before and after javascript runs content differs -- may rely on javascript for key seo content javascript rendering">
+        <tr data-severity="warning" data-category="other" data-search="warning https://simprosys.com/simprotips/wh-family-strategy-digital-marketing-how title, meta description, or h1 differs between the raw html and the javascript-rendered version. identical core content before and after javascript runs content differs -- may rely on javascript for key seo content other">
           <td><span class="severity-badge" style="--badge-color: #ffc700">⚠ Warning</span></td>
           <td><a href="https://simprosys.com/simprotips/wh-family-strategy-digital-marketing-how" target="_blank" rel="noopener">https://simprosys.com/simprotips/wh-family-strategy-digital-marketing-how</a></td>
           <td>Title, meta description, or H1 differs between the raw HTML and the JavaScript-rendered version.</td>
@@ -1298,7 +1294,7 @@
           <td class="muted">69 characters (&quot;WH family strategy in Digital marketing: WHERE - Learn With Simprosys&quot;)</td>
         </tr>
         
-        <tr data-severity="warning" data-category="js-rendering" data-search="warning https://simprosys.com/simprotips/wh-family-strategy-digital-marketing-where title, meta description, or h1 differs between the raw html and the javascript-rendered version. identical core content before and after javascript runs content differs -- may rely on javascript for key seo content javascript rendering">
+        <tr data-severity="warning" data-category="other" data-search="warning https://simprosys.com/simprotips/wh-family-strategy-digital-marketing-where title, meta description, or h1 differs between the raw html and the javascript-rendered version. identical core content before and after javascript runs content differs -- may rely on javascript for key seo content other">
           <td><span class="severity-badge" style="--badge-color: #ffc700">⚠ Warning</span></td>
           <td><a href="https://simprosys.com/simprotips/wh-family-strategy-digital-marketing-where" target="_blank" rel="noopener">https://simprosys.com/simprotips/wh-family-strategy-digital-marketing-where</a></td>
           <td>Title, meta description, or H1 differs between the raw HTML and the JavaScript-rendered version.</td>
@@ -1314,7 +1310,7 @@
           <td class="muted">67 characters (&quot;WH family strategy in Digital marketing: WHO - Learn With Simprosys&quot;)</td>
         </tr>
         
-        <tr data-severity="warning" data-category="js-rendering" data-search="warning https://simprosys.com/simprotips/wh-family-strategy-digital-marketing-who title, meta description, or h1 differs between the raw html and the javascript-rendered version. identical core content before and after javascript runs content differs -- may rely on javascript for key seo content javascript rendering">
+        <tr data-severity="warning" data-category="other" data-search="warning https://simprosys.com/simprotips/wh-family-strategy-digital-marketing-who title, meta description, or h1 differs between the raw html and the javascript-rendered version. identical core content before and after javascript runs content differs -- may rely on javascript for key seo content other">
           <td><span class="severity-badge" style="--badge-color: #ffc700">⚠ Warning</span></td>
           <td><a href="https://simprosys.com/simprotips/wh-family-strategy-digital-marketing-who" target="_blank" rel="noopener">https://simprosys.com/simprotips/wh-family-strategy-digital-marketing-who</a></td>
           <td>Title, meta description, or H1 differs between the raw HTML and the JavaScript-rendered version.</td>
@@ -1338,7 +1334,7 @@
           <td class="muted">187 characters</td>
         </tr>
         
-        <tr data-severity="warning" data-category="js-rendering" data-search="warning https://simprosys.com/simprotips/wh-family-strategy-in-digital-marketing-what title, meta description, or h1 differs between the raw html and the javascript-rendered version. identical core content before and after javascript runs content differs -- may rely on javascript for key seo content javascript rendering">
+        <tr data-severity="warning" data-category="other" data-search="warning https://simprosys.com/simprotips/wh-family-strategy-in-digital-marketing-what title, meta description, or h1 differs between the raw html and the javascript-rendered version. identical core content before and after javascript runs content differs -- may rely on javascript for key seo content other">
           <td><span class="severity-badge" style="--badge-color: #ffc700">⚠ Warning</span></td>
           <td><a href="https://simprosys.com/simprotips/wh-family-strategy-in-digital-marketing-what" target="_blank" rel="noopener">https://simprosys.com/simprotips/wh-family-strategy-in-digital-marketing-what</a></td>
           <td>Title, meta description, or H1 differs between the raw HTML and the JavaScript-rendered version.</td>
@@ -1354,7 +1350,7 @@
           <td class="muted">63 characters (&quot;WHEN - WH family strategy: Perfect Timing for Digital Marketing&quot;)</td>
         </tr>
         
-        <tr data-severity="warning" data-category="js-rendering" data-search="warning https://simprosys.com/simprotips/wh-family-strategy-in-digital-marketing-when title, meta description, or h1 differs between the raw html and the javascript-rendered version. identical core content before and after javascript runs content differs -- may rely on javascript for key seo content javascript rendering">
+        <tr data-severity="warning" data-category="other" data-search="warning https://simprosys.com/simprotips/wh-family-strategy-in-digital-marketing-when title, meta description, or h1 differs between the raw html and the javascript-rendered version. identical core content before and after javascript runs content differs -- may rely on javascript for key seo content other">
           <td><span class="severity-badge" style="--badge-color: #ffc700">⚠ Warning</span></td>
           <td><a href="https://simprosys.com/simprotips/wh-family-strategy-in-digital-marketing-when" target="_blank" rel="noopener">https://simprosys.com/simprotips/wh-family-strategy-in-digital-marketing-when</a></td>
           <td>Title, meta description, or H1 differs between the raw HTML and the JavaScript-rendered version.</td>
@@ -1378,7 +1374,7 @@
           <td class="muted">184 characters</td>
         </tr>
         
-        <tr data-severity="warning" data-category="js-rendering" data-search="warning https://simprosys.com/simprotips/wh-family-strategy-in-digital-marketing-why title, meta description, or h1 differs between the raw html and the javascript-rendered version. identical core content before and after javascript runs content differs -- may rely on javascript for key seo content javascript rendering">
+        <tr data-severity="warning" data-category="other" data-search="warning https://simprosys.com/simprotips/wh-family-strategy-in-digital-marketing-why title, meta description, or h1 differs between the raw html and the javascript-rendered version. identical core content before and after javascript runs content differs -- may rely on javascript for key seo content other">
           <td><span class="severity-badge" style="--badge-color: #ffc700">⚠ Warning</span></td>
           <td><a href="https://simprosys.com/simprotips/wh-family-strategy-in-digital-marketing-why" target="_blank" rel="noopener">https://simprosys.com/simprotips/wh-family-strategy-in-digital-marketing-why</a></td>
           <td>Title, meta description, or H1 differs between the raw HTML and the JavaScript-rendered version.</td>
@@ -1402,7 +1398,7 @@
           <td class="muted">181 characters</td>
         </tr>
         
-        <tr data-severity="warning" data-category="js-rendering" data-search="warning https://simprosys.com/simprotips/wh-family-strategy-of-digital-marketing-with-prospecting-remarketing title, meta description, or h1 differs between the raw html and the javascript-rendered version. identical core content before and after javascript runs content differs -- may rely on javascript for key seo content javascript rendering">
+        <tr data-severity="warning" data-category="other" data-search="warning https://simprosys.com/simprotips/wh-family-strategy-of-digital-marketing-with-prospecting-remarketing title, meta description, or h1 differs between the raw html and the javascript-rendered version. identical core content before and after javascript runs content differs -- may rely on javascript for key seo content other">
           <td><span class="severity-badge" style="--badge-color: #ffc700">⚠ Warning</span></td>
           <td><a href="https://simprosys.com/simprotips/wh-family-strategy-of-digital-marketing-with-prospecting-remarketing" target="_blank" rel="noopener">https://simprosys.com/simprotips/wh-family-strategy-of-digital-marketing-with-prospecting-remarketing</a></td>
           <td>Title, meta description, or H1 differs between the raw HTML and the JavaScript-rendered version.</td>
@@ -1474,7 +1470,7 @@
           <td class="muted">None</td>
         </tr>
         
-        <tr data-severity="info" data-category="js-rendering" data-search="info https://simprosys.com/ a significant number of internal links only appear after javascript runs. similar internal link count before and after javascript 18 raw vs 33 rendered javascript rendering">
+        <tr data-severity="info" data-category="other" data-search="info https://simprosys.com/ a significant number of internal links only appear after javascript runs. similar internal link count before and after javascript 18 raw vs 33 rendered other">
           <td><span class="severity-badge" style="--badge-color: #7239ea">ℹ Info</span></td>
           <td><a href="https://simprosys.com/" target="_blank" rel="noopener">https://simprosys.com/</a></td>
           <td>A significant number of internal links only appear after JavaScript runs.</td>
@@ -1514,7 +1510,7 @@
           <td class="muted">None</td>
         </tr>
         
-        <tr data-severity="info" data-category="js-rendering" data-search="info https://simprosys.com/about-us a significant number of internal links only appear after javascript runs. similar internal link count before and after javascript 16 raw vs 31 rendered javascript rendering">
+        <tr data-severity="info" data-category="other" data-search="info https://simprosys.com/about-us a significant number of internal links only appear after javascript runs. similar internal link count before and after javascript 16 raw vs 31 rendered other">
           <td><span class="severity-badge" style="--badge-color: #7239ea">ℹ Info</span></td>
           <td><a href="https://simprosys.com/about-us" target="_blank" rel="noopener">https://simprosys.com/about-us</a></td>
           <td>A significant number of internal links only appear after JavaScript runs.</td>
@@ -1554,7 +1550,7 @@
           <td class="muted">None</td>
         </tr>
         
-        <tr data-severity="info" data-category="js-rendering" data-search="info https://simprosys.com/bing-microsoft-ads a significant number of internal links only appear after javascript runs. similar internal link count before and after javascript 15 raw vs 30 rendered javascript rendering">
+        <tr data-severity="info" data-category="other" data-search="info https://simprosys.com/bing-microsoft-ads a significant number of internal links only appear after javascript runs. similar internal link count before and after javascript 15 raw vs 30 rendered other">
           <td><span class="severity-badge" style="--badge-color: #7239ea">ℹ Info</span></td>
           <td><a href="https://simprosys.com/bing-microsoft-ads" target="_blank" rel="noopener">https://simprosys.com/bing-microsoft-ads</a></td>
           <td>A significant number of internal links only appear after JavaScript runs.</td>
@@ -1594,7 +1590,7 @@
           <td class="muted">None</td>
         </tr>
         
-        <tr data-severity="info" data-category="js-rendering" data-search="info https://simprosys.com/contact-us a significant number of internal links only appear after javascript runs. similar internal link count before and after javascript 15 raw vs 30 rendered javascript rendering">
+        <tr data-severity="info" data-category="other" data-search="info https://simprosys.com/contact-us a significant number of internal links only appear after javascript runs. similar internal link count before and after javascript 15 raw vs 30 rendered other">
           <td><span class="severity-badge" style="--badge-color: #7239ea">ℹ Info</span></td>
           <td><a href="https://simprosys.com/contact-us" target="_blank" rel="noopener">https://simprosys.com/contact-us</a></td>
           <td>A significant number of internal links only appear after JavaScript runs.</td>
@@ -1642,7 +1638,7 @@
           <td class="muted">None</td>
         </tr>
         
-        <tr data-severity="info" data-category="js-rendering" data-search="info https://simprosys.com/google-calculated-delivery-speed-estimates a significant number of internal links only appear after javascript runs. similar internal link count before and after javascript 15 raw vs 30 rendered javascript rendering">
+        <tr data-severity="info" data-category="other" data-search="info https://simprosys.com/google-calculated-delivery-speed-estimates a significant number of internal links only appear after javascript runs. similar internal link count before and after javascript 15 raw vs 30 rendered other">
           <td><span class="severity-badge" style="--badge-color: #7239ea">ℹ Info</span></td>
           <td><a href="https://simprosys.com/google-calculated-delivery-speed-estimates" target="_blank" rel="noopener">https://simprosys.com/google-calculated-delivery-speed-estimates</a></td>
           <td>A significant number of internal links only appear after JavaScript runs.</td>
@@ -1682,7 +1678,7 @@
           <td class="muted">None</td>
         </tr>
         
-        <tr data-severity="info" data-category="js-rendering" data-search="info https://simprosys.com/google-shopping-by-simprosys-wix a significant number of internal links only appear after javascript runs. similar internal link count before and after javascript 15 raw vs 40 rendered javascript rendering">
+        <tr data-severity="info" data-category="other" data-search="info https://simprosys.com/google-shopping-by-simprosys-wix a significant number of internal links only appear after javascript runs. similar internal link count before and after javascript 15 raw vs 40 rendered other">
           <td><span class="severity-badge" style="--badge-color: #7239ea">ℹ Info</span></td>
           <td><a href="https://simprosys.com/google-shopping-by-simprosys-wix" target="_blank" rel="noopener">https://simprosys.com/google-shopping-by-simprosys-wix</a></td>
           <td>A significant number of internal links only appear after JavaScript runs.</td>
@@ -1722,7 +1718,7 @@
           <td class="muted">None</td>
         </tr>
         
-        <tr data-severity="info" data-category="js-rendering" data-search="info https://simprosys.com/google-shopping-feed a significant number of internal links only appear after javascript runs. similar internal link count before and after javascript 19 raw vs 34 rendered javascript rendering">
+        <tr data-severity="info" data-category="other" data-search="info https://simprosys.com/google-shopping-feed a significant number of internal links only appear after javascript runs. similar internal link count before and after javascript 19 raw vs 34 rendered other">
           <td><span class="severity-badge" style="--badge-color: #7239ea">ℹ Info</span></td>
           <td><a href="https://simprosys.com/google-shopping-feed" target="_blank" rel="noopener">https://simprosys.com/google-shopping-feed</a></td>
           <td>A significant number of internal links only appear after JavaScript runs.</td>
@@ -1762,7 +1758,7 @@
           <td class="muted">None</td>
         </tr>
         
-        <tr data-severity="info" data-category="js-rendering" data-search="info https://simprosys.com/google-shopping-feed-for-ecwid a significant number of internal links only appear after javascript runs. similar internal link count before and after javascript 15 raw vs 30 rendered javascript rendering">
+        <tr data-severity="info" data-category="other" data-search="info https://simprosys.com/google-shopping-feed-for-ecwid a significant number of internal links only appear after javascript runs. similar internal link count before and after javascript 15 raw vs 30 rendered other">
           <td><span class="severity-badge" style="--badge-color: #7239ea">ℹ Info</span></td>
           <td><a href="https://simprosys.com/google-shopping-feed-for-ecwid" target="_blank" rel="noopener">https://simprosys.com/google-shopping-feed-for-ecwid</a></td>
           <td>A significant number of internal links only appear after JavaScript runs.</td>
@@ -1802,7 +1798,7 @@
           <td class="muted">None</td>
         </tr>
         
-        <tr data-severity="info" data-category="js-rendering" data-search="info https://simprosys.com/google-shopping-feed-for-shopline a significant number of internal links only appear after javascript runs. similar internal link count before and after javascript 15 raw vs 40 rendered javascript rendering">
+        <tr data-severity="info" data-category="other" data-search="info https://simprosys.com/google-shopping-feed-for-shopline a significant number of internal links only appear after javascript runs. similar internal link count before and after javascript 15 raw vs 40 rendered other">
           <td><span class="severity-badge" style="--badge-color: #7239ea">ℹ Info</span></td>
           <td><a href="https://simprosys.com/google-shopping-feed-for-shopline" target="_blank" rel="noopener">https://simprosys.com/google-shopping-feed-for-shopline</a></td>
           <td>A significant number of internal links only appear after JavaScript runs.</td>
@@ -1842,7 +1838,7 @@
           <td class="muted">None</td>
         </tr>
         
-        <tr data-severity="info" data-category="js-rendering" data-search="info https://simprosys.com/partnership a significant number of internal links only appear after javascript runs. similar internal link count before and after javascript 15 raw vs 30 rendered javascript rendering">
+        <tr data-severity="info" data-category="other" data-search="info https://simprosys.com/partnership a significant number of internal links only appear after javascript runs. similar internal link count before and after javascript 15 raw vs 30 rendered other">
           <td><span class="severity-badge" style="--badge-color: #7239ea">ℹ Info</span></td>
           <td><a href="https://simprosys.com/partnership" target="_blank" rel="noopener">https://simprosys.com/partnership</a></td>
           <td>A significant number of internal links only appear after JavaScript runs.</td>
@@ -1882,7 +1878,7 @@
           <td class="muted">None</td>
         </tr>
         
-        <tr data-severity="info" data-category="js-rendering" data-search="info https://simprosys.com/privacy-policy a significant number of internal links only appear after javascript runs. similar internal link count before and after javascript 16 raw vs 31 rendered javascript rendering">
+        <tr data-severity="info" data-category="other" data-search="info https://simprosys.com/privacy-policy a significant number of internal links only appear after javascript runs. similar internal link count before and after javascript 16 raw vs 31 rendered other">
           <td><span class="severity-badge" style="--badge-color: #7239ea">ℹ Info</span></td>
           <td><a href="https://simprosys.com/privacy-policy" target="_blank" rel="noopener">https://simprosys.com/privacy-policy</a></td>
           <td>A significant number of internal links only appear after JavaScript runs.</td>
@@ -1922,7 +1918,7 @@
           <td class="muted">None</td>
         </tr>
         
-        <tr data-severity="info" data-category="js-rendering" data-search="info https://simprosys.com/product-feed-app-for-shopify a significant number of internal links only appear after javascript runs. similar internal link count before and after javascript 15 raw vs 40 rendered javascript rendering">
+        <tr data-severity="info" data-category="other" data-search="info https://simprosys.com/product-feed-app-for-shopify a significant number of internal links only appear after javascript runs. similar internal link count before and after javascript 15 raw vs 40 rendered other">
           <td><span class="severity-badge" style="--badge-color: #7239ea">ℹ Info</span></td>
           <td><a href="https://simprosys.com/product-feed-app-for-shopify" target="_blank" rel="noopener">https://simprosys.com/product-feed-app-for-shopify</a></td>
           <td>A significant number of internal links only appear after JavaScript runs.</td>
@@ -1978,7 +1974,7 @@
           <td class="muted">None</td>
         </tr>
         
-        <tr data-severity="info" data-category="js-rendering" data-search="info https://simprosys.com/product-feed-for-woocommerce a significant number of internal links only appear after javascript runs. similar internal link count before and after javascript 15 raw vs 40 rendered javascript rendering">
+        <tr data-severity="info" data-category="other" data-search="info https://simprosys.com/product-feed-for-woocommerce a significant number of internal links only appear after javascript runs. similar internal link count before and after javascript 15 raw vs 40 rendered other">
           <td><span class="severity-badge" style="--badge-color: #7239ea">ℹ Info</span></td>
           <td><a href="https://simprosys.com/product-feed-for-woocommerce" target="_blank" rel="noopener">https://simprosys.com/product-feed-for-woocommerce</a></td>
           <td>A significant number of internal links only appear after JavaScript runs.</td>
@@ -2010,7 +2006,7 @@
           <td class="muted">None</td>
         </tr>
         
-        <tr data-severity="info" data-category="js-rendering" data-search="info https://simprosys.com/register-interest a significant number of internal links only appear after javascript runs. similar internal link count before and after javascript 15 raw vs 30 rendered javascript rendering">
+        <tr data-severity="info" data-category="other" data-search="info https://simprosys.com/register-interest a significant number of internal links only appear after javascript runs. similar internal link count before and after javascript 15 raw vs 30 rendered other">
           <td><span class="severity-badge" style="--badge-color: #7239ea">ℹ Info</span></td>
           <td><a href="https://simprosys.com/register-interest" target="_blank" rel="noopener">https://simprosys.com/register-interest</a></td>
           <td>A significant number of internal links only appear after JavaScript runs.</td>
@@ -2050,7 +2046,7 @@
           <td class="muted">None</td>
         </tr>
         
-        <tr data-severity="info" data-category="js-rendering" data-search="info https://simprosys.com/simprosys-at-brightonseo-2026 a significant number of internal links only appear after javascript runs. similar internal link count before and after javascript 15 raw vs 30 rendered javascript rendering">
+        <tr data-severity="info" data-category="other" data-search="info https://simprosys.com/simprosys-at-brightonseo-2026 a significant number of internal links only appear after javascript runs. similar internal link count before and after javascript 15 raw vs 30 rendered other">
           <td><span class="severity-badge" style="--badge-color: #7239ea">ℹ Info</span></td>
           <td><a href="https://simprosys.com/simprosys-at-brightonseo-2026" target="_blank" rel="noopener">https://simprosys.com/simprosys-at-brightonseo-2026</a></td>
           <td>A significant number of internal links only appear after JavaScript runs.</td>
@@ -2090,7 +2086,7 @@
           <td class="muted">None</td>
         </tr>
         
-        <tr data-severity="info" data-category="js-rendering" data-search="info https://simprosys.com/simprosys-customer-match-lists a significant number of internal links only appear after javascript runs. similar internal link count before and after javascript 15 raw vs 30 rendered javascript rendering">
+        <tr data-severity="info" data-category="other" data-search="info https://simprosys.com/simprosys-customer-match-lists a significant number of internal links only appear after javascript runs. similar internal link count before and after javascript 15 raw vs 30 rendered other">
           <td><span class="severity-badge" style="--badge-color: #7239ea">ℹ Info</span></td>
           <td><a href="https://simprosys.com/simprosys-customer-match-lists" target="_blank" rel="noopener">https://simprosys.com/simprosys-customer-match-lists</a></td>
           <td>A significant number of internal links only appear after JavaScript runs.</td>
@@ -2130,7 +2126,7 @@
           <td class="muted">None</td>
         </tr>
         
-        <tr data-severity="info" data-category="js-rendering" data-search="info https://simprosys.com/simprosys-manufacturer-feed a significant number of internal links only appear after javascript runs. similar internal link count before and after javascript 15 raw vs 30 rendered javascript rendering">
+        <tr data-severity="info" data-category="other" data-search="info https://simprosys.com/simprosys-manufacturer-feed a significant number of internal links only appear after javascript runs. similar internal link count before and after javascript 15 raw vs 30 rendered other">
           <td><span class="severity-badge" style="--badge-color: #7239ea">ℹ Info</span></td>
           <td><a href="https://simprosys.com/simprosys-manufacturer-feed" target="_blank" rel="noopener">https://simprosys.com/simprosys-manufacturer-feed</a></td>
           <td>A significant number of internal links only appear after JavaScript runs.</td>
@@ -2194,7 +2190,7 @@
           <td class="muted">179 characters</td>
         </tr>
         
-        <tr data-severity="info" data-category="js-rendering" data-search="info https://simprosys.com/simprotips/5-google-shopping-tips-for-holiday-season a significant number of internal links only appear after javascript runs. similar internal link count before and after javascript 30 raw vs 46 rendered javascript rendering">
+        <tr data-severity="info" data-category="other" data-search="info https://simprosys.com/simprotips/5-google-shopping-tips-for-holiday-season a significant number of internal links only appear after javascript runs. similar internal link count before and after javascript 30 raw vs 46 rendered other">
           <td><span class="severity-badge" style="--badge-color: #7239ea">ℹ Info</span></td>
           <td><a href="https://simprosys.com/simprotips/5-google-shopping-tips-for-holiday-season" target="_blank" rel="noopener">https://simprosys.com/simprotips/5-google-shopping-tips-for-holiday-season</a></td>
           <td>A significant number of internal links only appear after JavaScript runs.</td>
@@ -2218,7 +2214,7 @@
           <td class="muted">62 characters</td>
         </tr>
         
-        <tr data-severity="info" data-category="js-rendering" data-search="info https://simprosys.com/simprotips/ad-assets-in-performance-max-campaigns a significant number of internal links only appear after javascript runs. similar internal link count before and after javascript 30 raw vs 46 rendered javascript rendering">
+        <tr data-severity="info" data-category="other" data-search="info https://simprosys.com/simprotips/ad-assets-in-performance-max-campaigns a significant number of internal links only appear after javascript runs. similar internal link count before and after javascript 30 raw vs 46 rendered other">
           <td><span class="severity-badge" style="--badge-color: #7239ea">ℹ Info</span></td>
           <td><a href="https://simprosys.com/simprotips/ad-assets-in-performance-max-campaigns" target="_blank" rel="noopener">https://simprosys.com/simprotips/ad-assets-in-performance-max-campaigns</a></td>
           <td>A significant number of internal links only appear after JavaScript runs.</td>
@@ -2410,7 +2406,7 @@
           <td class="muted">167 characters</td>
         </tr>
         
-        <tr data-severity="info" data-category="js-rendering" data-search="info https://simprosys.com/simprotips/getting-started-performance-max-campaigns a significant number of internal links only appear after javascript runs. similar internal link count before and after javascript 30 raw vs 47 rendered javascript rendering">
+        <tr data-severity="info" data-category="other" data-search="info https://simprosys.com/simprotips/getting-started-performance-max-campaigns a significant number of internal links only appear after javascript runs. similar internal link count before and after javascript 30 raw vs 47 rendered other">
           <td><span class="severity-badge" style="--badge-color: #7239ea">ℹ Info</span></td>
           <td><a href="https://simprosys.com/simprotips/getting-started-performance-max-campaigns" target="_blank" rel="noopener">https://simprosys.com/simprotips/getting-started-performance-max-campaigns</a></td>
           <td>A significant number of internal links only appear after JavaScript runs.</td>
@@ -2554,7 +2550,7 @@
           <td class="muted">165 characters</td>
         </tr>
         
-        <tr data-severity="info" data-category="js-rendering" data-search="info https://simprosys.com/simprotips/google-merchant-center-errors-and-fixes a significant number of internal links only appear after javascript runs. similar internal link count before and after javascript 30 raw vs 47 rendered javascript rendering">
+        <tr data-severity="info" data-category="other" data-search="info https://simprosys.com/simprotips/google-merchant-center-errors-and-fixes a significant number of internal links only appear after javascript runs. similar internal link count before and after javascript 30 raw vs 47 rendered other">
           <td><span class="severity-badge" style="--badge-color: #7239ea">ℹ Info</span></td>
           <td><a href="https://simprosys.com/simprotips/google-merchant-center-errors-and-fixes" target="_blank" rel="noopener">https://simprosys.com/simprotips/google-merchant-center-errors-and-fixes</a></td>
           <td>A significant number of internal links only appear after JavaScript runs.</td>
@@ -2666,7 +2662,7 @@
           <td class="muted">101 characters</td>
         </tr>
         
-        <tr data-severity="info" data-category="js-rendering" data-search="info https://simprosys.com/simprotips/microsoft-feed-based-audience-campaigns-vs-performance-max-campaigns a significant number of internal links only appear after javascript runs. similar internal link count before and after javascript 30 raw vs 48 rendered javascript rendering">
+        <tr data-severity="info" data-category="other" data-search="info https://simprosys.com/simprotips/microsoft-feed-based-audience-campaigns-vs-performance-max-campaigns a significant number of internal links only appear after javascript runs. similar internal link count before and after javascript 30 raw vs 48 rendered other">
           <td><span class="severity-badge" style="--badge-color: #7239ea">ℹ Info</span></td>
           <td><a href="https://simprosys.com/simprotips/microsoft-feed-based-audience-campaigns-vs-performance-max-campaigns" target="_blank" rel="noopener">https://simprosys.com/simprotips/microsoft-feed-based-audience-campaigns-vs-performance-max-campaigns</a></td>
           <td>A significant number of internal links only appear after JavaScript runs.</td>
@@ -2690,7 +2686,7 @@
           <td class="muted">72 characters</td>
         </tr>
         
-        <tr data-severity="info" data-category="js-rendering" data-search="info https://simprosys.com/simprotips/optimise-your-product-feed-for-google-shopping-filters a significant number of internal links only appear after javascript runs. similar internal link count before and after javascript 30 raw vs 46 rendered javascript rendering">
+        <tr data-severity="info" data-category="other" data-search="info https://simprosys.com/simprotips/optimise-your-product-feed-for-google-shopping-filters a significant number of internal links only appear after javascript runs. similar internal link count before and after javascript 30 raw vs 46 rendered other">
           <td><span class="severity-badge" style="--badge-color: #7239ea">ℹ Info</span></td>
           <td><a href="https://simprosys.com/simprotips/optimise-your-product-feed-for-google-shopping-filters" target="_blank" rel="noopener">https://simprosys.com/simprotips/optimise-your-product-feed-for-google-shopping-filters</a></td>
           <td>A significant number of internal links only appear after JavaScript runs.</td>
@@ -2730,7 +2726,7 @@
           <td class="muted">183 characters</td>
         </tr>
         
-        <tr data-severity="info" data-category="js-rendering" data-search="info https://simprosys.com/simprotips/product-feed-optimisation-checklist a significant number of internal links only appear after javascript runs. similar internal link count before and after javascript 30 raw vs 46 rendered javascript rendering">
+        <tr data-severity="info" data-category="other" data-search="info https://simprosys.com/simprotips/product-feed-optimisation-checklist a significant number of internal links only appear after javascript runs. similar internal link count before and after javascript 30 raw vs 46 rendered other">
           <td><span class="severity-badge" style="--badge-color: #7239ea">ℹ Info</span></td>
           <td><a href="https://simprosys.com/simprotips/product-feed-optimisation-checklist" target="_blank" rel="noopener">https://simprosys.com/simprotips/product-feed-optimisation-checklist</a></td>
           <td>A significant number of internal links only appear after JavaScript runs.</td>
@@ -2834,7 +2830,7 @@
           <td class="muted">69 characters</td>
         </tr>
         
-        <tr data-severity="info" data-category="js-rendering" data-search="info https://simprosys.com/simprotips/wh-family-strategy-digital-marketing-where a significant number of internal links only appear after javascript runs. similar internal link count before and after javascript 30 raw vs 46 rendered javascript rendering">
+        <tr data-severity="info" data-category="other" data-search="info https://simprosys.com/simprotips/wh-family-strategy-digital-marketing-where a significant number of internal links only appear after javascript runs. similar internal link count before and after javascript 30 raw vs 46 rendered other">
           <td><span class="severity-badge" style="--badge-color: #7239ea">ℹ Info</span></td>
           <td><a href="https://simprosys.com/simprotips/wh-family-strategy-digital-marketing-where" target="_blank" rel="noopener">https://simprosys.com/simprotips/wh-family-strategy-digital-marketing-where</a></td>
           <td>A significant number of internal links only appear after JavaScript runs.</td>
@@ -3010,7 +3006,7 @@
           <td class="muted">None</td>
         </tr>
         
-        <tr data-severity="info" data-category="js-rendering" data-search="info https://simprosys.com/tech-expo-gujarat-retreat-2025 a significant number of internal links only appear after javascript runs. similar internal link count before and after javascript 16 raw vs 31 rendered javascript rendering">
+        <tr data-severity="info" data-category="other" data-search="info https://simprosys.com/tech-expo-gujarat-retreat-2025 a significant number of internal links only appear after javascript runs. similar internal link count before and after javascript 16 raw vs 31 rendered other">
           <td><span class="severity-badge" style="--badge-color: #7239ea">ℹ Info</span></td>
           <td><a href="https://simprosys.com/tech-expo-gujarat-retreat-2025" target="_blank" rel="noopener">https://simprosys.com/tech-expo-gujarat-retreat-2025</a></td>
           <td>A significant number of internal links only appear after JavaScript runs.</td>
@@ -3050,7 +3046,7 @@
           <td class="muted">None</td>
         </tr>
         
-        <tr data-severity="info" data-category="js-rendering" data-search="info https://simprosys.com/why-us a significant number of internal links only appear after javascript runs. similar internal link count before and after javascript 15 raw vs 30 rendered javascript rendering">
+        <tr data-severity="info" data-category="other" data-search="info https://simprosys.com/why-us a significant number of internal links only appear after javascript runs. similar internal link count before and after javascript 15 raw vs 30 rendered other">
           <td><span class="severity-badge" style="--badge-color: #7239ea">ℹ Info</span></td>
           <td><a href="https://simprosys.com/why-us" target="_blank" rel="noopener">https://simprosys.com/why-us</a></td>
           <td>A significant number of internal links only appear after JavaScript runs.</td>
@@ -3090,7 +3086,7 @@
           <td class="muted">None</td>
         </tr>
         
-        <tr data-severity="info" data-category="js-rendering" data-search="info https://simprosys.com/work-at-simprosys a significant number of internal links only appear after javascript runs. similar internal link count before and after javascript 15 raw vs 30 rendered javascript rendering">
+        <tr data-severity="info" data-category="other" data-search="info https://simprosys.com/work-at-simprosys a significant number of internal links only appear after javascript runs. similar internal link count before and after javascript 15 raw vs 30 rendered other">
           <td><span class="severity-badge" style="--badge-color: #7239ea">ℹ Info</span></td>
           <td><a href="https://simprosys.com/work-at-simprosys" target="_blank" rel="noopener">https://simprosys.com/work-at-simprosys</a></td>
           <td>A significant number of internal links only appear after JavaScript runs.</td>

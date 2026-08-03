@@ -64,10 +64,7 @@
     padding: 22px 24px; font-size: 1.05rem; font-weight: 700; color: #ffffff;
     display: flex; align-items: center; gap: 10px;
   }
-  .brand-badge {
-    width: 32px; height: 32px; border-radius: 8px; background: var(--mx-primary);
-    display: flex; align-items: center; justify-content: center; font-weight: 700; color: #fff; font-size: 0.9rem;
-  }
+  .brand-logo { height: 34px; width: auto; display: block; }
   .sidebar-nav { padding: 8px 12px; display: flex; flex-direction: column; gap: 2px; flex: 1; }
   .sidebar-link {
     display: flex; align-items: center; gap: 12px; padding: 11px 14px; border-radius: 8px;
@@ -197,8 +194,7 @@
   
     <aside class="sidebar">
       <div class="sidebar-brand">
-        <span class="brand-badge">S</span>
-        <span>Simprosys SEO</span>
+        <img class="brand-logo" src="assets/logo.png" alt="Simprosys">
       </div>
       <nav class="sidebar-nav">
         <a class="sidebar-link" href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11.5 12 4l8 7.5"/><path d="M6 10v9a1 1 0 0 0 1 1h4v-6h2v6h4a1 1 0 0 0 1-1v-9"/></svg><span>Dashboard</span></a>
