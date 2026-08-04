@@ -93,7 +93,9 @@ Rahul's own idea, closest in spirit to the Content Calendar phase but distinct f
 
 Key constraint that shaped the build: **no budget for a paid API/tools plan**. Ruled out a standalone script calling the Anthropic API directly (real per-call billing) in favor of building each agent as a **Claude Code skill**, run interactively — no separate API key, rides on existing Claude Code access, and is naturally human-in-the-loop (Rahul triggers each step and watches it happen) rather than unattended automation like the audit cron.
 
-**Outliner Agent built 2026-08-04** — see `PROJECT_REPORT.md` §12, `content_agent/`, `.claude/skills/blog-outline/SKILL.md`. Writer and QA Checker not started. Rahul's own framing for how this stays accurate without paid research tools: the brief (from Outliner) + shared example blogs + the QA Checker's score-out-of-10 gate together do the job that expensive live-web research would otherwise do — consistency comes from those three things, not from which door reaches Claude.
+**Outliner Agent built 2026-08-04** — see `PROJECT_REPORT.md` §12, `content_agent/`, `.claude/skills/blog-outline/SKILL.md`. Rahul's own framing for how this stays accurate without paid research tools: the brief (from Outliner) + shared example blogs + the QA Checker's score-out-of-10 gate together do the job that expensive live-web research would otherwise do — consistency comes from those three things, not from which door reaches Claude.
+
+**Writer Agent built same day, 2026-08-04** — `/blog-write` (`.claude/skills/blog-write/SKILL.md`), writes prose section-by-section from a saved brief, real word counts computed from the text itself (never trusted from the model). Two explicit decisions Rahul made when asked rather than defaulted: **PDF-only export** (not Markdown, despite the recommendation to make editing easier — matches the brief's existing pattern), and **overwrite-only, no draft version history** (simpler for now; add versioning later only if actually needed). QA Checker still not started — that's the next piece.
 
 ## 5. Open questions / not yet decided
 

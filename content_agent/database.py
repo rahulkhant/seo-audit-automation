@@ -11,17 +11,21 @@ one database for the whole platform -- but owns its own table, kept
 separate from the audit's runs/pages/findings tables so the two modules
 stay independently replaceable, per the project's modular-design principle.
 
-The one table (for now)
-------------------------
+The tables
+----------
 "content_briefs" -- one row per outline produced by the Outliner Agent.
 The full section-by-section breakdown (headings, word budgets, points to
 cover, keyword mapping) is stored as JSON in one column, the same pattern
 Agent 2 already uses for nested audit data (images, links, etc.) that
 doesn't fit neatly into flat columns.
 
-"status" exists now so the Writer and QA Checker agents (not built yet)
-have somewhere to record progress against the same row later, instead of
-needing a schema change when they arrive.
+"content_drafts" -- one row per brief's written draft (Writer Agent).
+Overwrite-only by design (per Rahul, 2026-08-04): brief_id is UNIQUE, so
+saving a new draft for the same brief replaces the old one rather than
+keeping version history -- simpler for now, revisit only if that turns
+out to actually be needed. "status" on content_briefs moves to "drafted"
+once a draft exists, so the Content page can show progress without a
+second lookup.
 """
 
 import json
@@ -47,9 +51,21 @@ CREATE TABLE IF NOT EXISTS content_briefs (
 
     sections_json TEXT NOT NULL,
 
-    -- "outlined" is the only stage that exists today. "drafted" and
-    -- "qa_reviewed" are reserved for the Writer and QA Checker agents.
+    -- "qa_reviewed" is reserved for the QA Checker agent, not built yet.
     status TEXT NOT NULL DEFAULT 'outlined'
+)
+"""
+
+CREATE_CONTENT_DRAFTS_TABLE_SQL = """
+CREATE TABLE IF NOT EXISTS content_drafts (
+    draft_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    brief_id INTEGER NOT NULL UNIQUE REFERENCES content_briefs(brief_id),
+    created_at TEXT NOT NULL,
+
+    -- [{"heading": ..., "level": ..., "content": "...", "word_count": N}, ...]
+    -- word_count is a plain len(content.split()) count, computed once at
+    -- save time -- deterministic, not the model's own claim about itself.
+    sections_json TEXT NOT NULL
 )
 """
 
@@ -61,6 +77,7 @@ def get_connection(db_path=None):
     database file."""
     connection = _get_audit_connection(db_path) if db_path else _get_audit_connection()
     connection.execute(CREATE_CONTENT_BRIEFS_TABLE_SQL)
+    connection.execute(CREATE_CONTENT_DRAFTS_TABLE_SQL)
     connection.commit()
     return connection
 
@@ -128,3 +145,77 @@ def load_all_briefs(connection):
         brief["sections"] = json.loads(brief["sections_json"])
         briefs.append(brief)
     return briefs
+
+
+def load_brief(connection, brief_id):
+    """One brief by id, or None -- used by the Writer Agent to load the
+    spec it's writing from."""
+    row = connection.execute(
+        "SELECT * FROM content_briefs WHERE brief_id = ?", (brief_id,)
+    ).fetchone()
+    if row is None:
+        return None
+    brief = dict(row)
+    brief["secondary_keywords"] = json.loads(brief["secondary_keywords_json"] or "[]")
+    brief["sections"] = json.loads(brief["sections_json"])
+    return brief
+
+
+def save_draft(connection, brief_id, sections):
+    """
+    Saves (or overwrites -- see module docstring) the draft for one brief.
+    `sections` is a list of {"heading", "level", "content", "word_count"}
+    dicts, one per section in the brief's own order. Also flips the
+    brief's status to "drafted".
+
+    Returns the draft_id.
+    """
+    created_at = datetime.now(timezone.utc).isoformat()
+
+    connection.execute(
+        """
+        INSERT INTO content_drafts (brief_id, created_at, sections_json)
+        VALUES (?, ?, ?)
+        ON CONFLICT(brief_id) DO UPDATE SET
+            created_at = excluded.created_at,
+            sections_json = excluded.sections_json
+        """,
+        (brief_id, created_at, json.dumps(sections)),
+    )
+    connection.execute(
+        "UPDATE content_briefs SET status = 'drafted' WHERE brief_id = ?", (brief_id,)
+    )
+    connection.commit()
+
+    # cursor.lastrowid is not reliable here: on the ON CONFLICT DO UPDATE
+    # path SQLite doesn't update last_insert_rowid(), so it could silently
+    # return a stale id from an unrelated earlier insert on this same
+    # connection. brief_id is UNIQUE, so just look the row up directly.
+    row = connection.execute(
+        "SELECT draft_id FROM content_drafts WHERE brief_id = ?", (brief_id,)
+    ).fetchone()
+    return row["draft_id"]
+
+
+def load_draft_for_brief(connection, brief_id):
+    """The one draft for a brief, or None if it hasn't been written yet."""
+    row = connection.execute(
+        "SELECT * FROM content_drafts WHERE brief_id = ?", (brief_id,)
+    ).fetchone()
+    if row is None:
+        return None
+    draft = dict(row)
+    draft["sections"] = json.loads(draft["sections_json"])
+    return draft
+
+
+def load_all_drafts_by_brief(connection):
+    """{brief_id: draft} for every draft that exists -- lets the dashboard
+    look up a brief's draft (if any) without a query per row."""
+    rows = connection.execute("SELECT * FROM content_drafts").fetchall()
+    drafts = {}
+    for row in rows:
+        draft = dict(row)
+        draft["sections"] = json.loads(draft["sections_json"])
+        drafts[draft["brief_id"]] = draft
+    return drafts

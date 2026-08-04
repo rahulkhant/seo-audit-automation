@@ -49,7 +49,9 @@ seo-audit-automation/
 │   ├── index.html                   # Main Dashboard -- Metronic-styled (served by GitHub Pages)
 │   ├── history.html                 # Report History -- one line per past run, PDF download only
 │   ├── reporting.html                # Reporting Hub -- trend charts + category-by-run table across all runs
-│   ├── content.html                  # Content Outlines -- every brief the Outliner Agent has produced
+│   ├── content.html                  # Content Outlines -- every brief (+ draft, once written) the Content Agent has produced
+│   ├── content_briefs/brief-XXXX.pdf  # One outline PDF per brief (structured spec)
+│   ├── content_drafts/draft-XXXX.pdf  # One draft PDF per written draft (reads like an article)
 │   └── reports/
 │       ├── run-XXXX.pdf              # Permanent PDF archive, one file per run
 │       └── reporting-hub-latest.pdf  # Trend summary PDF -- overwritten every run, not archived per-run
@@ -70,18 +72,20 @@ seo-audit-automation/
 │   └── build_reporting_hub.py       # Builds docs/reporting.html + reporting-hub-latest.pdf (trends across all runs)
 ├── notifications/
 │   └── send_digest_email.py         # Sends the summary email via Gmail SMTP
-├── content_agent/                   # Content Agent (Outliner built; Writer + QA Checker planned) -- see §12
-│   ├── database.py                  # content_briefs table + save/load, shares the same DB file as agent2_storage
+├── content_agent/                   # Content Agent (Outliner + Writer built; QA Checker planned) -- see §12
+│   ├── database.py                  # content_briefs + content_drafts tables + save/load, shares the audit's DB file
 │   ├── word_budget.py               # Deterministic per-section word-count allocator
 │   ├── save_brief.py                # CLI: persists a finished brief (called by the blog-outline skill)
-│   ├── build_content_page.py        # Builds docs/content.html
+│   ├── save_draft.py                # CLI: persists a finished draft, computes real word counts (blog-write skill)
+│   ├── build_content_page.py        # Builds docs/content.html + per-brief/per-draft PDFs
 │   └── example_blogs/               # Reference posts for style/structure (empty until Rahul adds some)
 ├── .github/
 │   └── workflows/seo-audit.yml      # Weekly schedule (Mon 06:00 UTC) + manual trigger
 └── .claude/
     └── skills/
         ├── seo-audit/SKILL.md       # Claude Code custom skill: type /seo-audit to trigger a run
-        └── blog-outline/SKILL.md    # Claude Code custom skill: type /blog-outline to run the Outliner Agent
+        ├── blog-outline/SKILL.md    # Claude Code custom skill: type /blog-outline to run the Outliner Agent
+        └── blog-write/SKILL.md      # Claude Code custom skill: type /blog-write to run the Writer Agent
 ```
 
 ## 4. The site being audited
@@ -215,9 +219,9 @@ These were identified early on as needing subjective/semantic judgment rather th
 - Current priority (per Rahul, 2026-07-28, still true): validate accuracy/reliability of the existing mechanical rule set over real weekly runs before adding the Claude API phase or the login-gated dashboard redesign. The `/job-description`, `/simprotips/search`, and `sitemap.xml` exclusions (§6) are part of this same accuracy-hardening effort, not new scope.
 - **Broader context (2026-07-30)**: Rahul's long-term goal is a full internal SEO automation platform (technical/on-page audits, keyword research, competitor analysis, SWOT, content calendar, reporting, etc.), built module-by-module with the same rule-based-first philosophy, eventually usable by multiple people at Simprosys. See `roadmap_discussion.md` for the (not-yet-finalized) phased plan.
 
-## 12. Content Agent module (Outliner built, 2026-08-04)
+## 12. Content Agent module (Outliner + Writer built, 2026-08-04)
 
-First concrete build from the "rule-based script → dashboard" platform priority list (`roadmap_discussion.md` §5b) — a separate module from the SEO audit pipeline (agents 1-4), not a new stage in `main.py`. Planned as three agents: **Outliner** (built), **Writer** (not built), **QA Checker** (not built).
+First concrete build from the "rule-based script → dashboard" platform priority list (`roadmap_discussion.md` §5b) — a separate module from the SEO audit pipeline (agents 1-4), not a new stage in `main.py`. Planned as three agents: **Outliner** (built), **Writer** (built), **QA Checker** (not built).
 
 **Why this isn't a fully automated pipeline**: generating blog prose genuinely needs an LLM — there's no rule-based way to write coherent content, the same honest carve-out already made for a future SWOT module. Rahul has no budget for a separate paid API/tools plan, so rather than a standalone script calling the Anthropic API directly (real per-call billing, needs its own API key), this is built as a **Claude Code skill** — `/blog-outline` — run interactively in a Claude Code session. The model doing the outlining *is* the assistant running the skill; there's no second API call happening. This also means it's inherently human-in-the-loop by design (Rahul triggers each run and sees the outline form in the chat), not unattended automation like the weekly audit cron.
 
@@ -229,11 +233,14 @@ First concrete build from the "rule-based script → dashboard" platform priorit
 
 **Storage**: `content_agent/database.py` adds one table, `content_briefs`, to the *same* SQLite file the SEO audit already uses (via `agent2_storage.get_connection()`) — one database for the whole platform, but each module owns its own tables, per the modular-design principle. `status` exists now (`outlined` is the only value so far) so the future Writer/QA Checker steps have somewhere to record progress against the same row without a schema change later.
 
-**Dashboard**: a fourth sidebar page, `docs/content.html` (`content_agent/build_content_page.py`), listing every outline as an expandable card (plain HTML `<details>`/`<summary>`, no JavaScript) showing the full section-by-section brief. Since this shares the sidebar shell with the audit pages, the skill rebuilds all four HTML pages (`index.html`, `history.html`, `reporting.html`, `content.html`) every run, not just its own.
+**Dashboard**: a fourth sidebar page, `docs/content.html` (`content_agent/build_content_page.py`), listing every outline as a compact aligned row; clicking one opens the full section-by-section brief in a modal (native `<dialog>`, explicit `position:fixed` + `translate` centering, own internal scrollbar) rather than expanding inline — redesigned 2026-08-04 after the first real outline showed inline expansion pushing the whole page down with multiple outlines open. Since this shares the sidebar shell with the audit pages, both skills rebuild all four HTML pages (`index.html`, `history.html`, `reporting.html`, `content.html`) every run, not just their own.
 
-**Workflow, per Rahul's explicit instruction**: `/blog-outline` commits and pushes automatically at the end — no separate manual step, matching how the audit's GitHub Actions workflow already auto-commits every run. Full flow: collect inputs conversationally → validate → load `content_agent/example_blogs/` for style reference if any exist → compute word budgets → write the brief → save via `content_agent.save_brief` → rebuild all four dashboard pages → `git add`/`commit`/`push`.
+**Workflow, per Rahul's explicit instruction**: both `/blog-outline` and `/blog-write` commit and push automatically at the end — no separate manual step, matching how the audit's GitHub Actions workflow already auto-commits every run.
+- **Outliner** (`/blog-outline`): collect inputs conversationally → validate → load `content_agent/example_blogs/` for style reference if any exist → compute word budgets (`content_agent/word_budget.py`, deterministic) → write the brief → save via `content_agent.save_brief` → rebuild all four dashboard pages → `git add`/`commit`/`push`.
+- **Writer** (`/blog-write`, added 2026-08-04): pick a not-yet-drafted brief → load it in full → write actual prose section by section (the one step that's genuinely the model's judgment, not rule-based — matches the brief's `points_to_cover`/keywords/tone, shown in chat as it's produced) → save via `content_agent.save_draft`, which computes real word counts from the text itself (`len(content.split())`, never the model's own claimed count) → rebuild dashboard → commit/push. **Overwrite-only, no version history** (Rahul's explicit call, 2026-08-04): `content_drafts.brief_id` is `UNIQUE`, so writing a new draft for the same brief replaces the old one via `INSERT ... ON CONFLICT(brief_id) DO UPDATE`, simpler for now, revisit only if actually needed.
+- Each brief gets its own **Outline PDF** (`docs/content_briefs/brief-XXXX.pdf`, structured tables — a spec document) and, once drafted, its own separate **Draft PDF** (`docs/content_drafts/draft-XXXX.pdf`, real headings/paragraphs — reads like an actual article, since the point is handing a finished piece to a human editor, not a data sheet). Both plain HTML/CSS, no charts/CDN dependency, same self-contained-PDF philosophy as the Reporting Hub's PDF.
 
-**Not yet built**: the Writer Agent (drafts prose from a saved brief) and the QA Checker Agent (rates a draft out of 10 — planned as a deterministic half: word count, keyword placement, heading structure, a readability formula, all zero-cost Python; plus a judgment half: does it read naturally, does it match `example_blogs/`'s tone — combined into an itemized score, not a black-box number).
+**Not yet built**: the QA Checker Agent (rates a draft out of 10 — planned as a deterministic half: word count, keyword placement, heading structure, a readability formula, all zero-cost Python; plus a judgment half: does it read naturally, does it match `example_blogs/`'s tone — combined into an itemized score, not a black-box number).
 
 ---
 

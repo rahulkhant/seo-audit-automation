@@ -20,10 +20,18 @@ Also generates one PDF per brief (docs/content_briefs/brief-XXXX.pdf),
 plain tables/lists like the SEO audit's other PDF exports, so a finished
 outline can be handed to a writer without needing dashboard access.
 
+Extended 2026-08-04 for the Writer Agent: if a brief has a saved draft
+(content_agent.save_draft), each section shows its written text alongside
+the original plan, and a second PDF is generated per draft
+(docs/content_drafts/draft-XXXX.pdf) -- unlike the brief's PDF (a
+structured spec, rendered as tables), the draft's PDF reads like an actual
+article, since the point is handing a finished piece to a human editor,
+not a data sheet.
+
 This file does not produce or judge any content itself -- it only reads
-what the Outliner Agent already saved (via content_agent.save_brief) and
-turns it into something readable, the same division of labor as Agent 4
-for the audit pipeline.
+what the Outliner/Writer Agents already saved (via content_agent.save_brief
+/ content_agent.save_draft) and turns it into something readable, the same
+division of labor as Agent 4 for the audit pipeline.
 """
 
 import html
@@ -32,9 +40,10 @@ from pathlib import Path
 
 from playwright.sync_api import sync_playwright
 
-from content_agent.database import get_connection, load_all_briefs
+from content_agent.database import get_connection, load_all_briefs, load_all_drafts_by_brief
 from agent4_dashboard.build_dashboard_metronic import (
     ICON_DOWNLOAD,
+    MX_RESOLVED_COLOR,
     _render_sidebar_nav,
     _render_topbar,
     _shared_head,
@@ -43,6 +52,7 @@ from agent4_dashboard.build_dashboard_metronic import (
 DOCS_DIR = Path(__file__).resolve().parent.parent / "docs"
 CONTENT_FILE_PATH = DOCS_DIR / "content.html"
 BRIEFS_PDF_DIR = DOCS_DIR / "content_briefs"
+DRAFTS_PDF_DIR = DOCS_DIR / "content_drafts"
 
 _CONTENT_PAGE_STYLE = """
   .brief-list { display: flex; flex-direction: column; gap: 10px; }
@@ -107,6 +117,10 @@ _CONTENT_PAGE_STYLE = """
   .section-budget { color: var(--mx-primary); font-size: 0.82rem; font-weight: 600; margin-left: auto; }
   .section-points { font-size: 0.87rem; margin-top: 6px; }
   .section-keywords { color: var(--mx-text-gray-600); font-size: 0.8rem; margin-top: 6px; }
+  .section-actual { color: __RESOLVED_COLOR__; font-size: 0.8rem; font-weight: 600; }
+  .section-draft { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--mx-border); }
+  .section-draft-label { color: var(--mx-text-gray-500); font-size: 0.7rem; text-transform: uppercase; font-weight: 600; letter-spacing: 0.03em; margin-bottom: 4px; }
+  .section-draft-text { font-size: 0.88rem; white-space: pre-wrap; }
 """
 
 _MODAL_SCRIPT = """
@@ -125,8 +139,12 @@ document.querySelectorAll(".brief-modal-close").forEach(function (button) {
 """
 
 
-def _pdf_filename(brief_id):
+def _brief_pdf_filename(brief_id):
     return f"brief-{brief_id:04d}.pdf"
+
+
+def _draft_pdf_filename(brief_id):
+    return f"draft-{brief_id:04d}.pdf"
 
 
 def _format_created_at(iso_timestamp):
@@ -155,7 +173,7 @@ def _brief_fields(brief):
 
 # --- Live page ---
 
-def _render_section_item(section):
+def _render_section_item(section, draft_section=None):
     label = section["heading"] or section["level"].capitalize()
     level_tag = "" if section["level"] in ("intro", "conclusion") else section["level"]
     keywords = section.get("keywords") or []
@@ -169,22 +187,43 @@ def _render_section_item(section):
         if section.get("notes")
         else ""
     )
+    actual_words_html = (
+        f' &middot; <span class="section-actual">{draft_section["word_count"]} written</span>'
+        if draft_section
+        else ""
+    )
+    draft_html = (
+        f"""
+        <div class="section-draft">
+          <div class="section-draft-label">Draft</div>
+          <div class="section-draft-text">{html.escape(draft_section["content"])}</div>
+        </div>
+        """
+        if draft_section
+        else ""
+    )
     return f"""
     <div class="section-item">
       <div class="section-item-header">
         {f'<span class="section-level">{html.escape(level_tag)}</span>' if level_tag else ""}
         <span class="section-heading">{html.escape(label)}</span>
-        <span class="section-budget">{section['word_budget']} words</span>
+        <span class="section-budget">{section['word_budget']} words{actual_words_html}</span>
       </div>
       <div class="section-points">{html.escape(section.get("points_to_cover") or "")}</div>
       {keywords_html}
       {notes_html}
+      {draft_html}
     </div>
     """
 
 
-def _render_brief_row(brief):
+def _render_brief_row(brief, draft):
     modal_id = f"brief-modal-{brief['brief_id']}"
+    draft_pdf_button = (
+        f'<a class="btn btn-light" data-no-row-click href="content_drafts/{_draft_pdf_filename(brief["brief_id"])}">{ICON_DOWNLOAD}<span>Draft</span></a>'
+        if draft
+        else ""
+    )
     return f"""
     <div class="brief-row" data-modal-target="{modal_id}">
       <div class="brief-row-main">
@@ -193,19 +232,29 @@ def _render_brief_row(brief):
       </div>
       <div class="brief-row-right">
         <span class="status-badge">{html.escape(brief["status"])}</span>
-        <a class="btn btn-light" data-no-row-click href="content_briefs/{_pdf_filename(brief['brief_id'])}">{ICON_DOWNLOAD}<span>PDF</span></a>
+        <a class="btn btn-light" data-no-row-click href="content_briefs/{_brief_pdf_filename(brief['brief_id'])}">{ICON_DOWNLOAD}<span>Outline</span></a>
+        {draft_pdf_button}
       </div>
     </div>
     """
 
 
-def _render_brief_modal(brief):
+def _render_brief_modal(brief, draft):
     modal_id = f"brief-modal-{brief['brief_id']}"
     fields_html = "".join(
         f"<dt>{html.escape(label)}</dt><dd>{html.escape(str(value))}</dd>"
         for label, value in _brief_fields(brief)
     )
-    sections_html = "".join(_render_section_item(section) for section in brief["sections"])
+    draft_sections_by_index = draft["sections"] if draft else [None] * len(brief["sections"])
+    sections_html = "".join(
+        _render_section_item(section, draft_section)
+        for section, draft_section in zip(brief["sections"], draft_sections_by_index)
+    )
+    draft_pdf_button = (
+        f'<a class="btn btn-light" href="content_drafts/{_draft_pdf_filename(brief["brief_id"])}">{ICON_DOWNLOAD}<span>Download Draft PDF</span></a>'
+        if draft
+        else ""
+    )
 
     return f"""
     <dialog class="brief-modal" id="{modal_id}">
@@ -215,7 +264,8 @@ def _render_brief_modal(brief):
           <div class="brief-modal-meta">{_brief_meta_line(brief)}</div>
         </div>
         <div class="brief-modal-actions">
-          <a class="btn btn-light" href="content_briefs/{_pdf_filename(brief['brief_id'])}">{ICON_DOWNLOAD}<span>Download PDF</span></a>
+          <a class="btn btn-light" href="content_briefs/{_brief_pdf_filename(brief['brief_id'])}">{ICON_DOWNLOAD}<span>Download Outline PDF</span></a>
+          {draft_pdf_button}
           <button class="btn-icon-close brief-modal-close" type="button" aria-label="Close">&#10005;</button>
         </div>
       </div>
@@ -227,11 +277,11 @@ def _render_brief_modal(brief):
     """
 
 
-def generate_content_page_html(briefs):
+def generate_content_page_html(briefs, drafts_by_brief):
     subtitle_html = f"{len(briefs)} outline(s) created"
     if briefs:
-        rows_html = "".join(_render_brief_row(b) for b in briefs)
-        modals_html = "".join(_render_brief_modal(b) for b in briefs)
+        rows_html = "".join(_render_brief_row(b, drafts_by_brief.get(b["brief_id"])) for b in briefs)
+        modals_html = "".join(_render_brief_modal(b, drafts_by_brief.get(b["brief_id"])) for b in briefs)
         body = f'<div class="brief-list">{rows_html}</div>{modals_html}'
     else:
         body = '<div class="empty-state">No content outlines yet -- run the /blog-outline skill to create one.</div>'
@@ -240,7 +290,7 @@ def generate_content_page_html(briefs):
 <html lang="en">
 <head>
 {_shared_head("Content Outlines")}
-<style>{_CONTENT_PAGE_STYLE}</style>
+<style>{_CONTENT_PAGE_STYLE.replace("__RESOLVED_COLOR__", MX_RESOLVED_COLOR)}</style>
 </head>
 <body>
 <div class="app">
@@ -325,7 +375,83 @@ def _generate_brief_print_html(brief):
 def _save_brief_pdf(brief, briefs_dir=BRIEFS_PDF_DIR):
     print_html = _generate_brief_print_html(brief)
     briefs_dir.mkdir(parents=True, exist_ok=True)
-    pdf_path = briefs_dir / _pdf_filename(brief["brief_id"])
+    pdf_path = briefs_dir / _brief_pdf_filename(brief["brief_id"])
+
+    with sync_playwright() as playwright:
+        browser = playwright.chromium.launch(headless=True)
+        page = browser.new_page()
+        page.set_content(print_html)
+        page.pdf(
+            path=str(pdf_path),
+            format="A4",
+            print_background=True,
+            margin={"top": "20px", "bottom": "20px", "left": "20px", "right": "20px"},
+        )
+        browser.close()
+
+    return pdf_path
+
+
+# --- Per-draft PDF: unlike the brief's PDF (a structured spec, rendered as
+# tables), this one is meant to read like an actual article -- real
+# headings, real paragraphs -- since the whole point is handing a finished
+# draft to a human editor/writer to read and mark up, not a data sheet. ---
+
+_DRAFT_HEADING_TAG = {"H2": "h2", "H3": "h3", "H4": "h4"}
+
+
+def _render_draft_section_print(section):
+    heading = section.get("heading")
+    heading_html = ""
+    if heading:
+        tag = _DRAFT_HEADING_TAG.get(section["level"], "h2")
+        heading_html = f"<{tag}>{html.escape(heading)}</{tag}>"
+    paragraphs_html = "".join(
+        f"<p>{html.escape(paragraph)}</p>"
+        for paragraph in section["content"].split("\n\n")
+        if paragraph.strip()
+    )
+    return f"{heading_html}{paragraphs_html}"
+
+
+def _generate_draft_print_html(brief, draft):
+    total_words = sum(section["word_count"] for section in draft["sections"])
+    body_html = "".join(_render_draft_section_print(section) for section in draft["sections"])
+
+    return f"""<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>{html.escape(brief["topic"])}</title>
+<style>
+  * {{ box-sizing: border-box; }}
+  body {{
+    margin: 0; background: #ffffff; color: #14140f; padding: 40px 56px; max-width: 720px;
+    font-family: Georgia, "Times New Roman", serif; line-height: 1.6; font-size: 0.98rem;
+  }}
+  h1 {{ font-family: system-ui, -apple-system, sans-serif; font-size: 1.7rem; margin-bottom: 6px; }}
+  header p {{ font-family: system-ui, -apple-system, sans-serif; color: #6b6a63; font-size: 0.85rem; margin-top: 0; margin-bottom: 32px; }}
+  h2 {{ font-family: system-ui, -apple-system, sans-serif; font-size: 1.25rem; margin: 32px 0 10px; }}
+  h3 {{ font-family: system-ui, -apple-system, sans-serif; font-size: 1.08rem; margin: 26px 0 8px; }}
+  h4 {{ font-family: system-ui, -apple-system, sans-serif; font-size: 0.98rem; margin: 22px 0 6px; }}
+  p {{ margin: 0 0 14px; }}
+</style>
+</head>
+<body>
+  <header>
+    <h1>{html.escape(brief["topic"])}</h1>
+    <p>{total_words} words &middot; draft generated {html.escape(_format_created_at(draft["created_at"]))}</p>
+  </header>
+  {body_html}
+</body>
+</html>
+"""
+
+
+def _save_draft_pdf(brief, draft, drafts_dir=DRAFTS_PDF_DIR):
+    print_html = _generate_draft_print_html(brief, draft)
+    drafts_dir.mkdir(parents=True, exist_ok=True)
+    pdf_path = drafts_dir / _draft_pdf_filename(brief["brief_id"])
 
     with sync_playwright() as playwright:
         browser = playwright.chromium.launch(headless=True)
@@ -347,11 +473,15 @@ def build_and_save_content_page():
     try:
         DOCS_DIR.mkdir(parents=True, exist_ok=True)
         briefs = load_all_briefs(connection)
+        drafts_by_brief = load_all_drafts_by_brief(connection)
 
         for brief in briefs:
             _save_brief_pdf(brief)
+            draft = drafts_by_brief.get(brief["brief_id"])
+            if draft:
+                _save_draft_pdf(brief, draft)
 
-        content_html = generate_content_page_html(briefs)
+        content_html = generate_content_page_html(briefs, drafts_by_brief)
         with open(CONTENT_FILE_PATH, "w", encoding="utf-8") as content_file:
             content_file.write(content_html)
 
