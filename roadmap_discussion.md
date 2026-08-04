@@ -87,6 +87,14 @@ Rahul confirmed the priority order among Phases 2-7 (previously left open, §5 a
 
 Explicitly excluded from this "rule-based, no new infra" bucket: **Content Calendar** (Phase 2, needs real multi-user writes → needs Phase 0) and **SWOT** (Phase 7, inherently judgment-based, not rule-based).
 
+## 5c. New module: Content Agent (2026-08-04) — not one of the original Phases 2-7
+
+Rahul's own idea, closest in spirit to the Content Calendar phase but distinct from it: a **Content Agent** to help produce blog posts, split into three agents — **Outliner, Writer, QA Checker** (rate a draft out of 10). First proposed as a full research-grounded pipeline (SERP scraping, paid search API); Rahul judged that too big/complex and scoped it down himself: he owns the research (topic, keywords, heading hierarchy, CTA) entirely, the agents only need to outline/write/score.
+
+Key constraint that shaped the build: **no budget for a paid API/tools plan**. Ruled out a standalone script calling the Anthropic API directly (real per-call billing) in favor of building each agent as a **Claude Code skill**, run interactively — no separate API key, rides on existing Claude Code access, and is naturally human-in-the-loop (Rahul triggers each step and watches it happen) rather than unattended automation like the audit cron.
+
+**Outliner Agent built 2026-08-04** — see `PROJECT_REPORT.md` §12, `content_agent/`, `.claude/skills/blog-outline/SKILL.md`. Writer and QA Checker not started. Rahul's own framing for how this stays accurate without paid research tools: the brief (from Outliner) + shared example blogs + the QA Checker's score-out-of-10 gate together do the job that expensive live-web research would otherwise do — consistency comes from those three things, not from which door reaches Claude.
+
 ## 5. Open questions / not yet decided
 
 - No priority order confirmed yet among Phases 2-7 (explicitly deferred by Rahul, 2026-07-30).
