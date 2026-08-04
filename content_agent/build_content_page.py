@@ -63,11 +63,23 @@ _CONTENT_PAGE_STYLE = """
   }
   .empty-state { color: var(--mx-text-gray-600); font-size: 0.9rem; padding: 40px 0; text-align: center; }
 
-  dialog.brief-modal {
+  /* Base rule intentionally does NOT set "display" -- the browser's own
+     "dialog:not([open]) { display: none; }" default has to stay in charge
+     while a dialog is closed. An earlier version set display:flex here
+     unconditionally, which -- being equal specificity and later in the
+     cascade -- overrode that default and left every dialog visible (and
+     intercepting clicks) even when closed. Everything below is scoped to
+     [open] specifically so closed dialogs stay properly hidden. */
+  dialog.brief-modal[open] {
+    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); margin: 0;
     width: min(720px, 92vw); max-height: 82vh; padding: 0; border: none; border-radius: 14px;
     background: var(--mx-card-bg); color: var(--mx-text-dark); display: flex; flex-direction: column;
   }
   dialog.brief-modal::backdrop { background: rgba(15, 15, 20, 0.55); }
+  /* Native <dialog> doesn't lock the page behind it from scrolling on its
+     own -- without this, the main content could still scroll under the
+     modal, which is exactly the "don't scroll the full screen" bug. */
+  body:has(dialog.brief-modal[open]) { overflow: hidden; }
   .brief-modal-header {
     display: flex; align-items: flex-start; justify-content: space-between; gap: 16px;
     padding: 20px 24px; border-bottom: 1px solid var(--mx-border); flex-shrink: 0;
