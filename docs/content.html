@@ -189,27 +189,49 @@
 </style>
 
 <style>
-  .brief-list { display: flex; flex-direction: column; gap: 16px; }
-  .brief-card { background: var(--mx-card-bg); border: 1px solid var(--mx-border); border-radius: 12px; overflow: hidden; }
-  .brief-summary {
-    list-style: none; cursor: pointer; padding: 18px 22px; display: flex; align-items: center;
-    justify-content: space-between; gap: 16px; flex-wrap: wrap;
+  .brief-list { display: flex; flex-direction: column; gap: 10px; }
+  .brief-row {
+    background: var(--mx-card-bg); border: 1px solid var(--mx-border); border-radius: 10px;
+    padding: 16px 20px; display: flex; align-items: center; justify-content: space-between;
+    gap: 16px; cursor: pointer;
   }
-  .brief-summary::-webkit-details-marker { display: none; }
-  .brief-summary-main { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
-  .brief-topic { font-weight: 700; font-size: 1rem; }
-  .brief-meta { color: var(--mx-text-gray-600); font-size: 0.85rem; }
-  .brief-summary-right { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+  .brief-row:hover { border-color: var(--mx-primary); }
+  .brief-row-main { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+  .brief-topic { font-weight: 700; font-size: 0.98rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .brief-meta { color: var(--mx-text-gray-600); font-size: 0.83rem; }
+  .brief-row-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
   .status-badge {
     display: inline-flex; align-items: center; padding: 5px 12px; border-radius: 999px;
     font-weight: 600; font-size: 0.78rem; color: var(--mx-primary);
     background-color: var(--mx-primary-light); white-space: nowrap; text-transform: capitalize;
   }
-  .brief-body { padding: 0 22px 22px; border-top: 1px solid var(--mx-border); }
-  .brief-field-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; margin: 18px 0; }
-  .brief-field-label { color: var(--mx-text-gray-500); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.03em; font-weight: 600; }
-  .brief-field-value { font-size: 0.9rem; margin-top: 3px; }
-  .section-list { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; }
+  .empty-state { color: var(--mx-text-gray-600); font-size: 0.9rem; padding: 40px 0; text-align: center; }
+
+  dialog.brief-modal {
+    width: min(720px, 92vw); max-height: 82vh; padding: 0; border: none; border-radius: 14px;
+    background: var(--mx-card-bg); color: var(--mx-text-dark); display: flex; flex-direction: column;
+  }
+  dialog.brief-modal::backdrop { background: rgba(15, 15, 20, 0.55); }
+  .brief-modal-header {
+    display: flex; align-items: flex-start; justify-content: space-between; gap: 16px;
+    padding: 20px 24px; border-bottom: 1px solid var(--mx-border); flex-shrink: 0;
+  }
+  .brief-modal-title { font-size: 1.05rem; font-weight: 700; }
+  .brief-modal-meta { color: var(--mx-text-gray-600); font-size: 0.85rem; margin-top: 4px; }
+  .brief-modal-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+  .btn-icon-close {
+    width: 34px; height: 34px; border-radius: 8px; border: 1px solid var(--mx-border); background: transparent;
+    color: var(--mx-text-gray-600); cursor: pointer; display: flex; align-items: center; justify-content: center;
+    font-family: inherit; font-size: 1rem; line-height: 1;
+  }
+  .btn-icon-close:hover { background: var(--mx-body-bg); }
+  .brief-modal-body { padding: 20px 24px 24px; overflow-y: auto; flex: 1 1 auto; min-height: 0; }
+
+  dl.brief-field-table { display: grid; grid-template-columns: 150px 1fr; row-gap: 10px; column-gap: 16px; margin: 0 0 22px; font-size: 0.88rem; }
+  dl.brief-field-table dt { color: var(--mx-text-gray-500); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.03em; font-weight: 600; padding-top: 2px; }
+  dl.brief-field-table dd { margin: 0; }
+
+  .section-list { display: flex; flex-direction: column; gap: 10px; }
   .section-item { border: 1px solid var(--mx-border); border-radius: 8px; padding: 12px 16px; }
   .section-item-header { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
   .section-heading { font-weight: 600; }
@@ -217,7 +239,6 @@
   .section-budget { color: var(--mx-primary); font-size: 0.82rem; font-weight: 600; margin-left: auto; }
   .section-points { font-size: 0.87rem; margin-top: 6px; }
   .section-keywords { color: var(--mx-text-gray-600); font-size: 0.8rem; margin-top: 6px; }
-  .empty-state { color: var(--mx-text-gray-600); font-size: 0.9rem; padding: 40px 0; text-align: center; }
 </style>
 </head>
 <body>
@@ -247,19 +268,30 @@
     
     <main class="content">
       <div class="brief-list">
-    <details class="brief-card">
-      <summary class="brief-summary">
-        <div class="brief-summary-main">
-          <div class="brief-topic">How to Create and Set Up a Google Merchant Center Account (2026)</div>
-          <div class="brief-meta">Blog (How-to guide) &middot; 3000 words target &middot; Aug 04, 2026, 10:40 AM UTC &middot; 3000 words allocated</div>
+    <div class="brief-row" data-modal-target="brief-modal-1">
+      <div class="brief-row-main">
+        <div class="brief-topic">How to Create and Set Up a Google Merchant Center Account (2026)</div>
+        <div class="brief-meta">Blog (How-to guide) &middot; 3000 words target (3000 allocated) &middot; Aug 04, 2026, 10:40 AM UTC</div>
+      </div>
+      <div class="brief-row-right">
+        <span class="status-badge">outlined</span>
+        <a class="btn btn-light" data-no-row-click href="content_briefs/brief-0001.pdf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11"/><path d="M7.5 11 12 15.5 16.5 11"/><path d="M5 18.5h14"/></svg><span>PDF</span></a>
+      </div>
+    </div>
+    </div>
+    <dialog class="brief-modal" id="brief-modal-1">
+      <div class="brief-modal-header">
+        <div>
+          <div class="brief-modal-title">How to Create and Set Up a Google Merchant Center Account (2026)</div>
+          <div class="brief-modal-meta">Blog (How-to guide) &middot; 3000 words target (3000 allocated) &middot; Aug 04, 2026, 10:40 AM UTC</div>
         </div>
-        <div class="brief-summary-right">
-          <span class="status-badge">outlined</span>
+        <div class="brief-modal-actions">
+          <a class="btn btn-light" href="content_briefs/brief-0001.pdf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11"/><path d="M7.5 11 12 15.5 16.5 11"/><path d="M5 18.5h14"/></svg><span>Download PDF</span></a>
+          <button class="btn-icon-close brief-modal-close" type="button" aria-label="Close">&#10005;</button>
         </div>
-      </summary>
-      <div class="brief-body">
-        <div class="brief-field-row"><div><div class="brief-field-label">Primary keyword</div><div class="brief-field-value">Google Merchant Center Account</div></div><div><div class="brief-field-label">Secondary keywords</div><div class="brief-field-value">how to create google merchant center account, google merchant center setup 2026, set up a google merchant center, google merchant account setup, merchant center account, google merchant account</div></div><div><div class="brief-field-label">Target audience</div><div class="brief-field-value">Ecommerce merchants, digital marketing agencies, PPC managers</div></div><div><div class="brief-field-label">Search intent</div><div class="brief-field-value">Transactional</div></div><div><div class="brief-field-label">Tone of voice</div><div class="brief-field-value">Authoritative and expert</div></div><div><div class="brief-field-label">CTA</div><div class="brief-field-value">Soft CTA at the end to Simprosys&#x27;s Google Shopping Feed app</div></div></div>
-        <div class="brief-field-label">Other notes</div><div class="brief-field-value">Heading hierarchy jumps Step 4 -&gt; two H4s -&gt; Step 6 with no explicit &#x27;Step 5&#x27; -- kept the two H4s as standalone sections per Rahul&#x27;s instruction, not renumbered into the Step sequence. Two H2s (&#x27;Follow the Guidelines of the Google Merchant Centre&#x27; and &#x27;Google Merchant Center guidelines&#x27;) are worded very similarly back-to-back -- written as a short transition + a proper list intro so they don&#x27;t read as duplicated.</div>
+      </div>
+      <div class="brief-modal-body">
+        <dl class="brief-field-table"><dt>Primary keyword</dt><dd>Google Merchant Center Account</dd><dt>Secondary keywords</dt><dd>how to create google merchant center account, google merchant center setup 2026, set up a google merchant center, google merchant account setup, merchant center account, google merchant account</dd><dt>Target audience</dt><dd>Ecommerce merchants, digital marketing agencies, PPC managers</dd><dt>Search intent</dt><dd>Transactional</dd><dt>Tone of voice</dt><dd>Authoritative and expert</dd><dt>CTA</dt><dd>Soft CTA at the end to Simprosys&#x27;s Google Shopping Feed app</dd></dl>
         <div class="section-list">
     <div class="section-item">
       <div class="section-item-header">
@@ -493,10 +525,24 @@
     </div>
     </div>
       </div>
-    </details>
-    </div>
+    </dialog>
+    
     </main>
   </div>
 </div>
+<script>
+document.querySelectorAll(".brief-row").forEach(function (row) {
+  row.addEventListener("click", function (event) {
+    if (event.target.closest("[data-no-row-click]")) { return; }
+    var modal = document.getElementById(row.getAttribute("data-modal-target"));
+    if (modal) { modal.showModal(); }
+  });
+});
+document.querySelectorAll(".brief-modal-close").forEach(function (button) {
+  button.addEventListener("click", function () {
+    button.closest("dialog").close();
+  });
+});
+</script>
 </body>
 </html>

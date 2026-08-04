@@ -105,7 +105,7 @@ a "Content" link, so every page needs regenerating to stay in sync.)
 This was an explicit decision: this skill pushes on its own, the same way
 the SEO audit's GitHub Actions workflow already does.
 ```
-git add data/seo_audit_history.db docs/content.html docs/index.html docs/history.html docs/reporting.html docs/reports/reporting-hub-latest.pdf
+git add data/seo_audit_history.db docs/content.html docs/content_briefs/ docs/index.html docs/history.html docs/reporting.html docs/reports/reporting-hub-latest.pdf
 git commit -m "Add content outline: <topic>"
 git push
 ```
