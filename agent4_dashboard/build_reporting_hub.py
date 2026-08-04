@@ -41,17 +41,22 @@ from agent4_dashboard.build_dashboard import (
     SEVERITY_ORDER,
     _categorize_rule,
     _format_timestamp,
+    _pdf_filename as _audit_pdf_filename,
     compute_trend,
     load_all_runs,
     load_findings,
 )
 from agent4_dashboard.build_dashboard_metronic import (
+    ICON_CONTENT,
+    ICON_HOME,
+    MX_PRIMARY_COLOR,
     MX_RESOLVED_COLOR,
     MX_SEVERITY,
     _render_sidebar_nav,
     _render_topbar,
     _shared_head,
 )
+from content_agent.database import get_connection as get_content_connection, load_all_briefs
 
 DOCS_DIR = Path(__file__).resolve().parent.parent / "docs"
 REPORTING_FILE_PATH = DOCS_DIR / "reporting.html"
@@ -62,6 +67,35 @@ REPORTING_PDF_FILENAME = "reporting-hub-latest.pdf"
 # card uses for consistency across pages.
 _NEW_COLOR = MX_SEVERITY["critical"]["color"]
 _RECURRING_COLOR = MX_SEVERITY["info"]["color"]
+
+# How many recent items the activity feed shows -- this is meant to be a
+# "what's happened lately" glance across every module, not a full archive
+# (the History page + PDF archives already cover that for audits; the
+# Content page covers the full list of outlines). Capped so the feed stays
+# a quick read even after months of weekly runs.
+_ACTIVITY_FEED_LIMIT = 20
+
+_ACTIVITY_ICON = {"audit": ICON_HOME, "content": ICON_CONTENT}
+_ACTIVITY_COLOR = {"audit": MX_PRIMARY_COLOR, "content": MX_SEVERITY["info"]["color"]}
+
+_REPORTING_PAGE_STYLE = """
+  .activity-feed { display: flex; flex-direction: column; }
+  .activity-item {
+    display: flex; align-items: center; gap: 14px; padding: 14px 22px; border-bottom: 1px solid var(--mx-border);
+    text-decoration: none; color: inherit;
+  }
+  .activity-item:last-child { border-bottom: none; }
+  .activity-item:hover { background: var(--mx-body-bg); }
+  .activity-icon {
+    width: 36px; height: 36px; border-radius: 9px; display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; color: var(--kpi-color); background-color: color-mix(in srgb, var(--kpi-color) 15%, transparent);
+  }
+  .activity-icon svg { width: 17px; height: 17px; }
+  .activity-main { flex: 1; min-width: 0; }
+  .activity-label { font-weight: 600; font-size: 0.9rem; }
+  .activity-sublabel { color: var(--mx-text-gray-600); font-size: 0.8rem; margin-top: 2px; }
+  .activity-time { color: var(--mx-text-gray-500); font-size: 0.8rem; white-space: nowrap; flex-shrink: 0; }
+"""
 
 
 def _load_reporting_hub_data(connection):
@@ -90,6 +124,51 @@ def _load_reporting_hub_data(connection):
             "trend": compute_trend(connection, run["run_id"]),
         })
     return per_run
+
+
+def _load_recent_activity(per_run, limit=_ACTIVITY_FEED_LIMIT):
+    """
+    A single reverse-chronological feed mixing every module's recent
+    activity -- audit runs today, plus content outlines now that the
+    Content Agent exists, and future drafts/QA scores once those agents
+    are built. This is the one place cross-module aggregation is meant to
+    happen; the individual modules (audit pipeline, content agent) stay
+    decoupled from each other and don't need to know this page exists.
+
+    Reuses `per_run` (already loaded by the caller) rather than re-querying
+    the audit DB, and opens its own short-lived connection to the content
+    DB since that's a separate module's data.
+    """
+    items = []
+    for r in per_run:
+        items.append({
+            "timestamp": r["run"]["run_timestamp"],
+            "kind": "audit",
+            "label": f"Audit run #{r['run']['run_id']} completed",
+            "sublabel": f"{r['run']['total_pages_crawled']} pages audited · {r['total']} findings",
+            "href": f"reports/{_audit_pdf_filename(r['run']['run_id'])}",
+        })
+
+    content_connection = get_content_connection()
+    try:
+        briefs = load_all_briefs(content_connection)
+    finally:
+        content_connection.close()
+
+    for brief in briefs:
+        items.append({
+            "timestamp": brief["created_at"],
+            "kind": "content",
+            "label": f"Outline created: {brief['topic']}",
+            "sublabel": (
+                f"{brief.get('content_format') or 'Blog'} · "
+                f"{brief['target_word_count']} words · {brief['status'].capitalize()}"
+            ),
+            "href": "content.html",
+        })
+
+    items.sort(key=lambda item: item["timestamp"], reverse=True)
+    return items[:limit]
 
 
 # --- Live page: ApexCharts (client-side, same CDN as the main dashboard) ---
@@ -223,7 +302,36 @@ def _render_category_table_card(per_run):
     """
 
 
-def generate_reporting_hub_html(per_run):
+def _render_activity_item(item):
+    icon = _ACTIVITY_ICON.get(item["kind"], ICON_HOME)
+    color = _ACTIVITY_COLOR.get(item["kind"], MX_PRIMARY_COLOR)
+    return f"""
+    <a class="activity-item" href="{html.escape(item['href'])}">
+      <div class="activity-icon" style="--kpi-color: {color}">{icon}</div>
+      <div class="activity-main">
+        <div class="activity-label">{html.escape(item['label'])}</div>
+        <div class="activity-sublabel">{html.escape(item['sublabel'])}</div>
+      </div>
+      <div class="activity-time">{html.escape(_format_timestamp(item['timestamp']))}</div>
+    </a>
+    """
+
+
+def _render_activity_feed_card(activity):
+    body = (
+        "".join(_render_activity_item(item) for item in activity)
+        if activity
+        else '<div class="chart-empty">No activity recorded yet.</div>'
+    )
+    return f"""
+    <div class="card">
+      <div class="card-header"><div class="card-header-title">Recent Activity</div></div>
+      <div class="activity-feed">{body}</div>
+    </div>
+    """
+
+
+def generate_reporting_hub_html(per_run, activity):
     total_runs = len(per_run)
     latest = per_run[-1] if per_run else None
     subtitle_html = f"{total_runs} run(s) recorded"
@@ -241,6 +349,7 @@ def generate_reporting_hub_html(per_run):
 <html lang="en">
 <head>
 {_shared_head("SEO Reporting Hub")}
+<style>{_REPORTING_PAGE_STYLE}</style>
 </head>
 <body>
 <div class="app">
@@ -248,6 +357,7 @@ def generate_reporting_hub_html(per_run):
   <div class="main">
     {_render_topbar("Reporting Hub", subtitle_html, pdf_href)}
     <main class="content">
+      {_render_activity_feed_card(activity)}
       {_render_trend_chart_card(per_run)}
       {_render_change_chart_card(per_run)}
       {_render_category_table_card(per_run)}
@@ -267,8 +377,18 @@ def generate_reporting_hub_html(per_run):
 # consistent with the existing per-run PDF report's philosophy of staying
 # fully self-contained for an unattended Playwright render. ---
 
-def _generate_reporting_print_html(per_run):
+def _generate_reporting_print_html(per_run, activity):
     total_runs = len(per_run)
+
+    activity_rows = "".join(
+        f"""<tr>
+          <td>{html.escape(_format_timestamp(item['timestamp']))}</td>
+          <td>{html.escape(item['kind'].capitalize())}</td>
+          <td>{html.escape(item['label'])}</td>
+          <td>{html.escape(item['sublabel'])}</td>
+        </tr>"""
+        for item in activity
+    ) or '<tr><td colspan="4">No activity recorded yet.</td></tr>'
 
     findings_rows = "".join(
         f"""<tr>
@@ -320,6 +440,12 @@ def _generate_reporting_print_html(per_run):
     <p>Trend summary across {total_runs} recorded run(s)</p>
   </header>
 
+  <h2>Recent Activity</h2>
+  <table>
+    <thead><tr><th>Date</th><th>Type</th><th>Activity</th><th>Detail</th></tr></thead>
+    <tbody>{activity_rows}</tbody>
+  </table>
+
   <h2>Findings by Run</h2>
   <table>
     <thead><tr><th>Run</th><th>Date</th><th>Pages Audited</th><th>Critical</th><th>Warning</th><th>Info</th><th>Total</th></tr></thead>
@@ -342,8 +468,8 @@ def _generate_reporting_print_html(per_run):
 """
 
 
-def _save_reporting_hub_pdf(per_run, reports_dir=REPORTS_DIR_PATH):
-    print_html = _generate_reporting_print_html(per_run)
+def _save_reporting_hub_pdf(per_run, activity, reports_dir=REPORTS_DIR_PATH):
+    print_html = _generate_reporting_print_html(per_run, activity)
     reports_dir.mkdir(parents=True, exist_ok=True)
     pdf_path = reports_dir / REPORTING_PDF_FILENAME
 
@@ -367,12 +493,13 @@ def build_and_save_reporting_hub():
     try:
         DOCS_DIR.mkdir(parents=True, exist_ok=True)
         per_run = _load_reporting_hub_data(connection)
+        activity = _load_recent_activity(per_run)
 
-        reporting_html = generate_reporting_hub_html(per_run)
+        reporting_html = generate_reporting_hub_html(per_run, activity)
         with open(REPORTING_FILE_PATH, "w", encoding="utf-8") as reporting_file:
             reporting_file.write(reporting_html)
 
-        pdf_path = _save_reporting_hub_pdf(per_run)
+        pdf_path = _save_reporting_hub_pdf(per_run, activity)
         return REPORTING_FILE_PATH, pdf_path
     finally:
         connection.close()

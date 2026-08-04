@@ -188,6 +188,24 @@
 
 </style>
 
+<style>
+  .activity-feed { display: flex; flex-direction: column; }
+  .activity-item {
+    display: flex; align-items: center; gap: 14px; padding: 14px 22px; border-bottom: 1px solid var(--mx-border);
+    text-decoration: none; color: inherit;
+  }
+  .activity-item:last-child { border-bottom: none; }
+  .activity-item:hover { background: var(--mx-body-bg); }
+  .activity-icon {
+    width: 36px; height: 36px; border-radius: 9px; display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; color: var(--kpi-color); background-color: color-mix(in srgb, var(--kpi-color) 15%, transparent);
+  }
+  .activity-icon svg { width: 17px; height: 17px; }
+  .activity-main { flex: 1; min-width: 0; }
+  .activity-label { font-weight: 600; font-size: 0.9rem; }
+  .activity-sublabel { color: var(--mx-text-gray-600); font-size: 0.8rem; margin-top: 2px; }
+  .activity-time { color: var(--mx-text-gray-500); font-size: 0.8rem; white-space: nowrap; flex-shrink: 0; }
+</style>
 </head>
 <body>
 <div class="app">
@@ -215,6 +233,102 @@
     </header>
     
     <main class="content">
+      
+    <div class="card">
+      <div class="card-header"><div class="card-header-title">Recent Activity</div></div>
+      <div class="activity-feed">
+    <a class="activity-item" href="content.html">
+      <div class="activity-icon" style="--kpi-color: #7239ea"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3.5h9l3 3v14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-16a1 1 0 0 1 1-1z"/><path d="M8.5 10h7"/><path d="M8.5 13.5h7"/><path d="M8.5 17h4.5"/></svg></div>
+      <div class="activity-main">
+        <div class="activity-label">Outline created: How to Create and Set Up a Google Merchant Center Account (2026)</div>
+        <div class="activity-sublabel">Blog (How-to guide) · 3000 words · Outlined</div>
+      </div>
+      <div class="activity-time">Aug 04, 2026, 10:40 AM UTC</div>
+    </a>
+    
+    <a class="activity-item" href="reports/run-0009.pdf">
+      <div class="activity-icon" style="--kpi-color: #009ef7"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11.5 12 4l8 7.5"/><path d="M6 10v9a1 1 0 0 0 1 1h4v-6h2v6h4a1 1 0 0 0 1-1v-9"/></svg></div>
+      <div class="activity-main">
+        <div class="activity-label">Audit run #9 completed</div>
+        <div class="activity-sublabel">74 pages audited · 271 findings</div>
+      </div>
+      <div class="activity-time">Aug 03, 2026, 04:00 PM UTC</div>
+    </a>
+    
+    <a class="activity-item" href="reports/run-0008.pdf">
+      <div class="activity-icon" style="--kpi-color: #009ef7"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11.5 12 4l8 7.5"/><path d="M6 10v9a1 1 0 0 0 1 1h4v-6h2v6h4a1 1 0 0 0 1-1v-9"/></svg></div>
+      <div class="activity-main">
+        <div class="activity-label">Audit run #8 completed</div>
+        <div class="activity-sublabel">74 pages audited · 348 findings</div>
+      </div>
+      <div class="activity-time">Aug 03, 2026, 09:43 AM UTC</div>
+    </a>
+    
+    <a class="activity-item" href="reports/run-0007.pdf">
+      <div class="activity-icon" style="--kpi-color: #009ef7"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11.5 12 4l8 7.5"/><path d="M6 10v9a1 1 0 0 0 1 1h4v-6h2v6h4a1 1 0 0 0 1-1v-9"/></svg></div>
+      <div class="activity-main">
+        <div class="activity-label">Audit run #7 completed</div>
+        <div class="activity-sublabel">74 pages audited · 348 findings</div>
+      </div>
+      <div class="activity-time">Jul 31, 2026, 04:47 AM UTC</div>
+    </a>
+    
+    <a class="activity-item" href="reports/run-0006.pdf">
+      <div class="activity-icon" style="--kpi-color: #009ef7"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11.5 12 4l8 7.5"/><path d="M6 10v9a1 1 0 0 0 1 1h4v-6h2v6h4a1 1 0 0 0 1-1v-9"/></svg></div>
+      <div class="activity-main">
+        <div class="activity-label">Audit run #6 completed</div>
+        <div class="activity-sublabel">74 pages audited · 383 findings</div>
+      </div>
+      <div class="activity-time">Jul 30, 2026, 03:41 PM UTC</div>
+    </a>
+    
+    <a class="activity-item" href="reports/run-0005.pdf">
+      <div class="activity-icon" style="--kpi-color: #009ef7"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11.5 12 4l8 7.5"/><path d="M6 10v9a1 1 0 0 0 1 1h4v-6h2v6h4a1 1 0 0 0 1-1v-9"/></svg></div>
+      <div class="activity-main">
+        <div class="activity-label">Audit run #5 completed</div>
+        <div class="activity-sublabel">75 pages audited · 384 findings</div>
+      </div>
+      <div class="activity-time">Jul 30, 2026, 02:40 PM UTC</div>
+    </a>
+    
+    <a class="activity-item" href="reports/run-0004.pdf">
+      <div class="activity-icon" style="--kpi-color: #009ef7"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11.5 12 4l8 7.5"/><path d="M6 10v9a1 1 0 0 0 1 1h4v-6h2v6h4a1 1 0 0 0 1-1v-9"/></svg></div>
+      <div class="activity-main">
+        <div class="activity-label">Audit run #4 completed</div>
+        <div class="activity-sublabel">76 pages audited · 431 findings</div>
+      </div>
+      <div class="activity-time">Jul 30, 2026, 09:28 AM UTC</div>
+    </a>
+    
+    <a class="activity-item" href="reports/run-0003.pdf">
+      <div class="activity-icon" style="--kpi-color: #009ef7"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11.5 12 4l8 7.5"/><path d="M6 10v9a1 1 0 0 0 1 1h4v-6h2v6h4a1 1 0 0 0 1-1v-9"/></svg></div>
+      <div class="activity-main">
+        <div class="activity-label">Audit run #3 completed</div>
+        <div class="activity-sublabel">76 pages audited · 440 findings</div>
+      </div>
+      <div class="activity-time">Jul 30, 2026, 08:09 AM UTC</div>
+    </a>
+    
+    <a class="activity-item" href="reports/run-0002.pdf">
+      <div class="activity-icon" style="--kpi-color: #009ef7"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11.5 12 4l8 7.5"/><path d="M6 10v9a1 1 0 0 0 1 1h4v-6h2v6h4a1 1 0 0 0 1-1v-9"/></svg></div>
+      <div class="activity-main">
+        <div class="activity-label">Audit run #2 completed</div>
+        <div class="activity-sublabel">76 pages audited · 440 findings</div>
+      </div>
+      <div class="activity-time">Jul 28, 2026, 08:39 AM UTC</div>
+    </a>
+    
+    <a class="activity-item" href="reports/run-0001.pdf">
+      <div class="activity-icon" style="--kpi-color: #009ef7"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11.5 12 4l8 7.5"/><path d="M6 10v9a1 1 0 0 0 1 1h4v-6h2v6h4a1 1 0 0 0 1-1v-9"/></svg></div>
+      <div class="activity-main">
+        <div class="activity-label">Audit run #1 completed</div>
+        <div class="activity-sublabel">76 pages audited · 439 findings</div>
+      </div>
+      <div class="activity-time">Jul 27, 2026, 01:07 PM UTC</div>
+    </a>
+    </div>
+    </div>
+    
       
     <div class="card">
       <div class="card-header"><div class="card-header-title">Findings Over Time</div></div>
