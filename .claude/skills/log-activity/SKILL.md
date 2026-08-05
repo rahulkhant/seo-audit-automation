@@ -68,9 +68,16 @@ For each bullet Rahul gave you, decide:
   optional, leave it out if he doesn't give one.
 - **day_note** -- a short, specific note of what actually happened with
   this task today (not a restatement of the task's name). If Rahul's
-  report includes a time range or time spent, fold that into the note
-  (e.g. "09:30-09:45 - 15 min") rather than inventing separate fields for
-  it -- there's no dedicated time-tracking field yet (see step 8).
+  report includes time spent, fold just the DURATION into the note --
+  "15 min", "45 min", "1 hr 5 min" -- never a start-end time range (e.g.
+  not "09:30-09:45"). Rahul corrected this 2026-08-05: a computed
+  duration reads faster than a range he'd have to subtract himself. Use
+  the report's own "Time Spent" value directly rather than computing it
+  from a start/end range yourself -- the two don't always agree (a range
+  can include an interruption the Time Spent column already excludes),
+  and the explicit figure is the more trustworthy one. There's no
+  dedicated time-tracking field yet -- this is still just text inside the
+  note (see step 8).
 - **target_notes** -- only if Rahul mentions a goal or deadline for a
   task (new or existing). Leave it out otherwise; don't invent one.
 
