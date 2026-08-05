@@ -64,7 +64,7 @@ seo-audit-automation/
 │   └── database.py                  # SQLite schema (runs/pages/findings tables) + save functions
 ├── agent3_validation/
 │   ├── rules_config.py              # All thresholds (title length, meta length, etc.) + EXCLUDED_URL_PATH_PREFIXES
-│   ├── page_checks.py               # Per-page rule checks (35 rules)
+│   ├── page_checks.py               # Per-page rule checks (36 rules)
 │   ├── site_checks.py               # Cross-page rule checks (6 rules)
 │   └── run_validation.py            # Runs all checks, saves findings to DB
 ├── agent4_dashboard/
@@ -117,13 +117,33 @@ seo-audit-automation/
 
 **Deliberately scoped to 100% mechanical, deterministic checks only** — no AI/LLM judgment calls, no external paid APIs. This was a considered decision to prove the pipeline's accuracy first (see §2).
 
-### 41 rules currently implemented
+### 42 rules currently implemented
 
-**Per-page checks** (`agent3_validation/page_checks.py`, 35 rules):
-`page-fetch-failed`, `page-not-200`, `url-underscore`, `url-uppercase`, `url-unnecessary-date`, `url-too-long`, `title-missing`, `title-length`, `meta-description-missing`, `meta-description-length`, `og-title-missing`, `og-title-length`, `og-description-missing`, `og-description-length`, `twitter-title-missing`, `twitter-description-missing`, `twitter-description-length`, `canonical-missing`, `canonical-duplicate`, `canonical-not-absolute`, `canonical-not-https`, `h1-missing`, `h1-multiple`, `robots-conflicting-directives`, `robots-noindex-in-sitemap`, `sitemap-non-html-entry`, `image-alt-missing`, `schema-invalid-json`, `schema-missing`, `mixed-content`, `ssl-invalid`, `https-not-enforced`, `redirect-chain`, `redirect-loop`, `sitemap-url-redirects`
+**Per-page checks** (`agent3_validation/page_checks.py`, 36 rules):
+`page-fetch-failed`, `page-not-200`, `url-underscore`, `url-uppercase`, `url-unnecessary-date`, `url-too-long`, `title-missing`, `title-length`, `meta-description-missing`, `meta-description-length`, `og-title-missing`, `og-title-length`, `og-description-missing`, `og-description-length`, `twitter-title-missing`, `twitter-title-length`, `twitter-description-missing`, `twitter-description-length`, `canonical-missing`, `canonical-duplicate`, `canonical-not-absolute`, `canonical-not-https`, `h1-missing`, `h1-multiple`, `robots-conflicting-directives`, `robots-noindex-in-sitemap`, `sitemap-non-html-entry`, `image-alt-missing`, `schema-invalid-json`, `schema-missing`, `mixed-content`, `ssl-invalid`, `https-not-enforced`, `redirect-chain`, `redirect-loop`, `sitemap-url-redirects`
 
 **Cross-page checks** (`agent3_validation/site_checks.py`, 6 rules):
 `internal-link-broken`, `internal-link-unverified`, `orphan-page`, `duplicate-title`, `duplicate-meta-description`, `canonical-target-broken`
+
+### Rule → dashboard category mapping
+
+Every rule above is grouped into one of 11 checklist categories (`agent4_dashboard/build_dashboard.py`'s `CATEGORIES`), used to browse the Dashboard/Reporting Hub by "type of issue" rather than by severity. Any rule not listed here falls back to an "Other" bucket automatically, so a new rule added to Agent 3 without updating this list still shows up somewhere rather than silently vanishing:
+
+| Category | Rules |
+|---|---|
+| Meta Title & Description | `title-missing`, `title-length`, `meta-description-missing`, `meta-description-length`, `duplicate-title`, `duplicate-meta-description` |
+| Headings | `h1-missing`, `h1-multiple` |
+| Social Tags (OG & Twitter) | `og-title-missing`, `og-title-length`, `og-description-missing`, `og-description-length`, `twitter-title-missing`, `twitter-title-length`, `twitter-description-missing`, `twitter-description-length` |
+| URL Structure | `url-underscore`, `url-uppercase`, `url-unnecessary-date`, `url-too-long` |
+| Canonical Tags | `canonical-missing`, `canonical-duplicate`, `canonical-not-absolute`, `canonical-not-https`, `canonical-target-broken` |
+| Robots & Indexability | `robots-conflicting-directives`, `robots-noindex-in-sitemap`, `sitemap-non-html-entry`, `page-not-200`, `page-fetch-failed` |
+| Images & Alt Text | `image-alt-missing` |
+| Structured Data (Schema) | `schema-invalid-json`, `schema-missing` |
+| HTTPS & Security | `ssl-invalid`, `https-not-enforced`, `mixed-content` |
+| Redirects | `redirect-chain`, `redirect-loop`, `sitemap-url-redirects` |
+| Internal Linking | `internal-link-broken`, `internal-link-unverified`, `orphan-page` |
+
+**Bug fixed 2026-08-05, found while auditing this documentation for completeness**: `twitter-title-length` (a real rule in `page_checks.py`) had been left out of the "Social Tags" category set in `build_dashboard.py`, so any finding of that type was silently falling into the generic "Other" bucket on the Dashboard/Reporting Hub instead of appearing under Social Tags where it belongs. Fixed by adding it to the category's rule set — a good reminder that this category list has to be updated by hand alongside `page_checks.py`, since nothing enforces the two stay in sync automatically.
 
 **`h1-missing`/`h1-multiple` added 2026-07-28** — previously H1 text was only used internally for the JS-rendering comparison, never checked as its own rule; added so the dashboard's "Headings" category has real content.
 

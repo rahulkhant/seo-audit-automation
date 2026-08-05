@@ -58,7 +58,7 @@ CATEGORIES = [
     ("headings", "Headings", {"h1-missing", "h1-multiple"}),
     ("social-tags", "Social Tags (OG & Twitter)", {
         "og-title-missing", "og-title-length", "og-description-missing", "og-description-length",
-        "twitter-title-missing", "twitter-description-missing", "twitter-description-length",
+        "twitter-title-missing", "twitter-title-length", "twitter-description-missing", "twitter-description-length",
     }),
     ("url-structure", "URL Structure", {"url-underscore", "url-uppercase", "url-unnecessary-date", "url-too-long"}),
     ("canonical-tags", "Canonical Tags", {
