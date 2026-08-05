@@ -451,6 +451,18 @@ def _qa_report_fields(report):
     ]
 
 
+def _qa_full_deductions(report):
+    """Deterministic deductions plus the judgment adjustment as its own
+    line, if non-zero -- without this, a score below 10 could show up
+    next to an empty "no deductions" list with nothing explaining the gap."""
+    deductions = list(report.get("deductions") or [])
+    adjustment = report.get("judgment_adjustment") or 0
+    if adjustment:
+        sign = "+" if adjustment > 0 else ""
+        deductions.append(f"Judgment adjustment: {sign}{adjustment} (see notes below)")
+    return deductions
+
+
 def _render_qa_modal(brief, review):
     if review is None:
         return ""
@@ -464,7 +476,7 @@ def _render_qa_modal(brief, review):
         for label, value in _qa_report_fields(report)
     )
 
-    deductions = report.get("deductions") or []
+    deductions = _qa_full_deductions(report)
     deductions_html = (
         f'<ul>{"".join(f"<li>{html.escape(d)}</li>" for d in deductions)}</ul>'
         if deductions
@@ -659,7 +671,7 @@ def _generate_qa_print_html(brief, review):
         f"<tr><th>{html.escape(label)}</th><td>{html.escape(str(value))}</td></tr>"
         for label, value in _qa_report_fields(report)
     )
-    deductions = report.get("deductions") or []
+    deductions = _qa_full_deductions(report)
     deductions_html = (
         "".join(f"<li>{html.escape(d)}</li>" for d in deductions)
         if deductions
