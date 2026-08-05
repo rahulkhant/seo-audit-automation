@@ -26,6 +26,14 @@ keeping version history -- simpler for now, revisit only if that turns
 out to actually be needed. "status" on content_briefs moves to "drafted"
 once a draft exists, so the Content page can show progress without a
 second lookup.
+
+"content_qa_reviews" -- one row per brief's QA report (QA Checker Agent),
+same overwrite-only pattern as drafts. Stores the full itemized report
+(word count, keyword coverage/density, readability, sentence complexity,
+passive voice, banned-phrase hits -- all computed fresh by
+content_agent/qa_checks.py at save time, never trusted from the skill
+conversation) plus the skill's own judgment_adjustment/judgment_notes and
+the combined score. Status moves to "qa_reviewed".
 """
 
 import json
@@ -51,7 +59,6 @@ CREATE TABLE IF NOT EXISTS content_briefs (
 
     sections_json TEXT NOT NULL,
 
-    -- "qa_reviewed" is reserved for the QA Checker agent, not built yet.
     status TEXT NOT NULL DEFAULT 'outlined'
 )
 """
@@ -69,6 +76,19 @@ CREATE TABLE IF NOT EXISTS content_drafts (
 )
 """
 
+CREATE_CONTENT_QA_REVIEWS_TABLE_SQL = """
+CREATE TABLE IF NOT EXISTS content_qa_reviews (
+    review_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    brief_id INTEGER NOT NULL UNIQUE REFERENCES content_briefs(brief_id),
+    created_at TEXT NOT NULL,
+
+    score REAL NOT NULL,
+    -- {"deterministic": {...run_deterministic_checks() output...},
+    --  "deductions": [...], "judgment_adjustment": N, "judgment_notes": "..."}
+    report_json TEXT NOT NULL
+)
+"""
+
 
 def get_connection(db_path=None):
     """Same physical database file as the SEO audit (agent2_storage), with
@@ -78,6 +98,7 @@ def get_connection(db_path=None):
     connection = _get_audit_connection(db_path) if db_path else _get_audit_connection()
     connection.execute(CREATE_CONTENT_BRIEFS_TABLE_SQL)
     connection.execute(CREATE_CONTENT_DRAFTS_TABLE_SQL)
+    connection.execute(CREATE_CONTENT_QA_REVIEWS_TABLE_SQL)
     connection.commit()
     return connection
 
@@ -219,3 +240,62 @@ def load_all_drafts_by_brief(connection):
         draft["sections"] = json.loads(draft["sections_json"])
         drafts[draft["brief_id"]] = draft
     return drafts
+
+
+def save_qa_review(connection, brief_id, score, report):
+    """
+    Saves (or overwrites -- same pattern as save_draft) the QA report for
+    one brief. `report` is the full report dict (deterministic checks +
+    deductions + judgment_adjustment/judgment_notes) produced by
+    content_agent.save_qa_review's CLI, not raw model output. Also flips
+    the brief's status to "qa_reviewed".
+
+    Returns the review_id.
+    """
+    created_at = datetime.now(timezone.utc).isoformat()
+
+    connection.execute(
+        """
+        INSERT INTO content_qa_reviews (brief_id, created_at, score, report_json)
+        VALUES (?, ?, ?, ?)
+        ON CONFLICT(brief_id) DO UPDATE SET
+            created_at = excluded.created_at,
+            score = excluded.score,
+            report_json = excluded.report_json
+        """,
+        (brief_id, created_at, score, json.dumps(report)),
+    )
+    connection.execute(
+        "UPDATE content_briefs SET status = 'qa_reviewed' WHERE brief_id = ?", (brief_id,)
+    )
+    connection.commit()
+
+    # Same lastrowid caveat as save_draft -- look the row up directly
+    # rather than trusting cursor.lastrowid on the ON CONFLICT DO UPDATE path.
+    row = connection.execute(
+        "SELECT review_id FROM content_qa_reviews WHERE brief_id = ?", (brief_id,)
+    ).fetchone()
+    return row["review_id"]
+
+
+def load_qa_review_for_brief(connection, brief_id):
+    """The one QA review for a brief, or None if it hasn't been reviewed yet."""
+    row = connection.execute(
+        "SELECT * FROM content_qa_reviews WHERE brief_id = ?", (brief_id,)
+    ).fetchone()
+    if row is None:
+        return None
+    review = dict(row)
+    review["report"] = json.loads(review["report_json"])
+    return review
+
+
+def load_all_qa_reviews_by_brief(connection):
+    """{brief_id: review} for every QA review that exists."""
+    rows = connection.execute("SELECT * FROM content_qa_reviews").fetchall()
+    reviews = {}
+    for row in rows:
+        review = dict(row)
+        review["report"] = json.loads(review["report_json"])
+        reviews[review["brief_id"]] = review
+    return reviews

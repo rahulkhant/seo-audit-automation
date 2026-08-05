@@ -3,35 +3,29 @@ Content Agent: dashboard page.
 
 Purpose of this file
 --------------------
-Builds docs/content.html -- a list of every outline the Outliner Agent has
-produced, using the same Metronic shell (sidebar, topbar, card styling) as
-the SEO audit's dashboard pages, so the whole platform reads as one
-system rather than a bolted-on second app.
+Builds docs/content.html -- everything the Content Agent has produced,
+using the same Metronic shell (sidebar, topbar, card styling) as the SEO
+audit's dashboard pages, so the whole platform reads as one system rather
+than a bolted-on second app.
 
-Redesigned 2026-08-04 (per Rahul's feedback on the first real outline):
-the list itself stays a short, aligned row per brief -- topic, format,
-word count, status, a Download PDF button -- and clicking a row opens the
-full section-by-section brief in a modal (native <dialog>) with its own
-internal scrollbar, instead of expanding inline and pushing the whole page
-down. With several outlines on the page at once, only the modal you
-actually opened scrolls, not the entire dashboard.
+Redesigned 2026-08-05 (per Rahul's request, now that all three agents
+exist) into three tabs -- Outline / Draft / QA Checker -- switched
+client-side, no page reload. Each tab lists every brief with its own
+per-stage view (a brief with no draft yet shows a "not drafted" placeholder
+in the Draft tab rather than being hidden, so it's obvious at a glance
+where every piece of content actually stands). Clicking a real card in any
+tab opens the same scrollable <dialog> modal pattern -- reused identically
+across all three tabs, per Rahul's explicit ask for one consistent format.
 
-Also generates one PDF per brief (docs/content_briefs/brief-XXXX.pdf),
-plain tables/lists like the SEO audit's other PDF exports, so a finished
-outline can be handed to a writer without needing dashboard access.
-
-Extended 2026-08-04 for the Writer Agent: if a brief has a saved draft
-(content_agent.save_draft), each section shows its written text alongside
-the original plan, and a second PDF is generated per draft
-(docs/content_drafts/draft-XXXX.pdf) -- unlike the brief's PDF (a
-structured spec, rendered as tables), the draft's PDF reads like an actual
-article, since the point is handing a finished piece to a human editor,
-not a data sheet.
+Generates one PDF per brief per stage it's reached:
+  - docs/content_briefs/brief-XXXX.pdf  (structured spec, tables)
+  - docs/content_drafts/draft-XXXX.pdf  (reads like an article)
+  - docs/content_qa/qa-XXXX.pdf         (the full QA report)
 
 This file does not produce or judge any content itself -- it only reads
-what the Outliner/Writer Agents already saved (via content_agent.save_brief
-/ content_agent.save_draft) and turns it into something readable, the same
-division of labor as Agent 4 for the audit pipeline.
+what the Outliner/Writer/QA Checker agents already saved and turns it
+into something readable, the same division of labor as Agent 4 for the
+audit pipeline.
 """
 
 import html
@@ -40,10 +34,16 @@ from pathlib import Path
 
 from playwright.sync_api import sync_playwright
 
-from content_agent.database import get_connection, load_all_briefs, load_all_drafts_by_brief
+from content_agent.database import (
+    get_connection,
+    load_all_briefs,
+    load_all_drafts_by_brief,
+    load_all_qa_reviews_by_brief,
+)
 from agent4_dashboard.build_dashboard_metronic import (
     ICON_DOWNLOAD,
     MX_RESOLVED_COLOR,
+    MX_SEVERITY,
     _render_sidebar_nav,
     _render_topbar,
     _shared_head,
@@ -53,8 +53,19 @@ DOCS_DIR = Path(__file__).resolve().parent.parent / "docs"
 CONTENT_FILE_PATH = DOCS_DIR / "content.html"
 BRIEFS_PDF_DIR = DOCS_DIR / "content_briefs"
 DRAFTS_PDF_DIR = DOCS_DIR / "content_drafts"
+QA_PDF_DIR = DOCS_DIR / "content_qa"
 
 _CONTENT_PAGE_STYLE = """
+  .tabs { display: flex; gap: 4px; margin-bottom: 20px; border-bottom: 1px solid var(--mx-border); }
+  .tab-button {
+    padding: 10px 18px; border: none; background: transparent; font-family: inherit; font-size: 0.9rem;
+    font-weight: 600; color: var(--mx-text-gray-600); cursor: pointer; border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+  }
+  .tab-button:hover { color: var(--mx-text-dark); }
+  .tab-button.active { color: var(--mx-primary); border-bottom-color: var(--mx-primary); }
+  .tab-panel[hidden] { display: none; }
+
   .brief-list { display: flex; flex-direction: column; gap: 10px; }
   .brief-row {
     background: var(--mx-card-bg); border: 1px solid var(--mx-border); border-radius: 10px;
@@ -62,33 +73,37 @@ _CONTENT_PAGE_STYLE = """
     gap: 16px; cursor: pointer;
   }
   .brief-row:hover { border-color: var(--mx-primary); }
-  .brief-row-main { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+  .pending-row {
+    background: var(--mx-card-bg); border: 1px dashed var(--mx-border); border-radius: 10px;
+    padding: 16px 20px; display: flex; align-items: center; justify-content: space-between;
+    gap: 16px; color: var(--mx-text-gray-500);
+  }
+  .brief-row-main, .pending-row-main { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
   .brief-topic { font-weight: 700; font-size: 0.98rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .brief-meta { color: var(--mx-text-gray-600); font-size: 0.83rem; }
+  .brief-meta, .pending-meta { color: var(--mx-text-gray-600); font-size: 0.83rem; }
   .brief-row-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
   .status-badge {
     display: inline-flex; align-items: center; padding: 5px 12px; border-radius: 999px;
     font-weight: 600; font-size: 0.78rem; color: var(--mx-primary);
-    background-color: var(--mx-primary-light); white-space: nowrap; text-transform: capitalize;
+    background-color: var(--mx-primary-light); white-space: nowrap;
+  }
+  .score-badge {
+    display: inline-flex; align-items: center; padding: 5px 12px; border-radius: 999px;
+    font-weight: 700; font-size: 0.85rem; color: var(--score-color);
+    background-color: color-mix(in srgb, var(--score-color) 15%, transparent); white-space: nowrap;
   }
   .empty-state { color: var(--mx-text-gray-600); font-size: 0.9rem; padding: 40px 0; text-align: center; }
 
   /* Base rule intentionally does NOT set "display" -- the browser's own
      "dialog:not([open]) { display: none; }" default has to stay in charge
-     while a dialog is closed. An earlier version set display:flex here
-     unconditionally, which -- being equal specificity and later in the
-     cascade -- overrode that default and left every dialog visible (and
-     intercepting clicks) even when closed. Everything below is scoped to
-     [open] specifically so closed dialogs stay properly hidden. */
+     while a dialog is closed. Scoped to [open] so closed dialogs stay
+     properly hidden (see git history for why this matters). */
   dialog.brief-modal[open] {
     position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); margin: 0;
     width: min(720px, 92vw); max-height: 82vh; padding: 0; border: none; border-radius: 14px;
     background: var(--mx-card-bg); color: var(--mx-text-dark); display: flex; flex-direction: column;
   }
   dialog.brief-modal::backdrop { background: rgba(15, 15, 20, 0.55); }
-  /* Native <dialog> doesn't lock the page behind it from scrolling on its
-     own -- without this, the main content could still scroll under the
-     modal, which is exactly the "don't scroll the full screen" bug. */
   body:has(dialog.brief-modal[open]) { overflow: hidden; }
   .brief-modal-header {
     display: flex; align-items: flex-start; justify-content: space-between; gap: 16px;
@@ -105,7 +120,7 @@ _CONTENT_PAGE_STYLE = """
   .btn-icon-close:hover { background: var(--mx-body-bg); }
   .brief-modal-body { padding: 20px 24px 24px; overflow-y: auto; flex: 1 1 auto; min-height: 0; }
 
-  dl.brief-field-table { display: grid; grid-template-columns: 150px 1fr; row-gap: 10px; column-gap: 16px; margin: 0 0 22px; font-size: 0.88rem; }
+  dl.brief-field-table { display: grid; grid-template-columns: 190px 1fr; row-gap: 10px; column-gap: 16px; margin: 0 0 22px; font-size: 0.88rem; }
   dl.brief-field-table dt { color: var(--mx-text-gray-500); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.03em; font-weight: 600; padding-top: 2px; }
   dl.brief-field-table dd { margin: 0; }
 
@@ -117,13 +132,31 @@ _CONTENT_PAGE_STYLE = """
   .section-budget { color: var(--mx-primary); font-size: 0.82rem; font-weight: 600; margin-left: auto; }
   .section-points { font-size: 0.87rem; margin-top: 6px; }
   .section-keywords { color: var(--mx-text-gray-600); font-size: 0.8rem; margin-top: 6px; }
-  .section-actual { color: __RESOLVED_COLOR__; font-size: 0.8rem; font-weight: 600; }
-  .section-draft { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--mx-border); }
-  .section-draft-label { color: var(--mx-text-gray-500); font-size: 0.7rem; text-transform: uppercase; font-weight: 600; letter-spacing: 0.03em; margin-bottom: 4px; }
-  .section-draft-text { font-size: 0.88rem; white-space: pre-wrap; }
+
+  .draft-article h2 { font-size: 1.1rem; margin: 28px 0 8px; }
+  .draft-article h3 { font-size: 1.02rem; margin: 24px 0 6px; }
+  .draft-article h4 { font-size: 0.94rem; margin: 20px 0 6px; }
+  .draft-article p { font-size: 0.9rem; line-height: 1.6; margin: 0 0 12px; }
+
+  .qa-score-hero { display: flex; align-items: baseline; gap: 8px; margin-bottom: 4px; }
+  .qa-score-value { font-size: 2.2rem; font-weight: 800; color: var(--score-color); }
+  .qa-score-value span { font-size: 1.1rem; font-weight: 600; color: var(--mx-text-gray-500); }
+  .qa-section-title { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.03em; font-weight: 600; color: var(--mx-text-gray-500); margin: 20px 0 8px; }
+  .qa-deductions-list, .qa-notes { font-size: 0.87rem; }
+  .qa-deductions-list ul { margin: 0; padding-left: 18px; }
+  .qa-deductions-list li { margin-bottom: 4px; }
+  .qa-clean { color: __RESOLVED_COLOR__; font-weight: 600; font-size: 0.87rem; }
 """
 
-_MODAL_SCRIPT = """
+_CONTENT_PAGE_SCRIPT = """
+document.querySelectorAll(".tab-button").forEach(function (button) {
+  button.addEventListener("click", function () {
+    document.querySelectorAll(".tab-button").forEach(function (b) { b.classList.remove("active"); });
+    document.querySelectorAll(".tab-panel").forEach(function (p) { p.hidden = true; });
+    button.classList.add("active");
+    document.getElementById("tab-panel-" + button.dataset.tab).hidden = false;
+  });
+});
 document.querySelectorAll(".brief-row").forEach(function (row) {
   row.addEventListener("click", function (event) {
     if (event.target.closest("[data-no-row-click]")) { return; }
@@ -145,6 +178,10 @@ def _brief_pdf_filename(brief_id):
 
 def _draft_pdf_filename(brief_id):
     return f"draft-{brief_id:04d}.pdf"
+
+
+def _qa_pdf_filename(brief_id):
+    return f"qa-{brief_id:04d}.pdf"
 
 
 def _format_created_at(iso_timestamp):
@@ -171,9 +208,77 @@ def _brief_fields(brief):
     ]
 
 
-# --- Live page ---
+# Shared by the on-page draft article view and the draft PDF, so a
+# section's heading renders as the same real HTML heading level in both
+# places rather than two independently-maintained mappings.
+_DRAFT_HEADING_TAG = {"H2": "h2", "H3": "h3", "H4": "h4"}
 
-def _render_section_item(section, draft_section=None):
+
+def _render_draft_section_html(section):
+    """Renders one draft section as real heading + paragraph tags --
+    shared building block for both the on-page modal and the print PDF,
+    which differ only in surrounding page chrome/CSS, not this part."""
+    heading = section.get("heading")
+    heading_html = ""
+    if heading:
+        tag = _DRAFT_HEADING_TAG.get(section["level"], "h2")
+        heading_html = f"<{tag}>{html.escape(heading)}</{tag}>"
+    paragraphs_html = "".join(
+        f"<p>{html.escape(paragraph)}</p>"
+        for paragraph in section["content"].split("\n\n")
+        if paragraph.strip()
+    )
+    return f"{heading_html}{paragraphs_html}"
+
+
+def _format_status(status):
+    """'qa_reviewed' -> 'QA Reviewed' -- CSS text-transform:capitalize only
+    handles the first letter of the whole string, so a raw snake_case
+    status like this would otherwise render as 'Qa_reviewed'."""
+    words = status.split("_")
+    return " ".join("QA" if word == "qa" else word.capitalize() for word in words)
+
+
+def _flesch_label(score):
+    if score >= 90:
+        return "Very easy"
+    if score >= 80:
+        return "Easy"
+    if score >= 70:
+        return "Fairly easy"
+    if score >= 60:
+        return "Plain English"
+    if score >= 50:
+        return "Fairly difficult"
+    if score >= 30:
+        return "Difficult"
+    return "Very difficult"
+
+
+def _score_color(score):
+    if score >= 8:
+        return MX_RESOLVED_COLOR
+    if score >= 6:
+        return MX_SEVERITY["warning"]["color"]
+    return MX_SEVERITY["critical"]["color"]
+
+
+# --- Tabs (live page) ---
+
+def _render_pending_row(topic, message):
+    return f"""
+    <div class="pending-row">
+      <div class="pending-row-main">
+        <div class="brief-topic">{html.escape(topic)}</div>
+        <div class="pending-meta">{html.escape(message)}</div>
+      </div>
+    </div>
+    """
+
+
+# -- Outline tab --
+
+def _render_outline_section_item(section):
     label = section["heading"] or section["level"].capitalize()
     level_tag = "" if section["level"] in ("intro", "conclusion") else section["level"]
     keywords = section.get("keywords") or []
@@ -187,43 +292,22 @@ def _render_section_item(section, draft_section=None):
         if section.get("notes")
         else ""
     )
-    actual_words_html = (
-        f' &middot; <span class="section-actual">{draft_section["word_count"]} written</span>'
-        if draft_section
-        else ""
-    )
-    draft_html = (
-        f"""
-        <div class="section-draft">
-          <div class="section-draft-label">Draft</div>
-          <div class="section-draft-text">{html.escape(draft_section["content"])}</div>
-        </div>
-        """
-        if draft_section
-        else ""
-    )
     return f"""
     <div class="section-item">
       <div class="section-item-header">
         {f'<span class="section-level">{html.escape(level_tag)}</span>' if level_tag else ""}
         <span class="section-heading">{html.escape(label)}</span>
-        <span class="section-budget">{section['word_budget']} words{actual_words_html}</span>
+        <span class="section-budget">{section['word_budget']} words</span>
       </div>
       <div class="section-points">{html.escape(section.get("points_to_cover") or "")}</div>
       {keywords_html}
       {notes_html}
-      {draft_html}
     </div>
     """
 
 
-def _render_brief_row(brief, draft):
-    modal_id = f"brief-modal-{brief['brief_id']}"
-    draft_pdf_button = (
-        f'<a class="btn btn-light" data-no-row-click href="content_drafts/{_draft_pdf_filename(brief["brief_id"])}">{ICON_DOWNLOAD}<span>Draft</span></a>'
-        if draft
-        else ""
-    )
+def _render_outline_row(brief):
+    modal_id = f"outline-modal-{brief['brief_id']}"
     return f"""
     <div class="brief-row" data-modal-target="{modal_id}">
       <div class="brief-row-main">
@@ -231,30 +315,20 @@ def _render_brief_row(brief, draft):
         <div class="brief-meta">{_brief_meta_line(brief)}</div>
       </div>
       <div class="brief-row-right">
-        <span class="status-badge">{html.escape(brief["status"])}</span>
-        <a class="btn btn-light" data-no-row-click href="content_briefs/{_brief_pdf_filename(brief['brief_id'])}">{ICON_DOWNLOAD}<span>Outline</span></a>
-        {draft_pdf_button}
+        <span class="status-badge">{html.escape(_format_status(brief["status"]))}</span>
+        <a class="btn btn-light" data-no-row-click href="content_briefs/{_brief_pdf_filename(brief['brief_id'])}">{ICON_DOWNLOAD}<span>PDF</span></a>
       </div>
     </div>
     """
 
 
-def _render_brief_modal(brief, draft):
-    modal_id = f"brief-modal-{brief['brief_id']}"
+def _render_outline_modal(brief):
+    modal_id = f"outline-modal-{brief['brief_id']}"
     fields_html = "".join(
         f"<dt>{html.escape(label)}</dt><dd>{html.escape(str(value))}</dd>"
         for label, value in _brief_fields(brief)
     )
-    draft_sections_by_index = draft["sections"] if draft else [None] * len(brief["sections"])
-    sections_html = "".join(
-        _render_section_item(section, draft_section)
-        for section, draft_section in zip(brief["sections"], draft_sections_by_index)
-    )
-    draft_pdf_button = (
-        f'<a class="btn btn-light" href="content_drafts/{_draft_pdf_filename(brief["brief_id"])}">{ICON_DOWNLOAD}<span>Download Draft PDF</span></a>'
-        if draft
-        else ""
-    )
+    sections_html = "".join(_render_outline_section_item(section) for section in brief["sections"])
 
     return f"""
     <dialog class="brief-modal" id="{modal_id}">
@@ -264,8 +338,7 @@ def _render_brief_modal(brief, draft):
           <div class="brief-modal-meta">{_brief_meta_line(brief)}</div>
         </div>
         <div class="brief-modal-actions">
-          <a class="btn btn-light" href="content_briefs/{_brief_pdf_filename(brief['brief_id'])}">{ICON_DOWNLOAD}<span>Download Outline PDF</span></a>
-          {draft_pdf_button}
+          <a class="btn btn-light" href="content_briefs/{_brief_pdf_filename(brief['brief_id'])}">{ICON_DOWNLOAD}<span>Download PDF</span></a>
           <button class="btn-icon-close brief-modal-close" type="button" aria-label="Close">&#10005;</button>
         </div>
       </div>
@@ -277,14 +350,189 @@ def _render_brief_modal(brief, draft):
     """
 
 
-def generate_content_page_html(briefs, drafts_by_brief):
+# -- Draft tab --
+
+def _render_draft_row(brief, draft):
+    if draft is None:
+        return _render_pending_row(brief["topic"], "Not drafted yet -- run /blog-write")
+
+    total_words = sum(s["word_count"] for s in draft["sections"])
+    modal_id = f"draft-modal-{brief['brief_id']}"
+    meta = f"{total_words} words (target {brief['target_word_count']}) &middot; {html.escape(_format_created_at(draft['created_at']))}"
+    return f"""
+    <div class="brief-row" data-modal-target="{modal_id}">
+      <div class="brief-row-main">
+        <div class="brief-topic">{html.escape(brief["topic"])}</div>
+        <div class="brief-meta">{meta}</div>
+      </div>
+      <div class="brief-row-right">
+        <a class="btn btn-light" data-no-row-click href="content_drafts/{_draft_pdf_filename(brief['brief_id'])}">{ICON_DOWNLOAD}<span>PDF</span></a>
+      </div>
+    </div>
+    """
+
+
+def _render_draft_modal(brief, draft):
+    if draft is None:
+        return ""
+    total_words = sum(s["word_count"] for s in draft["sections"])
+    modal_id = f"draft-modal-{brief['brief_id']}"
+    meta = f"{total_words} words (target {brief['target_word_count']}) &middot; {html.escape(_format_created_at(draft['created_at']))}"
+    article_html = "".join(_render_draft_section_html(section) for section in draft["sections"])
+
+    return f"""
+    <dialog class="brief-modal" id="{modal_id}">
+      <div class="brief-modal-header">
+        <div>
+          <div class="brief-modal-title">{html.escape(brief["topic"])}</div>
+          <div class="brief-modal-meta">{meta}</div>
+        </div>
+        <div class="brief-modal-actions">
+          <a class="btn btn-light" href="content_drafts/{_draft_pdf_filename(brief['brief_id'])}">{ICON_DOWNLOAD}<span>Download PDF</span></a>
+          <button class="btn-icon-close brief-modal-close" type="button" aria-label="Close">&#10005;</button>
+        </div>
+      </div>
+      <div class="brief-modal-body">
+        <div class="draft-article">{article_html}</div>
+      </div>
+    </dialog>
+    """
+
+
+# -- QA Checker tab --
+
+def _render_qa_row(brief, review):
+    if review is None:
+        return _render_pending_row(brief["topic"], "Not reviewed yet -- run /blog-qa")
+
+    modal_id = f"qa-modal-{brief['brief_id']}"
+    color = _score_color(review["score"])
+    meta = html.escape(_format_created_at(review["created_at"]))
+    return f"""
+    <div class="brief-row" data-modal-target="{modal_id}">
+      <div class="brief-row-main">
+        <div class="brief-topic">{html.escape(brief["topic"])}</div>
+        <div class="brief-meta">{meta}</div>
+      </div>
+      <div class="brief-row-right">
+        <span class="score-badge" style="--score-color: {color}">{review['score']}/10</span>
+        <a class="btn btn-light" data-no-row-click href="content_qa/{_qa_pdf_filename(brief['brief_id'])}">{ICON_DOWNLOAD}<span>PDF</span></a>
+      </div>
+    </div>
+    """
+
+
+def _qa_report_fields(report):
+    det = report["deterministic"]
+    wc = det["word_count"]
+    kw = det["keyword_coverage"]
+    density = det["keyword_density"]
+    readability = det["readability"]
+    complexity = det["sentence_complexity"]
+    passive = det["passive_voice"]
+    banned = det["banned_phrases"]
+
+    missing_kw = len(kw["section_keyword_misses"])
+    banned_summary = (
+        ", ".join(f'"{phrase}" x{count}' for phrase, count in banned.items())
+        if banned
+        else "None found"
+    )
+
+    return [
+        ("Word count", f"{wc['actual']} / {wc['target']} target ({wc['deviation_pct']}% off)"),
+        ("Keyword coverage", f"{missing_kw} section keyword(s) missing" if missing_kw else "All assigned keywords present"),
+        ("Primary keyword placement", "Intro + conclusion ✓" if kw["primary_keyword_in_intro"] and kw["primary_keyword_in_conclusion"] else "Missing from intro and/or conclusion"),
+        ("Primary keyword density", f"{density['primary_density_pct']}% ({density['primary_keyword_count']} occurrences)"),
+        ("Readability (Flesch Reading Ease)", f"{readability['flesch_reading_ease']} — {_flesch_label(readability['flesch_reading_ease'])}"),
+        ("Avg. sentence length", f"{complexity['avg_sentence_length']} words (σ {complexity['sentence_length_stdev']})"),
+        ("Passive voice", f"{passive['percentage']}% of sentences"),
+        ("Banned phrases found", banned_summary),
+    ]
+
+
+def _render_qa_modal(brief, review):
+    if review is None:
+        return ""
+    modal_id = f"qa-modal-{brief['brief_id']}"
+    report = review["report"]
+    color = _score_color(review["score"])
+    meta = html.escape(_format_created_at(review["created_at"]))
+
+    fields_html = "".join(
+        f"<dt>{html.escape(label)}</dt><dd>{html.escape(str(value))}</dd>"
+        for label, value in _qa_report_fields(report)
+    )
+
+    deductions = report.get("deductions") or []
+    deductions_html = (
+        f'<ul>{"".join(f"<li>{html.escape(d)}</li>" for d in deductions)}</ul>'
+        if deductions
+        else '<div class="qa-clean">No deductions — clean pass.</div>'
+    )
+
+    judgment_notes = report.get("judgment_notes") or "—"
+
+    return f"""
+    <dialog class="brief-modal" id="{modal_id}">
+      <div class="brief-modal-header">
+        <div>
+          <div class="brief-modal-title">{html.escape(brief["topic"])}</div>
+          <div class="brief-modal-meta">{meta}</div>
+        </div>
+        <div class="brief-modal-actions">
+          <a class="btn btn-light" href="content_qa/{_qa_pdf_filename(brief['brief_id'])}">{ICON_DOWNLOAD}<span>Download PDF</span></a>
+          <button class="btn-icon-close brief-modal-close" type="button" aria-label="Close">&#10005;</button>
+        </div>
+      </div>
+      <div class="brief-modal-body">
+        <div class="qa-score-hero"><span class="qa-score-value" style="--score-color: {color}">{review['score']}<span>/10</span></span></div>
+        <dl class="brief-field-table">{fields_html}</dl>
+        <div class="qa-section-title">Deductions</div>
+        <div class="qa-deductions-list">{deductions_html}</div>
+        <div class="qa-section-title">Judgment Notes</div>
+        <div class="qa-notes">{html.escape(judgment_notes)}</div>
+      </div>
+    </dialog>
+    """
+
+
+def generate_content_page_html(briefs, drafts_by_brief, qa_reviews_by_brief):
     subtitle_html = f"{len(briefs)} outline(s) created"
-    if briefs:
-        rows_html = "".join(_render_brief_row(b, drafts_by_brief.get(b["brief_id"])) for b in briefs)
-        modals_html = "".join(_render_brief_modal(b, drafts_by_brief.get(b["brief_id"])) for b in briefs)
-        body = f'<div class="brief-list">{rows_html}</div>{modals_html}'
-    else:
+
+    if not briefs:
         body = '<div class="empty-state">No content outlines yet -- run the /blog-outline skill to create one.</div>'
+    else:
+        outline_rows = "".join(_render_outline_row(b) for b in briefs)
+        outline_modals = "".join(_render_outline_modal(b) for b in briefs)
+
+        draft_rows = "".join(_render_draft_row(b, drafts_by_brief.get(b["brief_id"])) for b in briefs)
+        draft_modals = "".join(
+            _render_draft_modal(b, drafts_by_brief.get(b["brief_id"])) for b in briefs
+        )
+
+        qa_rows = "".join(_render_qa_row(b, qa_reviews_by_brief.get(b["brief_id"])) for b in briefs)
+        qa_modals = "".join(
+            _render_qa_modal(b, qa_reviews_by_brief.get(b["brief_id"])) for b in briefs
+        )
+
+        body = f"""
+        <div class="tabs">
+          <button class="tab-button active" data-tab="outline">Outline</button>
+          <button class="tab-button" data-tab="draft">Draft</button>
+          <button class="tab-button" data-tab="qa">QA Checker</button>
+        </div>
+        <div class="tab-panel" id="tab-panel-outline">
+          <div class="brief-list">{outline_rows}</div>
+        </div>
+        <div class="tab-panel" id="tab-panel-draft" hidden>
+          <div class="brief-list">{draft_rows}</div>
+        </div>
+        <div class="tab-panel" id="tab-panel-qa" hidden>
+          <div class="brief-list">{qa_rows}</div>
+        </div>
+        {outline_modals}{draft_modals}{qa_modals}
+        """
 
     return f"""<!doctype html>
 <html lang="en">
@@ -302,16 +550,14 @@ def generate_content_page_html(briefs, drafts_by_brief):
     </main>
   </div>
 </div>
-<script>{_MODAL_SCRIPT}</script>
+<script>{_CONTENT_PAGE_SCRIPT}</script>
 </body>
 </html>
 """
 
 
-# --- Per-brief PDF, plain tables/lists, self-contained (same philosophy as
-# the Reporting Hub PDF -- no charts/CDN dependency, safe for an unattended
-# Playwright render, and this one specifically needs to be a clean,
-# shareable document a writer can open on its own). ---
+# --- PDFs: plain HTML/CSS, self-contained, no charts/CDN dependency
+# (same philosophy as the Reporting Hub's PDF) ---
 
 def _render_section_item_print(section):
     label = section["heading"] or section["level"].capitalize()
@@ -372,51 +618,9 @@ def _generate_brief_print_html(brief):
 """
 
 
-def _save_brief_pdf(brief, briefs_dir=BRIEFS_PDF_DIR):
-    print_html = _generate_brief_print_html(brief)
-    briefs_dir.mkdir(parents=True, exist_ok=True)
-    pdf_path = briefs_dir / _brief_pdf_filename(brief["brief_id"])
-
-    with sync_playwright() as playwright:
-        browser = playwright.chromium.launch(headless=True)
-        page = browser.new_page()
-        page.set_content(print_html)
-        page.pdf(
-            path=str(pdf_path),
-            format="A4",
-            print_background=True,
-            margin={"top": "20px", "bottom": "20px", "left": "20px", "right": "20px"},
-        )
-        browser.close()
-
-    return pdf_path
-
-
-# --- Per-draft PDF: unlike the brief's PDF (a structured spec, rendered as
-# tables), this one is meant to read like an actual article -- real
-# headings, real paragraphs -- since the whole point is handing a finished
-# draft to a human editor/writer to read and mark up, not a data sheet. ---
-
-_DRAFT_HEADING_TAG = {"H2": "h2", "H3": "h3", "H4": "h4"}
-
-
-def _render_draft_section_print(section):
-    heading = section.get("heading")
-    heading_html = ""
-    if heading:
-        tag = _DRAFT_HEADING_TAG.get(section["level"], "h2")
-        heading_html = f"<{tag}>{html.escape(heading)}</{tag}>"
-    paragraphs_html = "".join(
-        f"<p>{html.escape(paragraph)}</p>"
-        for paragraph in section["content"].split("\n\n")
-        if paragraph.strip()
-    )
-    return f"{heading_html}{paragraphs_html}"
-
-
 def _generate_draft_print_html(brief, draft):
     total_words = sum(section["word_count"] for section in draft["sections"])
-    body_html = "".join(_render_draft_section_print(section) for section in draft["sections"])
+    body_html = "".join(_render_draft_section_html(section) for section in draft["sections"])
 
     return f"""<!doctype html>
 <html lang="en">
@@ -448,11 +652,60 @@ def _generate_draft_print_html(brief, draft):
 """
 
 
-def _save_draft_pdf(brief, draft, drafts_dir=DRAFTS_PDF_DIR):
-    print_html = _generate_draft_print_html(brief, draft)
-    drafts_dir.mkdir(parents=True, exist_ok=True)
-    pdf_path = drafts_dir / _draft_pdf_filename(brief["brief_id"])
+def _generate_qa_print_html(brief, review):
+    report = review["report"]
+    color = _score_color(review["score"])
+    fields_rows = "".join(
+        f"<tr><th>{html.escape(label)}</th><td>{html.escape(str(value))}</td></tr>"
+        for label, value in _qa_report_fields(report)
+    )
+    deductions = report.get("deductions") or []
+    deductions_html = (
+        "".join(f"<li>{html.escape(d)}</li>" for d in deductions)
+        if deductions
+        else "<li>No deductions — clean pass.</li>"
+    )
+    judgment_notes = report.get("judgment_notes") or "—"
 
+    return f"""<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>QA Report - {html.escape(brief["topic"])}</title>
+<style>
+  * {{ box-sizing: border-box; }}
+  body {{ margin: 0; background: #ffffff; color: #0b0b0b; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; padding: 24px; }}
+  h1 {{ font-size: 1.3rem; margin-bottom: 4px; }}
+  h2 {{ font-size: 1rem; margin: 26px 0 8px; }}
+  header p {{ color: #52514e; margin-top: 0; }}
+  .score {{ font-size: 2.4rem; font-weight: 800; color: {color}; margin-bottom: 16px; }}
+  .score span {{ font-size: 1.1rem; color: #52514e; font-weight: 600; }}
+  table {{ width: 100%; border-collapse: collapse; margin-bottom: 8px; }}
+  th, td {{ text-align: left; padding: 7px 10px; font-size: 0.85rem; vertical-align: top; border: 1px solid #cfcec8; }}
+  th {{ width: 220px; color: #52514e; font-weight: 600; font-size: 0.72rem; text-transform: uppercase; background: #f6f5f1; }}
+  ul {{ margin: 0; padding-left: 20px; font-size: 0.87rem; }}
+  li {{ margin-bottom: 4px; }}
+  p.notes {{ font-size: 0.87rem; }}
+</style>
+</head>
+<body>
+  <header>
+    <h1>{html.escape(brief["topic"])}</h1>
+    <p>QA report &middot; reviewed {html.escape(_format_created_at(review["created_at"]))}</p>
+  </header>
+  <div class="score">{review['score']}<span>/10</span></div>
+  <table>{fields_rows}</table>
+  <h2>Deductions</h2>
+  <ul>{deductions_html}</ul>
+  <h2>Judgment Notes</h2>
+  <p class="notes">{html.escape(judgment_notes)}</p>
+</body>
+</html>
+"""
+
+
+def _render_pdf(print_html, pdf_path):
+    pdf_path.parent.mkdir(parents=True, exist_ok=True)
     with sync_playwright() as playwright:
         browser = playwright.chromium.launch(headless=True)
         page = browser.new_page()
@@ -464,7 +717,6 @@ def _save_draft_pdf(brief, draft, drafts_dir=DRAFTS_PDF_DIR):
             margin={"top": "20px", "bottom": "20px", "left": "20px", "right": "20px"},
         )
         browser.close()
-
     return pdf_path
 
 
@@ -474,14 +726,26 @@ def build_and_save_content_page():
         DOCS_DIR.mkdir(parents=True, exist_ok=True)
         briefs = load_all_briefs(connection)
         drafts_by_brief = load_all_drafts_by_brief(connection)
+        qa_reviews_by_brief = load_all_qa_reviews_by_brief(connection)
 
         for brief in briefs:
-            _save_brief_pdf(brief)
+            _render_pdf(_generate_brief_print_html(brief), BRIEFS_PDF_DIR / _brief_pdf_filename(brief["brief_id"]))
+
             draft = drafts_by_brief.get(brief["brief_id"])
             if draft:
-                _save_draft_pdf(brief, draft)
+                _render_pdf(
+                    _generate_draft_print_html(brief, draft),
+                    DRAFTS_PDF_DIR / _draft_pdf_filename(brief["brief_id"]),
+                )
 
-        content_html = generate_content_page_html(briefs, drafts_by_brief)
+            review = qa_reviews_by_brief.get(brief["brief_id"])
+            if review:
+                _render_pdf(
+                    _generate_qa_print_html(brief, review),
+                    QA_PDF_DIR / _qa_pdf_filename(brief["brief_id"]),
+                )
+
+        content_html = generate_content_page_html(briefs, drafts_by_brief, qa_reviews_by_brief)
         with open(CONTENT_FILE_PATH, "w", encoding="utf-8") as content_file:
             content_file.write(content_html)
 

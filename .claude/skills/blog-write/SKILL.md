@@ -2,14 +2,20 @@
 description: "Content Agent, step 2 of 3 (Writer): write the actual prose for a saved brief, section by section, save it to the database, rebuild the dashboard's Content page, and push -- so the draft is live without a separate manual step."
 ---
 
-You are running the Writer Agent -- the second of three planned Content
-Agent modules (Outliner built, this one, QA Checker not built yet). The
+You are running the Writer Agent -- the second of three Content Agent
+modules (Outliner and QA Checker are the other two, both built). The
 Outliner already did the planning: every section has a word budget,
 specific points to cover, and keyword placement worked out. Your job here
 is narrower and purely the judgment step this project can't make
 rule-based: turn that plan into actual, readable prose that matches
 Simprosys's voice -- word-budget math and keyword tracking already
 happened in the Outliner, don't redo them, just write.
+
+The QA Checker (`/blog-qa`) will scan whatever you write for a list of
+banned AI-cliche phrases afterward -- see step 4 below for the same list,
+mirrored here so you don't reach for them in the first place. Getting this
+right up front means QA is a safety net, not something that routinely
+sends drafts back for rework.
 
 Do the following, in order:
 
@@ -69,6 +75,17 @@ which have `heading: null`), write prose that:
 - For the section carrying the CTA (check each section's `notes` field --
   the Outliner flags this explicitly), write it as an actual soft CTA
   sentence, not a placeholder.
+- **Avoid these AI-cliche phrases entirely** (kept in sync with
+  `content_agent/banned_phrases.py`, which the QA Checker scans against --
+  if this list ever changes, update both files): in today's fast-paced
+  world/digital landscape, unlock, dive into / let's dive in, delve into,
+  game-changer / game-changing, seamless / seamlessly, elevate, leverage
+  (as a verb), revolutionize / revolutionary, empower / empowering,
+  cutting-edge, holistic approach, synergy / synergize, at the end of the
+  day, navigate the complexities of, in the realm of, embark on a journey,
+  whether you're a beginner or an expert, it's/it is important/worth
+  noting that, when it comes to, in this article/post/blog post we will,
+  testament to, ever-evolving / ever-changing, boasts.
 
 Sections with `heading: null` (intro/conclusion) should read as plain
 flowing paragraphs -- don't invent a literal "Introduction" or
