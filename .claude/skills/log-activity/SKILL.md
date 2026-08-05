@@ -58,13 +58,19 @@ For each bullet Rahul gave you, decide:
   what it refers to. When genuinely unsure, ask rather than guessing.
 - **Or is this a brand new task?** If it doesn't match anything currently
   open, it's new.
-- **What's today's status** for that task: `in_progress` (worked on it,
-  not done), `completed` (finished today), or `blocked` (stuck on
-  something outside Rahul's control).
+- **What's today's status** for that task: `not_started` (planned for
+  today, nothing happened yet), `in_progress` (worked on it, not done),
+  `completed` (finished today), or `blocked` (stuck on something outside
+  Rahul's control).
 - **Category** -- Rahul will tell you what categories he's using; don't
   invent your own scheme.
+- **Priority**, if Rahul's report includes one (e.g. High/Medium/Low) --
+  optional, leave it out if he doesn't give one.
 - **day_note** -- a short, specific note of what actually happened with
-  this task today (not a restatement of the task's name).
+  this task today (not a restatement of the task's name). If Rahul's
+  report includes a time range or time spent, fold that into the note
+  (e.g. "09:30-09:45 - 15 min") rather than inventing separate fields for
+  it -- there's no dedicated time-tracking field yet (see step 8).
 - **target_notes** -- only if Rahul mentions a goal or deadline for a
   task (new or existing). Leave it out otherwise; don't invent one.
 
@@ -106,6 +112,13 @@ git push
 
 ## 8. Report back
 Tell Rahul: how many tasks were logged (new vs. continued), how many were
-completed/in-progress/blocked today, any tasks still open that haven't
-moved in a while (worth a nudge), and the dashboard link:
+completed/in-progress/not-started/blocked today, any tasks still open
+that haven't moved in a while (worth a nudge), and the dashboard link:
 https://rahulkhant.github.io/seo-audit-automation/activity.html
+
+If Rahul's report included time ranges or time-spent figures per task,
+mention that these are currently only preserved as text inside each
+entry's `day_note`, not as a structured field -- there's no time-per-task
+or hours-worked KPI yet. Worth flagging as a possible future addition if
+he wants that tracked properly (a dedicated `time_spent_minutes` field
+plus a "hours logged" KPI/chart), not something to build unprompted.

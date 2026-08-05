@@ -47,6 +47,7 @@ from activity_agent.database import get_connection, load_all_logs_with_entries, 
 from agent4_dashboard.build_dashboard_metronic import (
     ICON_DOWNLOAD,
     ICON_HISTORY,
+    ICON_NEW,
     ICON_RESOLVED,
     ICON_TOTAL,
     ICON_WARNING,
@@ -65,10 +66,22 @@ WEEKLY_PDF_FILENAME = "weekly-latest.pdf"
 MONTHLY_PDF_FILENAME = "monthly-latest.pdf"
 
 _BLOCKED_COLOR = MX_SEVERITY["critical"]["color"]
-_STATUS_LABEL = {"in_progress": "In Progress", "completed": "Completed", "blocked": "Blocked"}
-_STATUS_COLOR = {"in_progress": MX_PRIMARY_COLOR, "completed": MX_RESOLVED_COLOR, "blocked": _BLOCKED_COLOR}
+_NOT_STARTED_COLOR = "#8a8a8a"
+_STATUS_LABEL = {
+    "not_started": "Not Started", "in_progress": "In Progress",
+    "completed": "Completed", "blocked": "Blocked",
+}
+_STATUS_COLOR = {
+    "not_started": _NOT_STARTED_COLOR, "in_progress": MX_PRIMARY_COLOR,
+    "completed": MX_RESOLVED_COLOR, "blocked": _BLOCKED_COLOR,
+}
 
 _ACTIVITY_PAGE_STYLE = """
+  /* 5 KPI tiles here, not the shared 4-column grid built for the audit
+     dashboard's Critical/Warning/Info set -- auto-fit instead of a fixed
+     column count so this still collapses gracefully on narrow screens
+     without duplicating the shared style's breakpoint values. */
+  .kpi-row { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
   .reports-row { display: flex; gap: 10px; margin-bottom: 20px; }
   .task-list { display: flex; flex-direction: column; gap: 10px; }
   .task-row {
@@ -184,6 +197,7 @@ def _compute_kpis(open_tasks, logs, today):
             if entry["day_status"] == "completed":
                 completed_this_week += 1
 
+    not_started_count = sum(1 for t in open_tasks if t["status"] == "not_started")
     in_progress_count = sum(1 for t in open_tasks if t["status"] == "in_progress")
     blocked_count = sum(1 for t in open_tasks if t["status"] == "blocked")
 
@@ -194,6 +208,7 @@ def _compute_kpis(open_tasks, logs, today):
 
     return {
         "completed_this_week": completed_this_week,
+        "not_started": not_started_count,
         "in_progress": in_progress_count,
         "blocked": blocked_count,
         "days_logged_this_month": days_logged_this_month,
@@ -225,6 +240,7 @@ def _render_kpi_tiles(kpis):
     tiles = [
         ("Completed This Week", kpis["completed_this_week"], MX_RESOLVED_COLOR, ICON_RESOLVED),
         ("In Progress", kpis["in_progress"], MX_PRIMARY_COLOR, ICON_TOTAL),
+        ("Not Started", kpis["not_started"], _NOT_STARTED_COLOR, ICON_NEW),
         ("Blocked", kpis["blocked"], _BLOCKED_COLOR, ICON_WARNING),
         ("Days Logged This Month", kpis["days_logged_this_month"], MX_SEVERITY["info"]["color"], ICON_HISTORY),
     ]
@@ -285,6 +301,7 @@ def _render_open_task_row(task):
     color = _STATUS_COLOR.get(task["status"], MX_PRIMARY_COLOR)
     meta = " &middot; ".join(filter(None, [
         html.escape(task["category"]) if task.get("category") else None,
+        f"Priority: {html.escape(task['priority'])}" if task.get("priority") else None,
         f"started {_format_date(task['first_logged_date'])}",
         f"last update {_format_date(task['last_updated_date'])}",
     ]))
@@ -327,12 +344,14 @@ def _daily_pdf_filename(log_date):
 def _render_log_row(log):
     completed = sum(1 for e in log["entries"] if e["day_status"] == "completed")
     in_progress = sum(1 for e in log["entries"] if e["day_status"] == "in_progress")
+    not_started = sum(1 for e in log["entries"] if e["day_status"] == "not_started")
     blocked = sum(1 for e in log["entries"] if e["day_status"] == "blocked")
     modal_id = f"log-modal-{log['log_id']}"
 
     counts_html = "".join(filter(None, [
         f'<span class="status-pill" style="--pill-color: {MX_RESOLVED_COLOR}">{completed} done</span>' if completed else None,
         f'<span class="status-pill" style="--pill-color: {MX_PRIMARY_COLOR}">{in_progress} in progress</span>' if in_progress else None,
+        f'<span class="status-pill" style="--pill-color: {_NOT_STARTED_COLOR}">{not_started} not started</span>' if not_started else None,
         f'<span class="status-pill" style="--pill-color: {_BLOCKED_COLOR}">{blocked} blocked</span>' if blocked else None,
     ]))
 
@@ -353,6 +372,7 @@ def _render_log_row(log):
 def _render_log_entry_item(entry):
     color = _STATUS_COLOR.get(entry["day_status"], MX_PRIMARY_COLOR)
     category_html = f'<span class="log-entry-category">{html.escape(entry["category"])}</span>' if entry.get("category") else ""
+    priority_html = f'<span class="log-entry-category">Priority: {html.escape(entry["priority"])}</span>' if entry.get("priority") else ""
     target_html = (
         f'<div class="log-entry-target">Target: {html.escape(entry["target_notes"])}</div>'
         if entry.get("target_notes")
@@ -362,6 +382,7 @@ def _render_log_entry_item(entry):
     <div class="log-entry-item">
       <div class="log-entry-header">
         {category_html}
+        {priority_html}
         <span class="log-entry-desc">{html.escape(entry["description"])}</span>
         <span class="status-pill" style="--pill-color: {color}; margin-left: auto;">{_STATUS_LABEL.get(entry["day_status"], entry["day_status"])}</span>
       </div>
@@ -469,6 +490,7 @@ def _entry_rows_html(entries):
         f"""<tr>
           <td>{html.escape(entry.get("category") or "—")}</td>
           <td>{html.escape(entry["description"])}</td>
+          <td>{html.escape(entry.get("priority") or "—")}</td>
           <td>{html.escape(_STATUS_LABEL.get(entry["day_status"], entry["day_status"]))}</td>
           <td>{html.escape(entry.get("day_note") or "—")}</td>
           <td>{html.escape(entry.get("target_notes") or "—")}</td>
@@ -491,7 +513,7 @@ def _generate_daily_print_html(log):
     <p>{html.escape(log["daily_notes"]) if log.get("daily_notes") else f"{len(log['entries'])} task(s) touched"}</p>
   </header>
   <table>
-    <thead><tr><th>Category</th><th>Task</th><th>Status</th><th>Note</th><th>Target</th></tr></thead>
+    <thead><tr><th>Category</th><th>Task</th><th>Priority</th><th>Status</th><th>Note</th><th>Target</th></tr></thead>
     <tbody>{_entry_rows_html(log["entries"])}</tbody>
   </table>
 </body>
@@ -510,7 +532,7 @@ def _generate_range_print_html(title, subtitle, logs_in_range):
               <div class="day-heading">{_format_date(log["log_date"])}</div>
               {f'<div class="day-notes">{html.escape(log["daily_notes"])}</div>' if log.get("daily_notes") else ""}
               <table>
-                <thead><tr><th>Category</th><th>Task</th><th>Status</th><th>Note</th><th>Target</th></tr></thead>
+                <thead><tr><th>Category</th><th>Task</th><th>Priority</th><th>Status</th><th>Note</th><th>Target</th></tr></thead>
                 <tbody>{_entry_rows_html(log["entries"])}</tbody>
               </table>
             </div>

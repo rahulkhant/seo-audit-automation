@@ -15,11 +15,16 @@ own tables, per the modular-design principle already used by content_agent.
 The tables
 ----------
 "activity_tasks" -- one row per real piece of work, persists across
-however many days it takes to finish. `status` is one of "in_progress",
-"completed", "blocked". `target_notes` is an optional free-text goal or
-deadline ("finish by Friday", "waiting on client approval") -- this is
-what makes the "performance" tracking real: not just "did something
-happen" but "is it moving toward what was actually intended."
+however many days it takes to finish. `status` is one of "not_started",
+"in_progress", "completed", "blocked" -- "not_started" added 2026-08-05
+once Rahul's actual daily report turned out to include planned-but-untouched
+items (0 minutes spent), which the original three-status set couldn't
+represent. `priority` is free text (High/Medium/Low, whatever Rahul uses),
+same optional-field pattern as `target_notes`, which is an optional
+free-text goal or deadline ("finish by Friday", "waiting on client
+approval") -- this is what makes the "performance" tracking real: not
+just "did something happen" but "is it moving toward what was actually
+intended."
 
 "activity_daily_logs" -- one row per calendar date Rahul reports on.
 `log_date` is UNIQUE and overwrite-only (same pattern as content_agent's
@@ -41,7 +46,7 @@ from datetime import datetime, timezone
 
 from agent2_storage.database import get_connection as _get_audit_connection
 
-VALID_STATUSES = ("in_progress", "completed", "blocked")
+VALID_STATUSES = ("not_started", "in_progress", "completed", "blocked")
 
 CREATE_ACTIVITY_TASKS_TABLE_SQL = """
 CREATE TABLE IF NOT EXISTS activity_tasks (
@@ -49,6 +54,7 @@ CREATE TABLE IF NOT EXISTS activity_tasks (
     description TEXT NOT NULL,
     category TEXT,
     status TEXT NOT NULL DEFAULT 'in_progress',
+    priority TEXT,
     target_notes TEXT,
     first_logged_date TEXT NOT NULL,
     last_updated_date TEXT NOT NULL,
@@ -143,14 +149,15 @@ def save_activity_log(connection, log_date, raw_input, daily_notes, entries):
             cursor = connection.execute(
                 """
                 INSERT INTO activity_tasks (
-                    description, category, status, target_notes,
+                    description, category, status, priority, target_notes,
                     first_logged_date, last_updated_date, completed_date
-                ) VALUES (?, ?, ?, ?, ?, ?, ?)
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     entry["description"],
                     entry.get("category"),
                     day_status,
+                    entry.get("priority"),
                     entry.get("target_notes"),
                     log_date,
                     log_date,
@@ -165,6 +172,7 @@ def save_activity_log(connection, log_date, raw_input, daily_notes, entries):
                     description = COALESCE(?, description),
                     category = COALESCE(?, category),
                     status = ?,
+                    priority = COALESCE(?, priority),
                     target_notes = COALESCE(?, target_notes),
                     last_updated_date = ?,
                     completed_date = ?
@@ -174,6 +182,7 @@ def save_activity_log(connection, log_date, raw_input, daily_notes, entries):
                     entry.get("description"),
                     entry.get("category"),
                     day_status,
+                    entry.get("priority"),
                     entry.get("target_notes"),
                     log_date,
                     completed_date,
@@ -239,7 +248,7 @@ def load_entries_for_log(connection, log_id):
         SELECT
             e.entry_id, e.log_id, e.task_id, e.day_status, e.day_note,
             t.description, t.category, t.status AS current_status,
-            t.target_notes, t.completed_date
+            t.priority, t.target_notes, t.completed_date
         FROM activity_log_entries e
         JOIN activity_tasks t ON t.task_id = e.task_id
         WHERE e.log_id = ?

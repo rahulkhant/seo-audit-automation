@@ -25,7 +25,8 @@ Input JSON shape:
                 "task_id": 7,                 # omit/null for a new task
                 "description": "...",
                 "category": "...",
-                "day_status": "in_progress" | "completed" | "blocked",
+                "priority": "...",             # optional, e.g. High/Medium/Low
+                "day_status": "not_started" | "in_progress" | "completed" | "blocked",
                 "day_note": "...",
                 "target_notes": "..."
             },

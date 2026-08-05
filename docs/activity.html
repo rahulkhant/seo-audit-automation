@@ -189,6 +189,11 @@
 </style>
 
 <style>
+  /* 5 KPI tiles here, not the shared 4-column grid built for the audit
+     dashboard's Critical/Warning/Info set -- auto-fit instead of a fixed
+     column count so this still collapses gracefully on narrow screens
+     without duplicating the shared style's breakpoint values. */
+  .kpi-row { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
   .reports-row { display: flex; gap: 10px; margin-bottom: 20px; }
   .task-list { display: flex; flex-direction: column; gap: 10px; }
   .task-row {
@@ -269,7 +274,7 @@
     <header class="topbar">
       <div>
         <div class="topbar-title">Activity &amp; Performance</div>
-        <div class="topbar-sub">0 day(s) logged</div>
+        <div class="topbar-sub">1 day(s) logged</div>
       </div>
       
     </header>
@@ -279,7 +284,7 @@
         <div class="kpi-card">
           <div class="kpi-icon" style="--kpi-color: #50cd89"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5 9 17.5 20 6.5"/></svg></div>
           <div>
-            <div class="kpi-value">0</div>
+            <div class="kpi-value">5</div>
             <div class="kpi-label">Completed This Week</div>
           </div>
         </div>
@@ -287,8 +292,16 @@
         <div class="kpi-card">
           <div class="kpi-icon" style="--kpi-color: #009ef7"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h11"/><path d="M8 12h11"/><path d="M8 18h11"/><path d="M4 6h.01"/><path d="M4 12h.01"/><path d="M4 18h.01"/></svg></div>
           <div>
-            <div class="kpi-value">0</div>
+            <div class="kpi-value">4</div>
             <div class="kpi-label">In Progress</div>
+          </div>
+        </div>
+        
+        <div class="kpi-card">
+          <div class="kpi-icon" style="--kpi-color: #8a8a8a"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 8.5v7"/><path d="M8.5 12h7"/></svg></div>
+          <div>
+            <div class="kpi-value">4</div>
+            <div class="kpi-label">Not Started</div>
           </div>
         </div>
         
@@ -303,7 +316,7 @@
         <div class="kpi-card">
           <div class="kpi-icon" style="--kpi-color: #7239ea"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg></div>
           <div>
-            <div class="kpi-value">0</div>
+            <div class="kpi-value">1</div>
             <div class="kpi-label">Days Logged This Month</div>
           </div>
         </div>
@@ -315,24 +328,278 @@
       
     <div class="card chart-card">
       <div class="card-header"><div class="card-header-title">Work Distribution This Month</div></div>
-      <div class="card-body"><div class="chart-empty">No activity logged this month yet.</div></div>
+      <div class="card-body"><div id="categoryChart"></div></div>
     </div>
     
       
     <div class="card">
-      <div class="card-header"><div class="card-header-title">Open Tasks (0)</div></div>
-      <div class="card-body"><div class="empty-state">Nothing open right now.</div></div>
+      <div class="card-header"><div class="card-header-title">Open Tasks (8)</div></div>
+      <div class="card-body"><div class="task-list">
+    <div class="task-row">
+      <div class="task-row-main">
+        <div class="task-desc">Update SEO task tracker and prepare today&#x27;s work report</div>
+        <div class="task-meta">Documentation &middot; Priority: Low &middot; started Aug 05, 2026 &middot; last update Aug 05, 2026</div>
+        
+      </div>
+      <span class="status-pill" style="--pill-color: #8a8a8a">Not Started</span>
+    </div>
+    
+    <div class="task-row">
+      <div class="task-row-main">
+        <div class="task-desc">Share technical SEO fixes with the development team</div>
+        <div class="task-meta">Developer Coordination &middot; Priority: Medium &middot; started Aug 05, 2026 &middot; last update Aug 05, 2026</div>
+        
+      </div>
+      <span class="status-pill" style="--pill-color: #8a8a8a">Not Started</span>
+    </div>
+    
+    <div class="task-row">
+      <div class="task-row-main">
+        <div class="task-desc">Review newly acquired backlinks and identify toxic domains</div>
+        <div class="task-meta">Backlink Analysis &middot; Priority: Medium &middot; started Aug 05, 2026 &middot; last update Aug 05, 2026</div>
+        
+      </div>
+      <span class="status-pill" style="--pill-color: #8a8a8a">Not Started</span>
+    </div>
+    
+    <div class="task-row">
+      <div class="task-row-main">
+        <div class="task-desc">Analyze GA4 organic traffic and identify landing pages with traffic drops</div>
+        <div class="task-meta">Analytics &middot; Priority: Medium &middot; started Aug 05, 2026 &middot; last update Aug 05, 2026</div>
+        
+      </div>
+      <span class="status-pill" style="--pill-color: #009ef7">In Progress</span>
+    </div>
+    
+    <div class="task-row">
+      <div class="task-row-main">
+        <div class="task-desc">Validate Product, FAQ, and Breadcrumb schema across priority pages</div>
+        <div class="task-meta">Schema Markup &middot; Priority: Medium &middot; started Aug 05, 2026 &middot; last update Aug 05, 2026</div>
+        
+      </div>
+      <span class="status-pill" style="--pill-color: #009ef7">In Progress</span>
+    </div>
+    
+    <div class="task-row">
+      <div class="task-row-main">
+        <div class="task-desc">Analyze competitors&#x27; newly published content and keyword gaps</div>
+        <div class="task-meta">Competitor Analysis &middot; Priority: Medium &middot; started Aug 05, 2026 &middot; last update Aug 05, 2026</div>
+        
+      </div>
+      <span class="status-pill" style="--pill-color: #8a8a8a">Not Started</span>
+    </div>
+    
+    <div class="task-row">
+      <div class="task-row-main">
+        <div class="task-desc">Reviewed blog content for keyword placement and heading hierarchy</div>
+        <div class="task-meta">Content SEO &middot; Priority: Medium &middot; started Aug 05, 2026 &middot; last update Aug 05, 2026</div>
+        
+      </div>
+      <span class="status-pill" style="--pill-color: #009ef7">In Progress</span>
+    </div>
+    
+    <div class="task-row">
+      <div class="task-row-main">
+        <div class="task-desc">Checked Core Web Vitals for top landing pages</div>
+        <div class="task-meta">Technical SEO &middot; Priority: High &middot; started Aug 05, 2026 &middot; last update Aug 05, 2026</div>
+        
+      </div>
+      <span class="status-pill" style="--pill-color: #009ef7">In Progress</span>
+    </div>
+    </div></div>
     </div>
     
       <div class="card">
         <div class="card-header"><div class="card-header-title">Daily Log</div></div>
-        <div class="card-body"><div class="empty-state">No activity logged yet -- run the /log-activity skill at the end of the day to start tracking.</div></div>
+        <div class="card-body"><div class="log-list">
+    <div class="log-row" data-modal-target="log-modal-1">
+      <div class="log-row-main">
+        <div class="log-date">Aug 05, 2026</div>
+        <div class="log-meta">Test run of the Activity &amp; Performance module -- first real day logged.</div>
+      </div>
+      <div class="log-row-right">
+        <div class="log-counts"><span class="status-pill" style="--pill-color: #50cd89">5 done</span><span class="status-pill" style="--pill-color: #009ef7">4 in progress</span><span class="status-pill" style="--pill-color: #8a8a8a">4 not started</span></div>
+        <a class="btn btn-light" data-no-row-click href="activity_reports/daily-2026-08-05.pdf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11"/><path d="M7.5 11 12 15.5 16.5 11"/><path d="M5 18.5h14"/></svg><span>PDF</span></a>
+      </div>
+    </div>
+    </div>
+    <dialog class="log-modal" id="log-modal-1">
+      <div class="log-modal-header">
+        <div>
+          <div class="log-modal-title">Aug 05, 2026</div>
+          <div class="log-modal-meta">Logged Aug 05, 2026, 11:29 AM UTC</div>
+        </div>
+        <div class="log-modal-actions">
+          <a class="btn btn-light" href="activity_reports/daily-2026-08-05.pdf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11"/><path d="M7.5 11 12 15.5 16.5 11"/><path d="M5 18.5h14"/></svg><span>Download PDF</span></a>
+          <button class="btn-icon-close log-modal-close" type="button" aria-label="Close">&#10005;</button>
+        </div>
+      </div>
+      <div class="log-modal-body">
+        
+    <div class="log-entry-item">
+      <div class="log-entry-header">
+        <span class="log-entry-category">Daily Planning</span>
+        <span class="log-entry-category">Priority: High</span>
+        <span class="log-entry-desc">Reviewed yesterday&#x27;s pending SEO tasks and planned today&#x27;s work</span>
+        <span class="status-pill" style="--pill-color: #50cd89; margin-left: auto;">Completed</span>
+      </div>
+      <div class="log-entry-note">09:30-09:45 - 15 min</div>
+      
+    </div>
+    
+    <div class="log-entry-item">
+      <div class="log-entry-header">
+        <span class="log-entry-category">Technical SEO</span>
+        <span class="log-entry-category">Priority: High</span>
+        <span class="log-entry-desc">Crawled 120 website pages and identified broken internal links</span>
+        <span class="status-pill" style="--pill-color: #50cd89; margin-left: auto;">Completed</span>
+      </div>
+      <div class="log-entry-note">09:45-10:30 - 45 min</div>
+      
+    </div>
+    
+    <div class="log-entry-item">
+      <div class="log-entry-header">
+        <span class="log-entry-category">Technical SEO</span>
+        <span class="log-entry-category">Priority: High</span>
+        <span class="log-entry-desc">Checked Core Web Vitals for top landing pages</span>
+        <span class="status-pill" style="--pill-color: #009ef7; margin-left: auto;">In Progress</span>
+      </div>
+      <div class="log-entry-note">10:30-11:15 - 30 min</div>
+      
+    </div>
+    
+    <div class="log-entry-item">
+      <div class="log-entry-header">
+        <span class="log-entry-category">On-Page SEO</span>
+        <span class="log-entry-category">Priority: High</span>
+        <span class="log-entry-desc">Optimized title tags and meta descriptions for 8 category pages</span>
+        <span class="status-pill" style="--pill-color: #50cd89; margin-left: auto;">Completed</span>
+      </div>
+      <div class="log-entry-note">11:15-12:00 - 45 min</div>
+      
+    </div>
+    
+    <div class="log-entry-item">
+      <div class="log-entry-header">
+        <span class="log-entry-category">Content SEO</span>
+        <span class="log-entry-category">Priority: Medium</span>
+        <span class="log-entry-desc">Reviewed blog content for keyword placement and heading hierarchy</span>
+        <span class="status-pill" style="--pill-color: #009ef7; margin-left: auto;">In Progress</span>
+      </div>
+      <div class="log-entry-note">12:00-12:30 - 20 min</div>
+      
+    </div>
+    
+    <div class="log-entry-item">
+      <div class="log-entry-header">
+        <span class="log-entry-category">Competitor Analysis</span>
+        <span class="log-entry-category">Priority: Medium</span>
+        <span class="log-entry-desc">Analyze competitors&#x27; newly published content and keyword gaps</span>
+        <span class="status-pill" style="--pill-color: #8a8a8a; margin-left: auto;">Not Started</span>
+      </div>
+      <div class="log-entry-note">01:30-02:00 - 0 min</div>
+      
+    </div>
+    
+    <div class="log-entry-item">
+      <div class="log-entry-header">
+        <span class="log-entry-category">Keyword Research</span>
+        <span class="log-entry-category">Priority: High</span>
+        <span class="log-entry-desc">Find long-tail keywords for Google Shopping Feed blog cluster</span>
+        <span class="status-pill" style="--pill-color: #50cd89; margin-left: auto;">Completed</span>
+      </div>
+      <div class="log-entry-note">02:00-02:45 - 45 min</div>
+      
+    </div>
+    
+    <div class="log-entry-item">
+      <div class="log-entry-header">
+        <span class="log-entry-category">Schema Markup</span>
+        <span class="log-entry-category">Priority: Medium</span>
+        <span class="log-entry-desc">Validate Product, FAQ, and Breadcrumb schema across priority pages</span>
+        <span class="status-pill" style="--pill-color: #009ef7; margin-left: auto;">In Progress</span>
+      </div>
+      <div class="log-entry-note">02:45-03:15 - 15 min</div>
+      
+    </div>
+    
+    <div class="log-entry-item">
+      <div class="log-entry-header">
+        <span class="log-entry-category">Google Search Console</span>
+        <span class="log-entry-category">Priority: High</span>
+        <span class="log-entry-desc">Review indexing issues and investigate excluded pages</span>
+        <span class="status-pill" style="--pill-color: #50cd89; margin-left: auto;">Completed</span>
+      </div>
+      <div class="log-entry-note">03:15-03:45 - 30 min</div>
+      
+    </div>
+    
+    <div class="log-entry-item">
+      <div class="log-entry-header">
+        <span class="log-entry-category">Analytics</span>
+        <span class="log-entry-category">Priority: Medium</span>
+        <span class="log-entry-desc">Analyze GA4 organic traffic and identify landing pages with traffic drops</span>
+        <span class="status-pill" style="--pill-color: #009ef7; margin-left: auto;">In Progress</span>
+      </div>
+      <div class="log-entry-note">03:45-04:15 - 20 min</div>
+      
+    </div>
+    
+    <div class="log-entry-item">
+      <div class="log-entry-header">
+        <span class="log-entry-category">Backlink Analysis</span>
+        <span class="log-entry-category">Priority: Medium</span>
+        <span class="log-entry-desc">Review newly acquired backlinks and identify toxic domains</span>
+        <span class="status-pill" style="--pill-color: #8a8a8a; margin-left: auto;">Not Started</span>
+      </div>
+      <div class="log-entry-note">04:15-04:45 - 0 min</div>
+      
+    </div>
+    
+    <div class="log-entry-item">
+      <div class="log-entry-header">
+        <span class="log-entry-category">Developer Coordination</span>
+        <span class="log-entry-category">Priority: Medium</span>
+        <span class="log-entry-desc">Share technical SEO fixes with the development team</span>
+        <span class="status-pill" style="--pill-color: #8a8a8a; margin-left: auto;">Not Started</span>
+      </div>
+      <div class="log-entry-note">04:45-05:15 - 0 min</div>
+      
+    </div>
+    
+    <div class="log-entry-item">
+      <div class="log-entry-header">
+        <span class="log-entry-category">Documentation</span>
+        <span class="log-entry-category">Priority: Low</span>
+        <span class="log-entry-desc">Update SEO task tracker and prepare today&#x27;s work report</span>
+        <span class="status-pill" style="--pill-color: #8a8a8a; margin-left: auto;">Not Started</span>
+      </div>
+      <div class="log-entry-note">05:15-05:45 - 0 min</div>
+      
+    </div>
+    
+      </div>
+    </dialog>
+    </div>
       </div>
     </main>
   </div>
 </div>
-
-<script></script>
+<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+<script>
+var categoryChartEl = document.querySelector("#categoryChart");
+if (categoryChartEl && window.ApexCharts) {
+  var categoryChart = new ApexCharts(categoryChartEl, {
+    chart: { type: "donut", height: 300, fontFamily: "Inter, sans-serif" },
+    series: [1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+    labels: ["Daily Planning", "Technical SEO", "On-Page SEO", "Content SEO", "Competitor Analysis", "Keyword Research", "Schema Markup", "Google Search Console", "Analytics", "Backlink Analysis", "Developer Coordination", "Documentation"],
+    legend: { position: "bottom" },
+    dataLabels: { enabled: false }
+  });
+  categoryChart.render();
+}
+</script>
 <script>
 document.querySelectorAll(".log-row").forEach(function (row) {
   row.addEventListener("click", function (event) {
