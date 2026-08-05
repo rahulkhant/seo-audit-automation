@@ -216,6 +216,26 @@ def check_banned_phrases(draft):
     return find_banned_phrases(_full_text(draft))
 
 
+# Matches a literal "--" (how the model tends to type a dash in plain
+# text) or a real em-dash character. Found via QA reviewing the actual
+# Google Merchant Center draft (2026-08-05): nearly every section leaned
+# on one of these as a sentence aside, which reads as a repetitive,
+# mechanical pattern across a full article even though no single instance
+# is wrong on its own -- exactly the kind of thing worth catching
+# deterministically rather than relying on judgment to notice it every time.
+_DASH_ASIDE_RE = re.compile(r"--|—")
+
+
+def check_dash_usage(draft):
+    full_text = _full_text(draft)
+    total_words = len(full_text.split()) or 1
+    occurrences = len(_DASH_ASIDE_RE.findall(full_text))
+    return {
+        "occurrences": occurrences,
+        "rate_per_1000_words": round(occurrences / total_words * 1000, 2),
+    }
+
+
 def run_deterministic_checks(brief, draft):
     """Everything computable without a model, bundled into one report."""
     return {
@@ -226,6 +246,7 @@ def run_deterministic_checks(brief, draft):
         "sentence_complexity": check_sentence_complexity(draft),
         "passive_voice": check_passive_voice(draft),
         "banned_phrases": check_banned_phrases(draft),
+        "dash_usage": check_dash_usage(draft),
     }
 
 
@@ -288,6 +309,14 @@ def compute_score(deterministic, judgment_adjustment=0.0, judgment_notes=""):
         score -= penalty
         phrase_list = ", ".join(f'"{phrase}" x{count}' for phrase, count in banned.items())
         deductions.append(f"Banned phrase(s) found: {phrase_list} (-{penalty})")
+
+    dash_usage = deterministic["dash_usage"]
+    if dash_usage["rate_per_1000_words"] > 3.0:
+        score -= 1.0
+        deductions.append(
+            f"Dash-aside overuse: {dash_usage['occurrences']} occurrences "
+            f"({dash_usage['rate_per_1000_words']} per 1000 words) -- reads as repetitive (-1.0)"
+        )
 
     score += judgment_adjustment
     score = max(0.0, min(10.0, score))

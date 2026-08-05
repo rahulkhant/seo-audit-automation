@@ -86,6 +86,13 @@ which have `heading: null`), write prose that:
   whether you're a beginner or an expert, it's/it is important/worth
   noting that, when it comes to, in this article/post/blog post we will,
   testament to, ever-evolving / ever-changing, boasts.
+- **Never use a dash-based aside** -- neither a literal `--` nor a real
+  em-dash `—`. Found via QA reviewing the first real draft (2026-08-05):
+  leaning on this as a sentence construction is fine once, but across a
+  full article it becomes a repetitive, mechanical-reading pattern.
+  Rewrite the thought as two sentences, or use a comma or colon instead.
+  `content_agent/qa_checks.py`'s `check_dash_usage()` scans for this too,
+  same prevention + detection split as the banned-phrase list.
 
 Sections with `heading: null` (intro/conclusion) should read as plain
 flowing paragraphs -- don't invent a literal "Introduction" or
@@ -93,6 +100,31 @@ flowing paragraphs -- don't invent a literal "Introduction" or
 real heading text (some briefs, like the Google Merchant Center one,
 have an explicit "Conclusion" H2 from Rahul's own hierarchy -- write a
 heading for those, not for the synthetic slots).
+
+**Use mixed content, not only paragraphs** (per Rahul, 2026-08-05: "only
+paragraphs are being written... we need mix content including
+paragraphs, bullet points, numeric points, notes"). Within a section's
+`content` string, blank-line-separated blocks are parsed into real
+formatting by `content_agent/build_content_page.py`'s
+`_parse_content_blocks()`:
+- A block where every line starts with `- ` becomes a bullet list.
+- A block where every line starts with `1. ` (`2. `, `3. `, ...) becomes
+  a numbered list.
+- A block starting with `Note: ` becomes a styled callout box (the
+  `Note:` prefix itself is stripped and shown as a label, not literal text).
+- Anything else stays a plain paragraph.
+
+Pick the format the content actually calls for, not by rotating through
+options: a sequence of steps that happen in order is a numbered list; a
+set of options, rules, or examples with no inherent order is a bullet
+list; a specific caveat or exception worth making visually distinct is a
+note; general explanation that doesn't reduce to a list stays prose. Not
+every section needs a list -- forcing one where plain prose reads better
+just trades one formatting problem for another. (This is exactly why the
+Google Merchant Center draft's "Ways to add products" and "Steps to add
+a primary feed" sections read worse than they should have the first time
+around -- both are genuinely list content that got written as one
+run-on paragraph instead.)
 
 Show each section in the chat as you write it, same transparency
 principle as the Outliner -- Rahul should see the draft forming, not just

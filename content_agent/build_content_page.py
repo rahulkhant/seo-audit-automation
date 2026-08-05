@@ -29,6 +29,7 @@ audit pipeline.
 """
 
 import html
+import re
 from datetime import datetime
 from pathlib import Path
 
@@ -137,6 +138,12 @@ _CONTENT_PAGE_STYLE = """
   .draft-article h3 { font-size: 1.02rem; margin: 24px 0 6px; }
   .draft-article h4 { font-size: 0.94rem; margin: 20px 0 6px; }
   .draft-article p { font-size: 0.9rem; line-height: 1.6; margin: 0 0 12px; }
+  .draft-article ul, .draft-article ol { font-size: 0.9rem; line-height: 1.6; margin: 0 0 12px; padding-left: 22px; }
+  .draft-article li { margin-bottom: 4px; }
+  .draft-article .content-note {
+    background: var(--mx-primary-light); border-left: 3px solid var(--mx-primary); border-radius: 6px;
+    padding: 10px 14px; font-size: 0.87rem; line-height: 1.5; margin: 0 0 12px;
+  }
 
   .qa-score-hero { display: flex; align-items: baseline; gap: 8px; margin-bottom: 4px; }
   .qa-score-value { font-size: 2.2rem; font-weight: 800; color: var(--score-color); }
@@ -213,22 +220,68 @@ def _brief_fields(brief):
 # places rather than two independently-maintained mappings.
 _DRAFT_HEADING_TAG = {"H2": "h2", "H3": "h3", "H4": "h4"}
 
+# Lightweight content markup the Writer is instructed to use (see
+# .claude/skills/blog-write/SKILL.md) -- blank-line-separated blocks, "- "
+# for a bullet list, "1. " for a numbered list, a leading "Note:" for a
+# callout. Deliberately not a full Markdown parser or a bigger per-block
+# JSON schema change (each section's content stays one plain string) --
+# just enough structure to support mixed content (added 2026-08-05, per
+# Rahul's request: "only paragraphs are being written... we need mix
+# content including paragraphs, bullet points, numeric points, notes").
+_BULLET_LINE_RE = re.compile(r"^-\s+(.*)")
+_NUMBERED_LINE_RE = re.compile(r"^\d+\.\s+(.*)")
+_NOTE_PREFIX_RE = re.compile(r"^note:\s*(.*)", re.IGNORECASE)
+
+
+def _parse_content_blocks(content):
+    """Splits one section's raw content into typed blocks: paragraph,
+    bullet_list, numbered_list, or note. Shared by both the on-page article
+    view and the PDF, so formatting always stays identical between them."""
+    blocks = []
+    for raw_block in content.split("\n\n"):
+        lines = [line.strip() for line in raw_block.split("\n") if line.strip()]
+        if not lines:
+            continue
+
+        if all(_BULLET_LINE_RE.match(line) for line in lines):
+            blocks.append({"type": "bullet_list", "items": [_BULLET_LINE_RE.match(l).group(1) for l in lines]})
+        elif all(_NUMBERED_LINE_RE.match(line) for line in lines):
+            blocks.append({"type": "numbered_list", "items": [_NUMBERED_LINE_RE.match(l).group(1) for l in lines]})
+        elif _NOTE_PREFIX_RE.match(lines[0]):
+            first_line_text = _NOTE_PREFIX_RE.match(lines[0]).group(1)
+            blocks.append({"type": "note", "text": " ".join([first_line_text] + lines[1:])})
+        else:
+            blocks.append({"type": "paragraph", "text": " ".join(lines)})
+    return blocks
+
+
+def _render_content_blocks_html(content):
+    html_parts = []
+    for block in _parse_content_blocks(content):
+        if block["type"] == "bullet_list":
+            items_html = "".join(f"<li>{html.escape(item)}</li>" for item in block["items"])
+            html_parts.append(f"<ul>{items_html}</ul>")
+        elif block["type"] == "numbered_list":
+            items_html = "".join(f"<li>{html.escape(item)}</li>" for item in block["items"])
+            html_parts.append(f"<ol>{items_html}</ol>")
+        elif block["type"] == "note":
+            html_parts.append(f'<div class="content-note"><strong>Note:</strong> {html.escape(block["text"])}</div>')
+        else:
+            html_parts.append(f"<p>{html.escape(block['text'])}</p>")
+    return "".join(html_parts)
+
 
 def _render_draft_section_html(section):
-    """Renders one draft section as real heading + paragraph tags --
-    shared building block for both the on-page modal and the print PDF,
-    which differ only in surrounding page chrome/CSS, not this part."""
+    """Renders one draft section as a real heading plus its content
+    blocks (paragraphs/lists/notes) -- shared building block for both the
+    on-page modal and the print PDF, which differ only in surrounding
+    page chrome/CSS, not this part."""
     heading = section.get("heading")
     heading_html = ""
     if heading:
         tag = _DRAFT_HEADING_TAG.get(section["level"], "h2")
         heading_html = f"<{tag}>{html.escape(heading)}</{tag}>"
-    paragraphs_html = "".join(
-        f"<p>{html.escape(paragraph)}</p>"
-        for paragraph in section["content"].split("\n\n")
-        if paragraph.strip()
-    )
-    return f"{heading_html}{paragraphs_html}"
+    return f"{heading_html}{_render_content_blocks_html(section['content'])}"
 
 
 def _format_status(status):
@@ -651,6 +704,13 @@ def _generate_draft_print_html(brief, draft):
   h3 {{ font-family: system-ui, -apple-system, sans-serif; font-size: 1.08rem; margin: 26px 0 8px; }}
   h4 {{ font-family: system-ui, -apple-system, sans-serif; font-size: 0.98rem; margin: 22px 0 6px; }}
   p {{ margin: 0 0 14px; }}
+  ul, ol {{ margin: 0 0 14px; padding-left: 24px; }}
+  li {{ margin-bottom: 4px; }}
+  .content-note {{
+    background: #eef7ff; border-left: 3px solid #0a63c9; border-radius: 4px;
+    padding: 10px 14px; font-family: system-ui, -apple-system, sans-serif; font-size: 0.85rem;
+    line-height: 1.5; margin: 0 0 14px;
+  }}
 </style>
 </head>
 <body>
