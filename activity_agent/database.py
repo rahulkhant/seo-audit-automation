@@ -199,10 +199,60 @@ def save_activity_log(connection, log_date, raw_input, daily_notes, entries):
     return log_id
 
 
+def merge_tasks(connection, keep_task_id, merge_task_id, description=None):
+    """
+    Folds merge_task_id into keep_task_id -- for when the day-to-day
+    continuity matching (the /log-activity skill's one real judgment call)
+    turns out to have missed a match, e.g. two tasks logged on different
+    days that are actually the same ongoing work described differently
+    each time. Found in practice 2026-08-05: a batch backfill of several
+    historical days skipped the usual day-by-day matching step and
+    created two separate tasks for what Rahul confirmed was one thread.
+
+    Reassigns every log entry from merge_task_id to keep_task_id, then
+    brings keep_task_id's current state (status/description/dates) up to
+    date from whichever of the two was touched more recently, and removes
+    the now-orphaned merge_task_id row. `description` lets the caller set
+    the merged task's description explicitly (e.g. the more specific,
+    most recent wording) instead of just taking whichever task was newer.
+    """
+    connection.execute(
+        "UPDATE activity_log_entries SET task_id = ? WHERE task_id = ?",
+        (keep_task_id, merge_task_id),
+    )
+
+    keep_task = load_task(connection, keep_task_id)
+    merge_task = load_task(connection, merge_task_id)
+    newer = merge_task if merge_task["last_updated_date"] >= keep_task["last_updated_date"] else keep_task
+
+    connection.execute(
+        """
+        UPDATE activity_tasks SET
+            description = ?,
+            status = ?,
+            first_logged_date = ?,
+            last_updated_date = ?,
+            completed_date = ?
+        WHERE task_id = ?
+        """,
+        (
+            description or newer["description"],
+            newer["status"],
+            min(keep_task["first_logged_date"], merge_task["first_logged_date"]),
+            newer["last_updated_date"],
+            newer["completed_date"],
+            keep_task_id,
+        ),
+    )
+    connection.execute("DELETE FROM activity_tasks WHERE task_id = ?", (merge_task_id,))
+    connection.commit()
+
+
 def load_open_tasks(connection):
-    """Tasks not yet completed (in_progress or blocked), most recently
-    touched first -- what the skill loads to match today's bullets against
-    before deciding what's a continuation vs. a brand new task."""
+    """Tasks not yet completed (not_started, in_progress, or blocked),
+    most recently touched first -- what the skill loads to match today's
+    bullets against before deciding what's a continuation vs. a brand new
+    task."""
     rows = connection.execute(
         "SELECT * FROM activity_tasks WHERE status != 'completed' ORDER BY last_updated_date DESC, task_id DESC"
     ).fetchall()
