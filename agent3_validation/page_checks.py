@@ -115,11 +115,19 @@ def _check_url_structure(page):
             "No date in URL", url, rules.SEVERITY_WARNING,
         ))
 
-    if len(url) > rules.URL_MAX_RECOMMENDED_LENGTH:
+    # Only the last path segment (the actual slug) counts against the
+    # length budget, not the domain or category folders (e.g. "/blogs/")
+    # in front of it -- those are fixed and not something a content editor
+    # controls, and a blog/article slug will always trip a whole-URL check
+    # regardless of how well it's actually written. Query strings and
+    # fragments are stripped first for the same reason: not slug content.
+    last_segment = urlparse(url).path.rstrip("/").rsplit("/", 1)[-1]
+    if last_segment and len(last_segment) > rules.URL_MAX_RECOMMENDED_LENGTH:
         findings.append(make_finding(
             url, "url-too-long",
-            f"URL is longer than the recommended {rules.URL_MAX_RECOMMENDED_LENGTH} characters.",
-            f"Under {rules.URL_MAX_RECOMMENDED_LENGTH} characters", f"{len(url)} characters",
+            f"The URL's last path segment is longer than the recommended {rules.URL_MAX_RECOMMENDED_LENGTH} characters.",
+            f"Under {rules.URL_MAX_RECOMMENDED_LENGTH} characters",
+            f"{len(last_segment)} characters (\"{last_segment}\")",
             rules.SEVERITY_INFO,
         ))
 

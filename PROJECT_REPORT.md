@@ -164,7 +164,7 @@ Built by `agent4_dashboard/build_reporting_hub.py`, writing `docs/reporting.html
 - **Info** — low-urgency or can't-be-fully-certain findings (OG/Twitter tag issues, missing schema, unverified external-to-crawl links, minor JS-added-link gaps).
 
 ### Thresholds
-Title ≤60 chars, meta description ≤160, OG title ≤60, OG description ≤160, Twitter title ≤60, Twitter description ≤160 (max-only limits, no minimums; set to 55/155 on 2026-07-30, raised by 5 chars each on 2026-07-31, both per Rahul's numbers). Internal links 5–15/page. URL length (75 chars) is Rahul's own default — the source doc didn't specify an exact number.
+Title ≤60 chars, meta description ≤160, OG title ≤60, OG description ≤160, Twitter title ≤60, Twitter description ≤160 (max-only limits, no minimums; set to 55/155 on 2026-07-30, raised by 5 chars each on 2026-07-31, both per Rahul's numbers). Internal links 5–15/page. URL length (75 chars) is Rahul's own default — the source doc didn't specify an exact number. **Updated 2026-08-05**: this 75-char budget applies only to the last URL path segment (the slug), not the whole URL — the domain and any category folder (e.g. `/blogs/`) in front of it don't count, since blog/article URLs need real length there and that prefix isn't something a content editor controls anyway. Query strings/fragments are stripped before measuring. See `agent3_validation/page_checks.py`'s `_check_url_structure()`. Fixed 21 false-positive `url-too-long` findings on real `/simprotips/` blog posts that the old whole-URL check was generating; under the corrected logic, 0 of the site's 74 pages currently trip it.
 
 ## 7. Key decisions and non-obvious gotchas
 

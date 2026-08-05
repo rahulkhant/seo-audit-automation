@@ -67,6 +67,12 @@ INTERNAL_LINK_COUNT_MAX = 15
 # short"). This is my own reasonable default based on common SEO guidance,
 # flagged as low-urgency (INFO) rather than a hard rule. Worth adjusting if
 # you have a different number in mind.
+#
+# Applies to the last URL path segment only (updated 2026-08-05, per
+# Rahul's request) -- e.g. for /blogs/clear-pronounce-and-characters-of-the-
+# pkl-movies, only "clear-pronounce-and-characters-of-the-pkl-movies" counts
+# against this budget, not the domain or the "/blogs/" folder in front of
+# it. See agent3_validation/page_checks.py's _check_url_structure().
 URL_MAX_RECOMMENDED_LENGTH = 75
 
 # --- Redirect chains ---
