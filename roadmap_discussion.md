@@ -107,6 +107,14 @@ Also per Rahul's request: a shared **banned AI-cliche phrase list** (`content_ag
 
 **Dash-usage check + mixed-content formatting added 2026-08-05, both from Rahul reading the actual GMC draft**: he flagged two things at once (see `PROJECT_REPORT.md` §12 for the full detail) -- the draft leaned on `--`/em-dash asides as a repetitive sentence construction, and it was written as unbroken prose even where the content was genuinely list-shaped (steps, options, a caveat worth calling out). Both got the same prevention (Writer skill instructions) + detection (QA Checker, `qa_checks.py`) treatment as the banned-phrase list, and the GMC draft was regenerated and re-reviewed against the new rules the same day (0 dash-asides, several sections reformatted into real lists, 9.5/10 final QA score). Confirms the pattern established with the banned-phrase list: catching a real quality issue Rahul notices by reading actual output, then building both a skill-level instruction and a deterministic QA check for it, works well and should keep being the default response to this kind of feedback.
 
+## 5d. New module: Activity Agent (2026-08-05) — not one of the original Phases 2-7, and separate from the Content Agent
+
+Rahul's own idea, same "not one of the original phases" category as the Content Agent (§5c): a day-to-day work log, "Activity & Performance," so he can report what he did each day and see it structured on the dashboard rather than keeping it in his head or a separate document. Explicitly scoped as its own section, not folded into the Reporting Hub's existing cross-module activity feed — he was clear this stays separate.
+
+The design turned out to be more than "one log per day" once he explained what "performance" meant to him: tasks aren't always finished same-day, and he wants to track progress toward a defined goal, not just log that something happened. See `PROJECT_REPORT.md` §13 for the full build — the short version is that `activity_agent/database.py` tracks tasks as persistent entities that can span several days (status: in_progress/completed/blocked, plus an optional target/deadline note) linked to day-by-day log entries, rather than one flat blob per date. The `/log-activity` skill's one real judgment call is matching today's bullet list against tasks still open from previous days before saving — everything else (KPI counts, category rollups, week/month PDF ranges) is deterministic, same rule-based-where-possible split as every other module on this platform.
+
+Inputs Rahul confirmed before this was built: reports come in as a bullet list (not freeform paragraphs), categories are supplied by him per report rather than fixed in advance, and daily/weekly/monthly PDFs were wanted now with a custom date-range export explicitly deferred to later.
+
 ## 5. Open questions / not yet decided
 
 - No priority order confirmed yet among Phases 2-7 (explicitly deferred by Rahul, 2026-07-30).

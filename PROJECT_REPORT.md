@@ -280,6 +280,29 @@ First concrete build from the "rule-based script → dashboard" platform priorit
 
 ---
 
+## 13. Activity Agent module (built 2026-08-05)
+
+A third, separate module — not a stage in `main.py`, not part of the Content Agent, and deliberately **not** feeding into the Reporting Hub's activity feed (Rahul's explicit call: this stays its own section). Answers a different question than the rest of the platform: not "is the site healthy" or "has content been produced," but "what did Rahul actually do, day by day, and is it moving toward what he meant to get done."
+
+**Why this needed its own data model, not just a daily text note**: Rahul reports work as a bullet list once a day, but a single task often spans several days — started Monday, still open Wednesday, finished Friday. A naive one-row-per-day log would lose that continuity. So `activity_agent/database.py` has two linked tables instead of one:
+- `activity_tasks` — one row per real piece of work, persisting across however many days it takes. `status` is `in_progress` / `completed` / `blocked`; an optional `target_notes` field holds a goal or deadline if Rahul gives one ("finish by Friday"), which is what makes "performance" tracking mean something more than just activity volume.
+- `activity_daily_logs` — one row per calendar date, overwrite-only by `log_date` (same pattern as Content Agent's drafts/QA reviews — re-logging a date replaces it rather than duplicating).
+- `activity_log_entries` — the join: which task was touched on which day, with that day's own status snapshot and note. A five-day task has one row in `activity_tasks` and five rows here.
+
+**The one judgment step, same narrow split as the rest of the platform**: matching today's bullets against tasks still open from previous days (continuation vs. brand new task) is the `/log-activity` skill's job, done conversationally and shown to Rahul before saving — everything else (status bookkeeping, KPI math, category rollups) is plain deterministic Python.
+
+**Workflow** (`/log-activity`, `.claude/skills/log-activity/SKILL.md`): load tasks still open (`activity_agent.database.load_open_tasks`) → match against today's bullet list, asking rather than guessing when genuinely unsure → show the matched structure for confirmation → save via `activity_agent.save_activity_log` → rebuild all four dashboard pages (the sidebar gained a fifth nav item, so every page needs regenerating, same reason `/blog-outline` rebuilds more than its own page) → commit/push automatically, same established pattern as the Content Agent skills.
+
+**Dashboard** (`docs/activity.html`, `activity_agent/build_activity_page.py`), fifth sidebar item "Activity & Performance":
+- **KPI tiles**: Completed This Week, In Progress, Blocked, Days Logged This Month.
+- **Work Distribution This Month** — an ApexCharts donut of tasks touched this month, grouped by category (Rahul supplies the category list per report, nothing hardcoded).
+- **Open Tasks card** — every not-yet-completed task with its category, target/goal note if any, and when it was first logged / last touched — the "are we on track" view, distinct from the day-by-day history below it.
+- **Daily Log** — chronological list of logged days, each opening the same scrollable `<dialog>` modal pattern used by the Content Agent (own local CSS copy, not a cross-module import, matching the existing precedent that each page owns its own bespoke component styling while sharing the base Metronic shell/KPI/card CSS).
+
+**PDFs**, self-contained Playwright renders, same philosophy as the rest of the platform: one permanent PDF per logged day (`docs/activity_reports/daily-YYYY-MM-DD.pdf`), plus `weekly-latest.pdf` and `monthly-latest.pdf` — both always reflect the *current* Mon–Sun week / calendar month at build time and are overwritten every run, the same "always the latest snapshot" pattern as `reporting-hub-latest.pdf`, not a permanent per-period archive. Custom date-range export is noted as a later addition, not built yet.
+
+---
+
 ## Appendix: general playbook (for building *other* future automations, not just this one)
 
 This is the process that was followed, useful as a repeatable template:
