@@ -115,6 +115,18 @@ The design turned out to be more than "one log per day" once he explained what "
 
 Inputs Rahul confirmed before this was built: reports come in as a bullet list (not freeform paragraphs), categories are supplied by him per report rather than fixed in advance, and daily/weekly/monthly PDFs were wanted now with a custom date-range export explicitly deferred to later.
 
+## 5e. New module: Keyword Research (2026-08-06) — not one of the original Phases 2-7
+
+Grew out of a real problem Rahul described, not a platform-roadmap item: he had 10,000+ competitor keywords spread across 28 Google Sheets (25+ competitors, exported from Google Keyword Planner) and was manually deduplicating them by hand. Scoped through the same conversational back-and-forth as the other modules before any code was written — three separate rounds of clarifying questions (report focus, how to handle conflicting numbers for the same keyword across sources, and whether this should be reusable) rather than guessing, since getting the analysis wrong across 10k+ rows would be expensive to redo.
+
+Key decisions, all Rahul's explicit choices (2026-08-06):
+- **All four requested insight views** (competitor overlap, opportunity keywords, trending keywords, per-competitor summary) — "all of the above you suggest me."
+- **Conflicting values for the same keyword across sources**: keep whichever sheet's numbers were seen first, rather than averaging or flagging disagreements — simplest, and good enough since these numbers are usually close across sources anyway.
+- **Reusable, dashboard-integrated module**, not a one-off script — "i want to add it in our dashboard so whenever i need it then i'll working on it without any script."
+- **Both a cumulative master list AND standalone per-batch reports**, not one or the other — "sometimes i have master sheet and sometimes don't have so that." This is why every batch gets its own permanent record regardless of whether it feeds the master aggregation.
+
+See `PROJECT_REPORT.md` §14 for the full build. Same rule-based-where-possible split as every other module: which competitor/sheet actually gets pulled from Google Sheets and read is a skill-level, judgment-adjacent step (matching column names that vary slightly across exports, handling a sheet that isn't reachable); everything after that — dedup, percentile-based opportunity thresholds, overlap/trending/summary math — is plain deterministic Python, fully reproducible for the same input.
+
 ## 5. Open questions / not yet decided
 
 - No priority order confirmed yet among Phases 2-7 (explicitly deferred by Rahul, 2026-07-30).

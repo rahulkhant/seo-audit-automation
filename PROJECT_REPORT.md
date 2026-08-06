@@ -83,6 +83,14 @@ seo-audit-automation/
 │   ├── save_qa_review.py            # CLI: recomputes deterministic checks fresh + saves the QA report (blog-qa skill)
 │   ├── build_content_page.py        # Builds docs/content.html (3 tabs) + per-brief/draft/QA PDFs
 │   └── example_blogs/               # Reference posts for style/structure (empty until Rahul adds some)
+├── activity_agent/                  # Activity Agent -- see §13
+│   ├── database.py                  # activity_tasks/activity_daily_logs/activity_log_entries tables + save/load
+│   └── build_activity_page.py       # Builds docs/activity.html + daily/weekly/monthly PDFs
+├── keyword_research/                 # Keyword Research module -- see §14
+│   ├── database.py                  # keyword_research_batches/keyword_research_keywords tables + dedup logic
+│   ├── analytics.py                 # Deterministic overlap/opportunity/trending/per-competitor computations
+│   ├── save_batch.py                # CLI: validates + persists one imported batch (keyword-research skill)
+│   └── build_keyword_research_page.py  # Builds docs/keyword-research.html + Excel/PDF exports
 ├── .github/
 │   └── workflows/seo-audit.yml      # Weekly schedule (Mon 06:00 UTC) + manual trigger
 └── .claude/
@@ -92,7 +100,8 @@ seo-audit-automation/
         ├── blog-qa/SKILL.md         # Claude Code custom skill: type /blog-qa to run just the QA Checker Agent
         ├── blog-write/SKILL.md      # Claude Code custom skill: type /blog-write to run just the Writer Agent
         ├── blog-post/SKILL.md       # Claude Code custom skill: type /blog-post to run all three back to back, one input at the start
-        └── log-activity/SKILL.md    # Claude Code custom skill: type /log-activity to run the Activity Agent
+        ├── log-activity/SKILL.md    # Claude Code custom skill: type /log-activity to run the Activity Agent
+        └── keyword-research/SKILL.md  # Claude Code custom skill: type /keyword-research to import a batch of competitor keyword sheets
 ```
 
 ## 4. The site being audited
@@ -304,6 +313,32 @@ A third, separate module — not a stage in `main.py`, not part of the Content A
 - **Daily Log** — chronological list of logged days, each opening the same scrollable `<dialog>` modal pattern used by the Content Agent (own local CSS copy, not a cross-module import, matching the existing precedent that each page owns its own bespoke component styling while sharing the base Metronic shell/KPI/card CSS).
 
 **PDFs**, self-contained Playwright renders, same philosophy as the rest of the platform: one permanent PDF per logged day (`docs/activity_reports/daily-YYYY-MM-DD.pdf`), plus `weekly-latest.pdf` and `monthly-latest.pdf` — both always reflect the *current* Mon–Sun week / calendar month at build time and are overwritten every run, the same "always the latest snapshot" pattern as `reporting-hub-latest.pdf`, not a permanent per-period archive. Custom date-range export is noted as a later addition, not built yet.
+
+---
+
+## 14. Keyword Research module (built 2026-08-06)
+
+A fourth, separate module, prompted by a real practical problem: Rahul was manually deduplicating 10,000+ keywords by hand across 28 Google Sheets exported from Google Keyword Planner for 25+ competitors. Not part of `main.py`, not part of any other module — its own sidebar page, its own tables.
+
+**Two operating modes, both requested explicitly (2026-08-06)**: Rahul wanted flexibility — "sometimes i have master sheet and sometimes don't have so that." Every research run ("batch") is always saved and viewable on its own, permanently, in the Batch History tab. Separately, each batch carries an `include_in_master` flag (set when the batch is saved, per Rahul's explicit choice each time — not defaulted silently) controlling whether it also feeds a cumulative, continuously-deduped master keyword list. A batch marked `false` still gets its own full report and downloads; it just doesn't fold into the master aggregation.
+
+**Why the master list isn't its own stored table**: same philosophy as the Reporting Hub (`agent4_dashboard/build_reporting_hub.py`) — it's pure aggregation, computed at dashboard-build time from whichever batches have `include_in_master=1`, rather than a second copy of the same data. `keyword_research/database.py`'s `load_master_keywords()` re-runs the same dedup algorithm used when a batch is first saved, just across every included batch's keywords instead of one batch's raw sheet rows.
+
+**The dedup rule, Rahul's explicit choice over averaging or flagging disagreements (2026-08-06)**: when the same keyword appears more than once — within a batch (different competitor sheets) or across batches (master aggregation) — whichever appearance was seen *first* keeps its numeric values (Avg. Monthly Search Volume, Difficulty, YoY change). Every competitor whose sheet contained that keyword is still recorded, though, regardless of which one "won" numerically — that full competitor list is what the overlap analysis reads, so a keyword's contested-ness is never lost even though its stats come from just one source.
+
+**The four insight views Rahul asked for, all in `keyword_research/analytics.py`, plain deterministic Python, no judgment involved**:
+- **Competitor overlap** — which keywords are shared by the most competitors ("most contested," sorted descending) versus how many are unique to exactly one competitor (potential content gaps for everyone else).
+- **Opportunity keywords** — high search volume AND low difficulty. Thresholds are **percentile-based** (top third by volume, bottom third by difficulty, computed from whatever keyword set is actually being analyzed), per Rahul's choice of "sensible defaults" over him supplying exact numbers — this adapts to Simprosys's actual niche instead of assuming a specific difficulty scale.
+- **Trending keywords** — biggest positive/negative year-over-year movers, split into Rising and Declining.
+- **Per-competitor summary** — keyword count, how many are exclusive to them, and their average volume/difficulty.
+
+**Dashboard** (`docs/keyword-research.html`, `keyword_research/build_keyword_research_page.py`), sixth sidebar item "Keyword Research," two tabs:
+- **Insights** — KPI tiles (unique keywords, competitors tracked, opportunity count, trending count), all four analytics cards run against the master list, and the full master keyword table (searchable + paginated client-side, same cached-row/`data-search`-attribute pattern as the SEO Dashboard's Findings table, just without the category filter since it doesn't apply here).
+- **Batch History** — every batch ever saved, permanently, each showing sheet/competitor/unique-keyword counts and an "In Master List" or "Standalone" badge. Clicking a batch opens the same scrollable `<dialog>` modal pattern used elsewhere, showing that batch's own analytics computed in isolation (not the master numbers) — deliberately no giant keyword table inside the modal given the row counts involved; the full list is one Excel download away instead.
+
+**Exports**: `openpyxl` writes a plain unique-keyword spreadsheet (Keyword / Volume / Difficulty / YoY / Competitors) — one permanent file per batch, plus `master-keywords-latest.xlsx` which is overwritten every build to always reflect the current cumulative list. A matching PDF insights report (Playwright, self-contained, same philosophy as every other PDF here) exists per batch and for the master list.
+
+**Data source is Google Sheets, handled by the skill, not this Python module**: `.claude/skills/keyword-research/SKILL.md` is responsible for actually reading each competitor's shared sheet (via a connected Drive/Sheets tool if available, falling back to asking Rahul to export a sheet as CSV if a particular link isn't reachable that way) and assembling the batch JSON `keyword_research.save_batch` expects. The Python side only validates and stores structured rows — it has no Google API dependency of its own, keeping this module's actual code testable with plain JSON regardless of where the data came from.
 
 ---
 
