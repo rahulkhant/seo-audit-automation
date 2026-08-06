@@ -185,6 +185,38 @@ document.querySelectorAll(".batch-modal-close").forEach(function (button) {
 
   render();
 })();
+
+document.querySelectorAll("table[data-paginate]").forEach(function (table) {
+  var pagId = table.getAttribute("data-paginate");
+  var rowsPerPage = parseInt(table.getAttribute("data-rows-per-page"), 10) || 25;
+  var rows = Array.from(table.querySelectorAll("tbody tr"));
+  var prevButton = document.getElementById("pg-prev-" + pagId);
+  var nextButton = document.getElementById("pg-next-" + pagId);
+  var indicator = document.getElementById("pg-indicator-" + pagId);
+  if (!prevButton || !nextButton || !indicator) { return; }
+  var currentPage = 1;
+
+  function render() {
+    var totalPages = Math.max(1, Math.ceil(rows.length / rowsPerPage));
+    if (currentPage > totalPages) { currentPage = totalPages; }
+    var startIndex = (currentPage - 1) * rowsPerPage;
+    rows.forEach(function (row, index) {
+      row.style.display = (index >= startIndex && index < startIndex + rowsPerPage) ? "" : "none";
+    });
+    indicator.textContent = "Page " + currentPage + " of " + totalPages + " (" + rows.length + " keywords)";
+    prevButton.disabled = currentPage <= 1;
+    nextButton.disabled = currentPage >= totalPages;
+  }
+
+  prevButton.addEventListener("click", function () {
+    if (currentPage > 1) { currentPage -= 1; render(); }
+  });
+  nextButton.addEventListener("click", function () {
+    currentPage += 1; render();
+  });
+
+  render();
+});
 """
 
 
@@ -271,10 +303,11 @@ def _render_overlap_card(overlap):
     """
 
 
-def _render_opportunity_card(opportunities):
+def _render_opportunity_card(opportunities, card_id):
     if not opportunities:
         body = '<div class="empty-state">No keywords currently meet the high-volume, low-difficulty cutoff.</div>'
     else:
+        pag_id = f"opp-{card_id}"
         rows = "".join(
             f"""<tr>
               <td>{html.escape(k["keyword"])}</td>
@@ -286,10 +319,15 @@ def _render_opportunity_card(opportunities):
         )
         body = f"""
         <div class="table-wrap">
-          <table>
+          <table data-paginate="{pag_id}" data-rows-per-page="{_TABLE_ROWS_PER_PAGE}">
             <thead><tr><th>Keyword</th><th>Volume</th><th>Difficulty</th><th>Competitors</th></tr></thead>
             <tbody>{rows}</tbody>
           </table>
+        </div>
+        <div class="pagination-bar">
+          <button id="pg-prev-{pag_id}" class="btn btn-light">&larr; Prev</button>
+          <span id="pg-indicator-{pag_id}"></span>
+          <button id="pg-next-{pag_id}" class="btn btn-light">Next &rarr;</button>
         </div>
         """
     return f"""
@@ -367,10 +405,10 @@ def _render_per_competitor_card(summary):
     """
 
 
-def _render_analytics_cards(analytics):
+def _render_analytics_cards(analytics, card_id):
     return (
         _render_overlap_card(analytics["competitor_overlap"])
-        + _render_opportunity_card(analytics["opportunity_keywords"])
+        + _render_opportunity_card(analytics["opportunity_keywords"], card_id)
         + _render_trending_card(analytics["trending_keywords"])
         + _render_per_competitor_card(analytics["per_competitor_summary"])
     )
@@ -474,7 +512,7 @@ def _render_batch_modal(batch, batch_analytics):
       </div>
       <div class="batch-modal-body">
         {_render_kpi_tiles(batch_analytics)}
-        {_render_analytics_cards(batch_analytics)}
+        {_render_analytics_cards(batch_analytics, f"batch-{batch['batch_id']}")}
       </div>
     </dialog>
     """
@@ -486,7 +524,7 @@ def generate_keyword_research_page_html(master_keywords, master_analytics, batch
     insights_body = (
         _render_kpi_tiles(master_analytics)
         + f'<div class="reports-row"><a class="btn btn-light" href="keyword_research_exports/{MASTER_PDF_FILENAME}">{ICON_DOWNLOAD}<span>Download Master Insights PDF</span></a></div>'
-        + _render_analytics_cards(master_analytics)
+        + _render_analytics_cards(master_analytics, "master")
         + _render_keyword_table_card(master_keywords)
     )
 
