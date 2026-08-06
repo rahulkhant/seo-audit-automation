@@ -61,6 +61,7 @@ ICON_HISTORY = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strok
 ICON_REPORTING = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5h16"/><path d="M7 16v-4"/><path d="M12 16V8"/><path d="M17 16v-6.5"/></svg>'
 ICON_CONTENT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3.5h9l3 3v14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-16a1 1 0 0 1 1-1z"/><path d="M8.5 10h7"/><path d="M8.5 13.5h7"/><path d="M8.5 17h4.5"/></svg>'
 ICON_ACTIVITY = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2.5 6L14 5l2 7h5"/></svg>'
+ICON_KEYWORDS = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.5" cy="10.5" r="6"/><path d="M15 15 20.5 20.5"/></svg>'
 ICON_DOWNLOAD = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11"/><path d="M7.5 11 12 15.5 16.5 11"/><path d="M5 18.5h14"/></svg>'
 ICON_TOTAL = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h11"/><path d="M8 12h11"/><path d="M8 18h11"/><path d="M4 6h.01"/><path d="M4 12h.01"/><path d="M4 18h.01"/></svg>'
 ICON_CRITICAL = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 3.5h7l5 5v7l-5 5h-7l-5-5v-7z"/><path d="M12 8v5"/><path d="M12 16.5h.01"/></svg>'
@@ -365,13 +366,14 @@ def _render_chart_init_script(counts):
 
 def _render_sidebar_nav(active_page):
     """Primary navigation -- Dashboard / History / Reporting / Content /
-    Activity -- with categories living in the Findings card's own filter
-    control instead of the sidebar (see _render_findings_card)."""
+    Activity / Keyword Research -- with categories living in the Findings
+    card's own filter control instead of the sidebar (see _render_findings_card)."""
     dashboard_class = "sidebar-link active" if active_page == "dashboard" else "sidebar-link"
     history_class = "sidebar-link active" if active_page == "history" else "sidebar-link"
     reporting_class = "sidebar-link active" if active_page == "reporting" else "sidebar-link"
     content_class = "sidebar-link active" if active_page == "content" else "sidebar-link"
     activity_class = "sidebar-link active" if active_page == "activity" else "sidebar-link"
+    keywords_class = "sidebar-link active" if active_page == "keyword-research" else "sidebar-link"
     return f"""
     <aside class="sidebar">
       <div class="sidebar-brand">
@@ -383,6 +385,7 @@ def _render_sidebar_nav(active_page):
         <a class="{reporting_class}" href="reporting.html">{ICON_REPORTING}<span>Reporting</span></a>
         <a class="{content_class}" href="content.html">{ICON_CONTENT}<span>Content</span></a>
         <a class="{activity_class}" href="activity.html">{ICON_ACTIVITY}<span>Activity & Performance</span></a>
+        <a class="{keywords_class}" href="keyword-research.html">{ICON_KEYWORDS}<span>Keyword Research</span></a>
       </nav>
     </aside>
     """

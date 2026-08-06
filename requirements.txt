@@ -15,3 +15,8 @@ playwright>=1.44.0
 # file into environment variables, so credentials never need to be typed
 # directly into any Python file.
 python-dotenv>=1.0.0
+
+# openpyxl: writes the Keyword Research module's downloadable unique-keyword
+# Excel sheet. Lightweight, no server/account needed, matches this project's
+# preference for self-contained libraries over heavier reporting tools.
+openpyxl>=3.1.0
