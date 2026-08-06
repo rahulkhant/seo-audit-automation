@@ -467,13 +467,13 @@ def _render_keyword_table_card(keywords):
 
 # --- Batch History tab ---
 
-def _render_batch_row(batch):
+def _render_batch_row(batch, unique_keyword_count):
     modal_id = f"batch-modal-{batch['batch_id']}"
     label = batch["label"] or f"Batch #{batch['batch_id']}"
     meta = " &middot; ".join([
         f"{batch['sheet_count']} sheet(s)",
         f"{batch['competitor_count']} competitor(s)",
-        f"{batch['unique_keyword_count']} unique keyword(s)",
+        f"{unique_keyword_count} unique keyword(s)",
         html.escape(_format_created_at(batch["created_at"])),
     ])
     master_color = MX_RESOLVED_COLOR if batch["include_in_master"] else MX_SEVERITY["info"]["color"]
@@ -531,7 +531,10 @@ def generate_keyword_research_page_html(master_keywords, master_analytics, batch
     if not batches:
         history_body = '<div class="empty-state">No batches recorded yet -- run /keyword-research to import your first set of competitor sheets.</div>'
     else:
-        batch_rows = "".join(_render_batch_row(b) for b in batches)
+        batch_rows = "".join(
+            _render_batch_row(b, batch_analytics_by_id[b["batch_id"]]["total_keywords"])
+            for b in batches
+        )
         batch_modals = "".join(
             _render_batch_modal(b, batch_analytics_by_id[b["batch_id"]])
             for b in batches

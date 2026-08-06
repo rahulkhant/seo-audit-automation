@@ -127,6 +127,16 @@ Key decisions, all Rahul's explicit choices (2026-08-06):
 
 See `PROJECT_REPORT.md` §14 for the full build. Same rule-based-where-possible split as every other module: which competitor/sheet actually gets pulled from Google Sheets and read is a skill-level, judgment-adjacent step (matching column names that vary slightly across exports, handling a sheet that isn't reachable); everything after that — dedup, percentile-based opportunity thresholds, overlap/trending/summary math — is plain deterministic Python, fully reproducible for the same input.
 
+Two follow-up asks landed the same day, after the first 23-competitor batch was live:
+- **Pagination on the Opportunity Keywords table** — it had no cap (unlike the other three insight views, which are top-N), and with the real data that's thousands of rows.
+- **Inconsistent spacing between cards dashboard-wide** — traced to the shared `.card` class never having had a `margin-bottom`, so stacked cards touched while grid rows (KPI tiles, the two-column chart row) kept their gap. Fixed once in the shared stylesheet, not per-page.
+
+## 5f. Keyword quality filters (2026-08-06)
+
+Rahul's follow-up ask: strip keywords containing brand names, and keywords with a word repeated inside them ("hotel hotel management") — "not showing them in the whole dashboard or module," entirely, not just hidden in the UI. Confirmed scope through a quick back-and-forth: "brand" means both his 28 tracked competitors *and* the much bigger real source of noise — specific hotel/resort property names that Google Keyword Planner surfaces (kk royal, radisson, byke old anchor...). No dictionary of hotel brand names exists anywhere, and Rahul explicitly declined a review round or keeping a log of what gets dropped — "just dropped them... if in future we require then we'll think about it."
+
+Built as an elimination heuristic instead of a brand list: a word not in a real English dictionary, not known industry jargon, and not a real place name is almost always a proper noun in this dataset. See `PROJECT_REPORT.md` §14 for the mechanics and the explicitly disclosed limitation (an unusual town/hotel name could land on the wrong side of it — fix by extending an allow-list, not by rebuilding it).
+
 ## 5. Open questions / not yet decided
 
 - No priority order confirmed yet among Phases 2-7 (explicitly deferred by Rahul, 2026-07-30).

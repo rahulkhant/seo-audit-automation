@@ -41,6 +41,7 @@ import re
 from datetime import datetime, timezone
 
 from agent2_storage.database import get_connection as _get_audit_connection
+from keyword_research.quality_filters import is_valid_keyword
 
 CREATE_BATCHES_TABLE_SQL = """
 CREATE TABLE IF NOT EXISTS keyword_research_batches (
@@ -103,6 +104,11 @@ def dedupe_keyword_appearances(appearances):
     over averaging). Every distinct competitor seen for a keyword is kept,
     in first-seen order, regardless of which appearance "won" numerically.
 
+    Appearances that fail quality_filters.is_valid_keyword (repeated-word
+    keywords, or keywords containing a competitor/brand/property name) are
+    dropped here before dedup -- see quality_filters.py for why (Rahul's
+    call, 2026-08-06: drop entirely, don't store or show them anywhere).
+
     Returns an ordered list of unique keyword dicts:
         {"keyword": str, "avg_monthly_search_volume": num,
          "difficulty": num, "yoy_change": num, "competitors": [str, ...]}
@@ -110,6 +116,8 @@ def dedupe_keyword_appearances(appearances):
     by_normalized = {}
     order = []
     for appearance in appearances:
+        if not is_valid_keyword(appearance["keyword"]):
+            continue
         normalized = normalize_keyword(appearance["keyword"])
         if normalized not in by_normalized:
             by_normalized[normalized] = {
@@ -204,7 +212,14 @@ def load_batch(connection, batch_id):
 
 def load_keywords_for_batch(connection, batch_id):
     """One batch's own unique keyword list, as saved -- for viewing or
-    exporting that specific batch's report on its own."""
+    exporting that specific batch's report on its own.
+
+    Also re-applies quality_filters.is_valid_keyword on the way out, not
+    just at save time -- batches saved before a quality-filter rule
+    existed (or before an allow-list word was added) would otherwise still
+    show their old violations here. Filtering on load means every batch's
+    view stays current with the latest rules automatically, with nothing
+    to re-run by hand."""
     rows = connection.execute(
         "SELECT * FROM keyword_research_keywords WHERE batch_id = ? ORDER BY keyword_id",
         (batch_id,),
@@ -212,6 +227,8 @@ def load_keywords_for_batch(connection, batch_id):
     keywords = []
     for row in rows:
         keyword = dict(row)
+        if not is_valid_keyword(keyword["keyword"]):
+            continue
         keyword["competitors"] = json.loads(keyword["competitors_json"])
         keywords.append(keyword)
     return keywords
