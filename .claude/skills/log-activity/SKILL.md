@@ -18,7 +18,16 @@ Do the following, in order:
 ## 1. Confirm working directory
 If not already there, change to `/Users/rahul/Desktop/Automation/seo-audit-automation`.
 
-## 2. Get the date and the bullet list
+## 2. Which project is this for?
+Every project has its own separate activity log and dashboard. Ask which
+project today's log belongs to, unless it's already clear from context,
+and validate it:
+```
+.venv/bin/python3 -c "from projects import list_projects; print(' '.join(slug for slug, _ in list_projects()))"
+```
+If the name given isn't in that list, ask again rather than guessing.
+
+## 3. Get the date and the bullet list
 If the user already gave both in their message, use those. Otherwise ask:
 - **Which date** this log is for (default: today).
 - **The bullet list** of what was worked on, morning through evening --
@@ -32,17 +41,19 @@ skill replaces that day's entries, it doesn't keep old versions (see
 ```
 .venv/bin/python3 -c "
 from activity_agent.database import get_connection, load_log_by_date
-connection = get_connection()
+from projects import db_path
+connection = get_connection(db_path('<project>'))
 print(load_log_by_date(connection, '<log_date>'))
 connection.close()
 "
 ```
 
-## 3. Load tasks still open from previous days
+## 4. Load tasks still open from previous days
 ```
 .venv/bin/python3 -c "
 from activity_agent.database import get_connection, load_open_tasks
-connection = get_connection()
+from projects import db_path
+connection = get_connection(db_path('<project>'))
 for t in load_open_tasks(connection):
     print(f\"task_id={t['task_id']}  [{t['status']}]  {t['description']}  (category: {t['category']}, target: {t['target_notes']})\")
 connection.close()
@@ -50,9 +61,9 @@ connection.close()
 ```
 This is the list you'll match today's bullets against.
 
-## 4. Match today's bullets to tasks -- this is your judgment step
+## 5. Match today's bullets to tasks -- this is your judgment step
 For each bullet Rahul gave you, decide:
-- **Is this continuing an open task from step 3?** Match by meaning, not
+- **Is this continuing an open task from step 4?** Match by meaning, not
   exact wording -- "finished the GMC blog" should match an open task
   called "Regenerate GMC blog draft with mixed content" if that's clearly
   what it refers to. When genuinely unsure, ask rather than guessing.
@@ -77,7 +88,7 @@ For each bullet Rahul gave you, decide:
   can include an interruption the Time Spent column already excludes),
   and the explicit figure is the more trustworthy one. There's no
   dedicated time-tracking field yet -- this is still just text inside the
-  note (see step 8).
+  note (see step 6).
 - **target_notes** -- only if Rahul mentions a goal or deadline for a
   task (new or existing). Leave it out otherwise; don't invent one.
 
@@ -87,41 +98,43 @@ the status and note you're about to save. This is the one place a
 mismatch would otherwise go unnoticed, so a quick confirm here matters
 more than in the other Content Agent skills.
 
-## 5. Assemble and save
-Build the entries list as JSON (one entry per bullet/task from step 4:
+## 6. Assemble and save
+Build the entries list as JSON (one entry per bullet/task from step 5:
 `{"task_id": ... or omit for new, "description": ..., "category": ...,
 "day_status": ..., "day_note": ..., "target_notes": ...}`), write it to a
 temp file alongside `log_date`, `raw_input` (the bullet list verbatim),
 and `daily_notes` (an optional one-line summary of the day, only if it
 adds something the entries don't already say), then:
 ```
-.venv/bin/python3 -m activity_agent.save_activity_log <path-to-log.json>
+.venv/bin/python3 -m activity_agent.save_activity_log <project> <path-to-log.json>
 ```
 
-## 6. Rebuild the dashboard
+## 7. Rebuild the dashboard
 ```
-.venv/bin/python3 -m agent4_dashboard.build_dashboard_metronic
-.venv/bin/python3 -m agent4_dashboard.build_reporting_hub
-.venv/bin/python3 -m content_agent.build_content_page
-.venv/bin/python3 -m activity_agent.build_activity_page
+.venv/bin/python3 -m agent4_dashboard.build_dashboard_metronic <project>
+.venv/bin/python3 -m agent4_dashboard.build_reporting_hub <project>
+.venv/bin/python3 -m content_agent.build_content_page <project>
+.venv/bin/python3 -m activity_agent.build_activity_page <project>
 ```
 (All four -- the sidebar now has a fifth nav item, so every page needs
 regenerating to stay in sync, same reason `/blog-outline` rebuilds more
 than just its own page.)
 
-## 7. Commit and push -- automatically, no separate confirmation step
+## 8. Commit and push -- automatically, no separate confirmation step
 Same established pattern as the Content Agent skills.
 ```
-git add data/seo_audit_history.db docs/activity.html docs/activity_reports/ docs/index.html docs/history.html docs/reporting.html docs/content.html docs/reports/reporting-hub-latest.pdf
+git add data/<project>/ docs/<project>/activity.html docs/<project>/activity_reports/ docs/<project>/index.html docs/<project>/history.html docs/<project>/reporting.html docs/<project>/content.html docs/<project>/reports/reporting-hub-latest.pdf
 git commit -m "Log activity: <log_date>"
 git push
 ```
 
-## 8. Report back
+## 9. Report back
 Tell Rahul: how many tasks were logged (new vs. continued), how many were
 completed/in-progress/not-started/blocked today, any tasks still open
 that haven't moved in a while (worth a nudge), and the dashboard link:
-https://rahulkhant.github.io/seo-audit-automation/activity.html
+```
+.venv/bin/python3 -c "from projects import dashboard_url; print(dashboard_url('<project>') + 'activity.html')"
+```
 
 If Rahul's report included time ranges or time-spent figures per task,
 mention that these are currently only preserved as text inside each

@@ -21,13 +21,23 @@ Do the following, in order:
 ## 1. Confirm working directory
 If not already there, change to `/Users/rahul/Desktop/Automation/seo-audit-automation`.
 
-## 2. Pick which brief to review
+## 2. Which project is this for?
+Every project has its own separate content database and dashboard. Ask
+which project this review belongs to, unless it's already clear from
+context, and validate it:
+```
+.venv/bin/python3 -c "from projects import list_projects; print(' '.join(slug for slug, _ in list_projects()))"
+```
+If the name given isn't in that list, ask again rather than guessing.
+
+## 3. Pick which brief to review
 If the user named a topic or brief_id, use that. Otherwise list drafted
 briefs and ask:
 ```
 .venv/bin/python3 -c "
 from content_agent.database import get_connection, load_all_briefs
-connection = get_connection()
+from projects import db_path
+connection = get_connection(db_path('<project>'))
 for b in load_all_briefs(connection):
     print(f\"brief_id={b['brief_id']}  [{b['status']}]  {b['topic']}\")
 connection.close()
@@ -38,13 +48,14 @@ check. If the brief already has a QA review, confirm with the user before
 overwriting it -- same overwrite-only pattern as drafts, no version
 history kept (see content_agent/database.py's module docstring).
 
-## 3. Preview the deterministic report
+## 4. Preview the deterministic report
 ```
 .venv/bin/python3 -c "
 import json
 from content_agent.database import get_connection, load_brief, load_draft_for_brief
 from content_agent.qa_checks import run_deterministic_checks, compute_score
-connection = get_connection()
+from projects import db_path
+connection = get_connection(db_path('<project>'))
 brief = load_brief(connection, <brief_id>)
 draft = load_draft_for_brief(connection, <brief_id>)
 connection.close()
@@ -61,7 +72,7 @@ signal for step 4: a high passive-voice percentage or a difficult
 readability score is worth actually reading those sections for, not
 just noting the number.
 
-## 4. Read the full draft and form your judgment
+## 5. Read the full draft and form your judgment
 Load the draft's full text (same brief_id) and read it end to end --
 not skimmed. Decide:
 - **judgment_adjustment**: a number from -2.0 to +2.0. This is a small
@@ -76,32 +87,34 @@ not skimmed. Decide:
   name what's actually good or actually off, ideally pointing at a
   specific section if there's an issue worth flagging.
 
-## 5. Save
+## 6. Save
 Write `{"judgment_adjustment": ..., "judgment_notes": "..."}` to a temp
 file, then:
 ```
-.venv/bin/python3 -m content_agent.save_qa_review <brief_id> <path-to-judgment.json>
+.venv/bin/python3 -m content_agent.save_qa_review <project> <brief_id> <path-to-judgment.json>
 ```
-This recomputes the deterministic report fresh (never trusting step 3's
+This recomputes the deterministic report fresh (never trusting step 4's
 output directly -- that was a preview, not the saved source of truth),
 combines it with your judgment, and prints the final review_id and score.
 
-## 6. Rebuild the dashboard
+## 7. Rebuild the dashboard
 ```
-.venv/bin/python3 -m agent4_dashboard.build_dashboard_metronic
-.venv/bin/python3 -m agent4_dashboard.build_reporting_hub
-.venv/bin/python3 -m content_agent.build_content_page
+.venv/bin/python3 -m agent4_dashboard.build_dashboard_metronic <project>
+.venv/bin/python3 -m agent4_dashboard.build_reporting_hub <project>
+.venv/bin/python3 -m content_agent.build_content_page <project>
 ```
 
-## 7. Commit and push -- automatically, no separate confirmation step
+## 8. Commit and push -- automatically, no separate confirmation step
 Same established pattern as `/blog-outline` and `/blog-write`.
 ```
-git add data/seo_audit_history.db docs/content.html docs/content_qa/ docs/index.html docs/history.html docs/reporting.html docs/reports/reporting-hub-latest.pdf
+git add data/<project>/ docs/<project>/content.html docs/<project>/content_qa/ docs/<project>/index.html docs/<project>/history.html docs/<project>/reporting.html docs/<project>/reports/reporting-hub-latest.pdf
 git commit -m "Add QA review: <topic>"
 git push
 ```
 
-## 8. Report back
+## 9. Report back
 Tell Rahul: the final score out of 10, every deduction with its reason
 (not just the number), your judgment notes, and the dashboard link:
-https://rahulkhant.github.io/seo-audit-automation/content.html
+```
+.venv/bin/python3 -c "from projects import dashboard_url; print(dashboard_url('<project>') + 'content.html')"
+```

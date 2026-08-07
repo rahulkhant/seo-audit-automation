@@ -17,12 +17,11 @@ so a full audit is one command instead of four.
 
 Usage
 -----
-    python main.py
-        Audits the default site (SITE_ROOT_URL below).
-
-    python main.py https://example.com
-        Audits a different site instead -- useful once we add more company
-        websites later.
+    python main.py <project>
+        Audits the given registered project (see projects.py). There is no
+        default anymore -- crawling a different site now means registering
+        a project there first, not passing an ad hoc URL, so every run's
+        data and dashboard land in the right place automatically.
 """
 
 import sys
@@ -34,28 +33,26 @@ from agent3_validation.run_validation import run_validation_and_save
 from agent4_dashboard.build_dashboard import build_and_save_pdf_report, compute_trend
 from agent4_dashboard.build_dashboard_metronic import build_and_save_dashboard
 from agent4_dashboard.build_reporting_hub import build_and_save_reporting_hub
+from build_landing_page import build_and_save_landing_page, build_redirect_stubs
 from notifications.send_digest_email import send_digest_email
-
-# The site this audit runs against by default. Override by passing a
-# different URL as a command-line argument (see the usage note above).
-SITE_ROOT_URL = "https://simprosys.com"
-
-DASHBOARD_URL = "https://rahulkhant.github.io/seo-audit-automation/"
+from projects import data_dir, db_path, dashboard_url, get_project
 
 
-def run_full_audit(site_root_url):
+def run_full_audit(project):
     started_at = time.time()
+    site_root_url = get_project(project)["site_url"]
 
     print("=" * 60)
-    print(f"Starting SEO audit for {site_root_url}")
+    print(f"Starting SEO audit for project '{project}' ({site_root_url})")
     print("=" * 60)
 
     print("\n[1/5] Agent 1: Crawling the site...")
     crawl_result = run_full_crawl(site_root_url)
-    save_crawl_result(crawl_result)  # Also writes data/latest_crawl.json for debugging.
+    # Also writes <project>/latest_crawl.json for debugging.
+    save_crawl_result(crawl_result, data_dir(project) / "latest_crawl.json")
 
     print("\n[2/5] Agent 2: Saving crawl data to the database...")
-    connection = get_connection()
+    connection = get_connection(db_path(project))
     try:
         run_id = save_crawl_result_to_db(connection, crawl_result)
     finally:
@@ -63,24 +60,28 @@ def run_full_audit(site_root_url):
     print(f"    -> Saved as run_id={run_id}")
 
     print("\n[3/5] Agent 3: Validating against SEO rules...")
-    validated_run_id, findings = run_validation_and_save(run_id)
+    validated_run_id, findings = run_validation_and_save(project, run_id)
     print(f"    -> {len(findings)} findings saved")
 
     print("\n[4/5] Agent 4: Building the dashboard...")
-    dashboard_run_id, dashboard_path = build_and_save_dashboard(run_id)
+    dashboard_run_id, dashboard_path = build_and_save_dashboard(project, run_id)
     print(f"    -> Dashboard saved to {dashboard_path}")
-    pdf_run_id, pdf_path = build_and_save_pdf_report(run_id)
+    pdf_run_id, pdf_path = build_and_save_pdf_report(project, run_id)
     print(f"    -> PDF report archived to {pdf_path}")
-    reporting_html_path, reporting_pdf_path = build_and_save_reporting_hub()
+    reporting_html_path, reporting_pdf_path = build_and_save_reporting_hub(project)
     print(f"    -> Reporting Hub saved to {reporting_html_path} (PDF: {reporting_pdf_path})")
+    landing_path = build_and_save_landing_page()
+    build_redirect_stubs()
+    print(f"    -> Landing page refreshed at {landing_path}")
 
     print("\n[5/5] Sending summary email...")
-    connection = get_connection()
+    connection = get_connection(db_path(project))
     try:
         trend = compute_trend(connection, run_id)
     finally:
         connection.close()
-    was_sent = send_digest_email(run_id, findings, trend, DASHBOARD_URL)
+    notification_recipient = get_project(project)["notification_recipient"]
+    was_sent = send_digest_email(run_id, findings, trend, dashboard_url(project), notification_recipient)
     print(f"    -> Email sent" if was_sent else "    -> Email skipped (see message above)")
 
     duration_seconds = round(time.time() - started_at, 1)
@@ -94,5 +95,7 @@ def run_full_audit(site_root_url):
 
 
 if __name__ == "__main__":
-    target_site = sys.argv[1] if len(sys.argv) > 1 else SITE_ROOT_URL
-    run_full_audit(target_site)
+    if len(sys.argv) != 2:
+        print("Usage: python main.py <project>", file=sys.stderr)
+        sys.exit(1)
+    run_full_audit(sys.argv[1])

@@ -246,11 +246,16 @@ def save_crawl_result(connection, crawl_result):
 # Manual test: load Agent 1's latest crawl output and save it into the
 # database, then read a few things back to prove the round trip worked.
 if __name__ == "__main__":
-    crawl_result_path = Path(__file__).resolve().parent.parent / "data" / "latest_crawl.json"
+    import sys
+
+    from projects import data_dir, db_path
+
+    test_project = sys.argv[1] if len(sys.argv) > 1 else "simprosys"
+    crawl_result_path = data_dir(test_project) / "latest_crawl.json"
     with open(crawl_result_path, "r", encoding="utf-8") as crawl_result_file:
         loaded_crawl_result = json.load(crawl_result_file)
 
-    db_connection = get_connection()
+    db_connection = get_connection(db_path(test_project))
     saved_run_id = save_crawl_result(db_connection, loaded_crawl_result)
     print(f"Saved crawl result as run_id={saved_run_id}")
 

@@ -31,7 +31,6 @@ audit pipeline.
 import html
 import re
 from datetime import datetime
-from pathlib import Path
 
 from playwright.sync_api import sync_playwright
 
@@ -48,13 +47,9 @@ from agent4_dashboard.build_dashboard_metronic import (
     _render_sidebar_nav,
     _render_topbar,
     _shared_head,
+    _sidebar_brand_args,
 )
-
-DOCS_DIR = Path(__file__).resolve().parent.parent / "docs"
-CONTENT_FILE_PATH = DOCS_DIR / "content.html"
-BRIEFS_PDF_DIR = DOCS_DIR / "content_briefs"
-DRAFTS_PDF_DIR = DOCS_DIR / "content_drafts"
-QA_PDF_DIR = DOCS_DIR / "content_qa"
+from projects import db_path, docs_dir
 
 _CONTENT_PAGE_STYLE = """
   .tabs { display: flex; gap: 4px; margin-bottom: 20px; border-bottom: 1px solid var(--mx-border); }
@@ -562,7 +557,7 @@ def _render_qa_modal(brief, review):
     """
 
 
-def generate_content_page_html(briefs, drafts_by_brief, qa_reviews_by_brief):
+def generate_content_page_html(briefs, drafts_by_brief, qa_reviews_by_brief, project):
     subtitle_html = f"{len(briefs)} outline(s) created"
 
     if not briefs:
@@ -599,6 +594,7 @@ def generate_content_page_html(briefs, drafts_by_brief, qa_reviews_by_brief):
         {outline_modals}{draft_modals}{qa_modals}
         """
 
+    display_name, has_logo = _sidebar_brand_args(project)
     return f"""<!doctype html>
 <html lang="en">
 <head>
@@ -607,7 +603,7 @@ def generate_content_page_html(briefs, drafts_by_brief, qa_reviews_by_brief):
 </head>
 <body>
 <div class="app">
-  {_render_sidebar_nav("content")}
+  {_render_sidebar_nav("content", display_name, has_logo)}
   <div class="main">
     {_render_topbar("Content Outlines", subtitle_html)}
     <main class="content">
@@ -792,40 +788,49 @@ def _render_pdf(print_html, pdf_path):
     return pdf_path
 
 
-def build_and_save_content_page():
-    connection = get_connection()
+def build_and_save_content_page(project):
+    connection = get_connection(db_path(project))
     try:
-        DOCS_DIR.mkdir(parents=True, exist_ok=True)
+        project_docs_dir = docs_dir(project)
+        project_docs_dir.mkdir(parents=True, exist_ok=True)
+        content_file_path = project_docs_dir / "content.html"
+        briefs_pdf_dir = project_docs_dir / "content_briefs"
+        drafts_pdf_dir = project_docs_dir / "content_drafts"
+        qa_pdf_dir = project_docs_dir / "content_qa"
+
         briefs = load_all_briefs(connection)
         drafts_by_brief = load_all_drafts_by_brief(connection)
         qa_reviews_by_brief = load_all_qa_reviews_by_brief(connection)
 
         for brief in briefs:
-            _render_pdf(_generate_brief_print_html(brief), BRIEFS_PDF_DIR / _brief_pdf_filename(brief["brief_id"]))
+            _render_pdf(_generate_brief_print_html(brief), briefs_pdf_dir / _brief_pdf_filename(brief["brief_id"]))
 
             draft = drafts_by_brief.get(brief["brief_id"])
             if draft:
                 _render_pdf(
                     _generate_draft_print_html(brief, draft),
-                    DRAFTS_PDF_DIR / _draft_pdf_filename(brief["brief_id"]),
+                    drafts_pdf_dir / _draft_pdf_filename(brief["brief_id"]),
                 )
 
             review = qa_reviews_by_brief.get(brief["brief_id"])
             if review:
                 _render_pdf(
                     _generate_qa_print_html(brief, review),
-                    QA_PDF_DIR / _qa_pdf_filename(brief["brief_id"]),
+                    qa_pdf_dir / _qa_pdf_filename(brief["brief_id"]),
                 )
 
-        content_html = generate_content_page_html(briefs, drafts_by_brief, qa_reviews_by_brief)
-        with open(CONTENT_FILE_PATH, "w", encoding="utf-8") as content_file:
+        content_html = generate_content_page_html(briefs, drafts_by_brief, qa_reviews_by_brief, project)
+        with open(content_file_path, "w", encoding="utf-8") as content_file:
             content_file.write(content_html)
 
-        return CONTENT_FILE_PATH
+        return content_file_path
     finally:
         connection.close()
 
 
 if __name__ == "__main__":
-    saved_path = build_and_save_content_page()
+    import sys
+
+    test_project = sys.argv[1] if len(sys.argv) > 1 else "simprosys"
+    saved_path = build_and_save_content_page(test_project)
     print(f"Content page built: {saved_path}")

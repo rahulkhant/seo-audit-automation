@@ -14,7 +14,7 @@ reports about itself.
 
 Usage
 -----
-    python -m content_agent.save_draft path/to/draft.json
+    python -m content_agent.save_draft <project> path/to/draft.json
 
 Input JSON shape:
     {
@@ -32,6 +32,7 @@ import json
 import sys
 
 from content_agent.database import get_connection, load_brief, save_draft
+from projects import db_path
 
 
 def _validate(payload, brief):
@@ -63,15 +64,15 @@ def _with_word_counts(sections):
 
 
 def main():
-    if len(sys.argv) != 2:
-        print("Usage: python -m content_agent.save_draft path/to/draft.json", file=sys.stderr)
+    if len(sys.argv) != 3:
+        print("Usage: python -m content_agent.save_draft <project> path/to/draft.json", file=sys.stderr)
         sys.exit(1)
 
-    draft_path = sys.argv[1]
+    project, draft_path = sys.argv[1], sys.argv[2]
     with open(draft_path, "r", encoding="utf-8") as draft_file:
         payload = json.load(draft_file)
 
-    connection = get_connection()
+    connection = get_connection(db_path(project))
     try:
         brief = load_brief(connection, payload.get("brief_id"))
         _validate(payload, brief)

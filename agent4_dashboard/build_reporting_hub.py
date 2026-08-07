@@ -31,7 +31,6 @@ Output:
 
 import html
 import json
-from pathlib import Path
 
 from playwright.sync_api import sync_playwright
 
@@ -55,12 +54,11 @@ from agent4_dashboard.build_dashboard_metronic import (
     _render_sidebar_nav,
     _render_topbar,
     _shared_head,
+    _sidebar_brand_args,
 )
 from content_agent.database import get_connection as get_content_connection, load_all_briefs
+from projects import db_path, docs_dir
 
-DOCS_DIR = Path(__file__).resolve().parent.parent / "docs"
-REPORTING_FILE_PATH = DOCS_DIR / "reporting.html"
-REPORTS_DIR_PATH = DOCS_DIR / "reports"
 REPORTING_PDF_FILENAME = "reporting-hub-latest.pdf"
 
 # Reuse the exact same "new since last run" color the main dashboard's trend
@@ -126,7 +124,7 @@ def _load_reporting_hub_data(connection):
     return per_run
 
 
-def _load_recent_activity(per_run, limit=_ACTIVITY_FEED_LIMIT):
+def _load_recent_activity(project, per_run, limit=_ACTIVITY_FEED_LIMIT):
     """
     A single reverse-chronological feed mixing every module's recent
     activity -- audit runs today, plus content outlines now that the
@@ -136,8 +134,9 @@ def _load_recent_activity(per_run, limit=_ACTIVITY_FEED_LIMIT):
     decoupled from each other and don't need to know this page exists.
 
     Reuses `per_run` (already loaded by the caller) rather than re-querying
-    the audit DB, and opens its own short-lived connection to the content
-    DB since that's a separate module's data.
+    the audit DB, and opens its own short-lived connection to this same
+    project's content DB (still a separate table, and a separate
+    connection, but the same physical file/project as the audit data).
     """
     items = []
     for r in per_run:
@@ -149,7 +148,7 @@ def _load_recent_activity(per_run, limit=_ACTIVITY_FEED_LIMIT):
             "href": f"reports/{_audit_pdf_filename(r['run']['run_id'])}",
         })
 
-    content_connection = get_content_connection()
+    content_connection = get_content_connection(db_path(project))
     try:
         briefs = load_all_briefs(content_connection)
     finally:
@@ -331,7 +330,7 @@ def _render_activity_feed_card(activity):
     """
 
 
-def generate_reporting_hub_html(per_run, activity):
+def generate_reporting_hub_html(per_run, activity, project):
     total_runs = len(per_run)
     latest = per_run[-1] if per_run else None
     subtitle_html = f"{total_runs} run(s) recorded"
@@ -344,6 +343,7 @@ def generate_reporting_hub_html(per_run, activity):
     apex_cdn_tag = '<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>' if per_run else ""
     chart_scripts = _render_trend_chart_script(per_run) + _render_change_chart_script(per_run)
     pdf_href = f"reports/{REPORTING_PDF_FILENAME}"
+    display_name, has_logo = _sidebar_brand_args(project)
 
     return f"""<!doctype html>
 <html lang="en">
@@ -353,7 +353,7 @@ def generate_reporting_hub_html(per_run, activity):
 </head>
 <body>
 <div class="app">
-  {_render_sidebar_nav("reporting")}
+  {_render_sidebar_nav("reporting", display_name, has_logo)}
   <div class="main">
     {_render_topbar("Reporting Hub", subtitle_html, pdf_href)}
     <main class="content">
@@ -468,7 +468,7 @@ def _generate_reporting_print_html(per_run, activity):
 """
 
 
-def _save_reporting_hub_pdf(per_run, activity, reports_dir=REPORTS_DIR_PATH):
+def _save_reporting_hub_pdf(per_run, activity, reports_dir):
     print_html = _generate_reporting_print_html(per_run, activity)
     reports_dir.mkdir(parents=True, exist_ok=True)
     pdf_path = reports_dir / REPORTING_PDF_FILENAME
@@ -488,24 +488,30 @@ def _save_reporting_hub_pdf(per_run, activity, reports_dir=REPORTS_DIR_PATH):
     return pdf_path
 
 
-def build_and_save_reporting_hub():
-    connection = get_connection()
+def build_and_save_reporting_hub(project):
+    connection = get_connection(db_path(project))
     try:
-        DOCS_DIR.mkdir(parents=True, exist_ok=True)
-        per_run = _load_reporting_hub_data(connection)
-        activity = _load_recent_activity(per_run)
+        project_docs_dir = docs_dir(project)
+        project_docs_dir.mkdir(parents=True, exist_ok=True)
+        reporting_file_path = project_docs_dir / "reporting.html"
 
-        reporting_html = generate_reporting_hub_html(per_run, activity)
-        with open(REPORTING_FILE_PATH, "w", encoding="utf-8") as reporting_file:
+        per_run = _load_reporting_hub_data(connection)
+        activity = _load_recent_activity(project, per_run)
+
+        reporting_html = generate_reporting_hub_html(per_run, activity, project)
+        with open(reporting_file_path, "w", encoding="utf-8") as reporting_file:
             reporting_file.write(reporting_html)
 
-        pdf_path = _save_reporting_hub_pdf(per_run, activity)
-        return REPORTING_FILE_PATH, pdf_path
+        pdf_path = _save_reporting_hub_pdf(per_run, activity, project_docs_dir / "reports")
+        return reporting_file_path, pdf_path
     finally:
         connection.close()
 
 
 if __name__ == "__main__":
-    saved_html_path, saved_pdf_path = build_and_save_reporting_hub()
+    import sys
+
+    test_project = sys.argv[1] if len(sys.argv) > 1 else "simprosys"
+    saved_html_path, saved_pdf_path = build_and_save_reporting_hub(test_project)
     print(f"Reporting Hub built: {saved_html_path}")
     print(f"PDF summary saved to: {saved_pdf_path}")

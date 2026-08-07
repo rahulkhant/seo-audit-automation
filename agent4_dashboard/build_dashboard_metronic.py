@@ -21,7 +21,6 @@ Output:
 """
 
 import html
-from pathlib import Path
 
 from agent2_storage.database import get_connection
 from agent4_dashboard.build_dashboard import (
@@ -36,10 +35,7 @@ from agent4_dashboard.build_dashboard import (
     load_findings,
     load_run_info,
 )
-
-DOCS_DIR = Path(__file__).resolve().parent.parent / "docs"
-INDEX_FILE_PATH = DOCS_DIR / "index.html"
-HISTORY_FILE_PATH = DOCS_DIR / "history.html"
+from projects import db_path, docs_dir, get_project
 
 # Metronic's real default-theme semantic colors (Keenthemes) -- used here
 # purely as color values, deliberately different from the classic
@@ -131,6 +127,7 @@ def _mx_shared_style():
     display: flex; align-items: center; gap: 10px;
   }
   .brand-logo { height: 34px; width: auto; display: block; }
+  .brand-logo-text { font-size: 1.1rem; font-weight: 700; color: #ffffff; }
   .sidebar-nav { padding: 8px 12px; display: flex; flex-direction: column; gap: 2px; flex: 1; }
   .sidebar-link {
     display: flex; align-items: center; gap: 12px; padding: 11px 14px; border-radius: 8px;
@@ -366,20 +363,32 @@ def _render_chart_init_script(counts):
     return script
 
 
-def _render_sidebar_nav(active_page):
+def _render_sidebar_nav(active_page, display_name, has_logo):
     """Primary navigation -- Dashboard / History / Reporting / Content /
     Activity / Keyword Research -- with categories living in the Findings
-    card's own filter control instead of the sidebar (see _render_findings_card)."""
+    card's own filter control instead of the sidebar (see _render_findings_card).
+
+    `display_name` is this project's name (from projects.py). `has_logo`
+    says whether this project has its own docs/<slug>/assets/logo.png on
+    disk (checked once by the caller, at build time, since Python already
+    knows this before any HTML gets written) -- projects with a real logo
+    get the <img>, everything else gets a plain text brand mark instead of
+    a broken image icon."""
     dashboard_class = "sidebar-link active" if active_page == "dashboard" else "sidebar-link"
     history_class = "sidebar-link active" if active_page == "history" else "sidebar-link"
     reporting_class = "sidebar-link active" if active_page == "reporting" else "sidebar-link"
     content_class = "sidebar-link active" if active_page == "content" else "sidebar-link"
     activity_class = "sidebar-link active" if active_page == "activity" else "sidebar-link"
     keywords_class = "sidebar-link active" if active_page == "keyword-research" else "sidebar-link"
+    brand_mark = (
+        f'<img class="brand-logo" src="assets/logo.png" alt="{html.escape(display_name)}">'
+        if has_logo
+        else f'<span class="brand-logo-text">{html.escape(display_name)}</span>'
+    )
     return f"""
     <aside class="sidebar">
       <div class="sidebar-brand">
-        <img class="brand-logo" src="assets/logo.png" alt="Simprosys">
+        {brand_mark}
       </div>
       <nav class="sidebar-nav">
         <a class="{dashboard_class}" href="index.html">{ICON_HOME}<span>Dashboard</span></a>
@@ -575,7 +584,16 @@ def _shared_head(title):
 """
 
 
-def generate_metronic_index_html(connection, run_id):
+def _sidebar_brand_args(project):
+    """Resolves the two bits _render_sidebar_nav needs beyond which page is
+    active -- kept in one place since every one of the 5 dashboard pages
+    needs the exact same two values for the exact same project."""
+    display_name = get_project(project)["display_name"]
+    has_logo = (docs_dir(project) / "assets" / "logo.png").exists()
+    return display_name, has_logo
+
+
+def generate_metronic_index_html(connection, run_id, project):
     run_info = load_run_info(connection, run_id)
     findings = load_findings(connection, run_id)
     trend = compute_trend(connection, run_id)
@@ -595,6 +613,7 @@ def generate_metronic_index_html(connection, run_id):
         '<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>' if total > 0 else ""
     )
     chart_init_script = _render_chart_init_script(counts) if total > 0 else ""
+    display_name, has_logo = _sidebar_brand_args(project)
 
     return f"""<!doctype html>
 <html lang="en">
@@ -603,7 +622,7 @@ def generate_metronic_index_html(connection, run_id):
 </head>
 <body>
 <div class="app">
-  {_render_sidebar_nav("dashboard")}
+  {_render_sidebar_nav("dashboard", display_name, has_logo)}
   <div class="main">
     {_render_topbar("SEO Audit Dashboard", subtitle_html, pdf_href)}
     <main class="content">
@@ -652,11 +671,12 @@ def _render_history_rows_mx(connection, runs):
     return "".join(rows_html)
 
 
-def generate_metronic_history_html(connection):
+def generate_metronic_history_html(connection, project):
     """Same run-by-run data and "PDF download only, never browsable" rule
     as the classic history page -- restyled only."""
     runs = load_all_runs(connection)
     rows_html = _render_history_rows_mx(connection, runs)
+    display_name, has_logo = _sidebar_brand_args(project)
 
     return f"""<!doctype html>
 <html lang="en">
@@ -665,7 +685,7 @@ def generate_metronic_history_html(connection):
 </head>
 <body>
 <div class="app">
-  {_render_sidebar_nav("history")}
+  {_render_sidebar_nav("history", display_name, has_logo)}
   <div class="main">
     {_render_topbar("Report History", "Every past audit run. Older reports are downloadable as PDF only.")}
     <main class="content">
@@ -693,29 +713,35 @@ def generate_metronic_history_html(connection):
 """
 
 
-def build_and_save_dashboard(run_id=None):
-    connection = get_connection()
+def build_and_save_dashboard(project, run_id=None):
+    connection = get_connection(db_path(project))
     try:
         if run_id is None:
             row = connection.execute("SELECT MAX(run_id) FROM runs").fetchone()
             run_id = row[0]
 
-        DOCS_DIR.mkdir(parents=True, exist_ok=True)
+        project_docs_dir = docs_dir(project)
+        project_docs_dir.mkdir(parents=True, exist_ok=True)
+        index_file_path = project_docs_dir / "index.html"
+        history_file_path = project_docs_dir / "history.html"
 
-        index_html = generate_metronic_index_html(connection, run_id)
-        with open(INDEX_FILE_PATH, "w", encoding="utf-8") as index_file:
+        index_html = generate_metronic_index_html(connection, run_id, project)
+        with open(index_file_path, "w", encoding="utf-8") as index_file:
             index_file.write(index_html)
 
-        history_html = generate_metronic_history_html(connection)
-        with open(HISTORY_FILE_PATH, "w", encoding="utf-8") as history_file:
+        history_html = generate_metronic_history_html(connection, project)
+        with open(history_file_path, "w", encoding="utf-8") as history_file:
             history_file.write(history_html)
 
-        return run_id, INDEX_FILE_PATH
+        return run_id, index_file_path
     finally:
         connection.close()
 
 
 if __name__ == "__main__":
-    saved_run_id, saved_path = build_and_save_dashboard()
+    import sys
+
+    test_project = sys.argv[1] if len(sys.argv) > 1 else "simprosys"
+    saved_run_id, saved_path = build_and_save_dashboard(test_project)
     print(f"Dashboard built for run_id={saved_run_id}")
     print(f"Saved to: {saved_path}")

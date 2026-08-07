@@ -6,12 +6,12 @@
 
 ## 1. What this project is
 
-An automated, unattended weekly technical + on-page SEO audit for the company website **simprosys.com**, built for **Rahul Khant, SEO Executive at Simprosys**, who has no coding background. Every week (and on-demand), the system crawls the site, checks it against a defined SEO rulebook, and delivers the results as a dashboard + email — with zero manual work once set up.
+An automated, unattended weekly technical + on-page SEO audit, originally built for the company website **simprosys.com** and now (§15, added 2026-08-07) extended to run the exact same audit/content/activity/keyword-research pipeline for multiple, unrelated projects side by side. Built for **Rahul Khant, SEO Executive at Simprosys**, who has no coding background. Every week (and on-demand), the system crawls each registered site, checks it against a defined SEO rulebook, and delivers the results as a dashboard + email — with zero manual work once set up.
 
 - **Owner / user**: Rahul Khant (rahulkhant@simprosys.com)
 - **GitHub account**: `rahulkhant` (company account, not personal)
 - **Repository**: https://github.com/rahulkhant/seo-audit-automation (public — see §7 for why)
-- **Live dashboard**: https://rahulkhant.github.io/seo-audit-automation/
+- **Live dashboard**: https://rahulkhant.github.io/seo-audit-automation/ (a project picker as of §15 — Simprosys's own dashboard is at .../simprosys/)
 - **Local project path**: `/Users/rahul/Desktop/Automation/seo-audit-automation`
 
 ## 2. How Rahul likes to work (carry this forward to any future project)
@@ -38,24 +38,36 @@ Agent 1 (Crawl)  ->  Agent 2 (Storage)  ->  Agent 3 (Validation)  ->  Agent 4 (D
 ### Repository structure
 ```
 seo-audit-automation/
-├── main.py                          # Orchestrator: runs all 5 steps in sequence
-├── requirements.txt                 # requests, beautifulsoup4, playwright, python-dotenv
+├── main.py                          # Orchestrator: runs all 5 steps in sequence, for one project
+├── projects.py                      # Project registry (slug -> site_url/db_path/docs_dir) -- see §15
+├── build_landing_page.py            # Builds docs/index.html (project picker) + old-URL redirect stubs
+├── requirements.txt                 # requests, beautifulsoup4, playwright, python-dotenv, openpyxl
 ├── .env / .env.example              # SMTP credentials (real file gitignored)
 ├── .gitignore
 ├── data/
-│   ├── seo_audit_history.db         # SQLite -- COMMITTED to git (see §7, persistence)
-│   └── latest_crawl.json            # Intermediate debug artifact -- gitignored
+│   └── <project>/                   # One subfolder per registered project (e.g. simprosys/) -- see §15
+│       ├── seo_audit_history.db     # SQLite -- COMMITTED to git (see §7, persistence)
+│       └── latest_crawl.json        # Intermediate debug artifact -- gitignored
 ├── docs/
-│   ├── index.html                   # Main Dashboard -- Metronic-styled (served by GitHub Pages)
-│   ├── history.html                 # Report History -- one line per past run, PDF download only
-│   ├── reporting.html                # Reporting Hub -- trend charts + category-by-run table across all runs
-│   ├── content.html                  # Content Outlines -- Outline/Draft/QA Checker tabs, every brief
-│   ├── content_briefs/brief-XXXX.pdf  # One outline PDF per brief (structured spec)
-│   ├── content_drafts/draft-XXXX.pdf  # One draft PDF per written draft (reads like an article)
-│   ├── content_qa/qa-XXXX.pdf         # One QA report PDF per reviewed brief
-│   └── reports/
-│       ├── run-XXXX.pdf              # Permanent PDF archive, one file per run
-│       └── reporting-hub-latest.pdf  # Trend summary PDF -- overwritten every run, not archived per-run
+│   ├── index.html                   # Project picker -- links into each project's own dashboard (§15)
+│   ├── history.html, reporting.html, content.html,        # Redirect stubs at the old pre-multi-project
+│   ├── activity.html, keyword-research.html                # URLs, bouncing to <project>/<same-name>.html
+│   └── <project>/                   # One full dashboard per registered project (e.g. simprosys/)
+│       ├── index.html               # Main Dashboard -- Metronic-styled (served by GitHub Pages)
+│       ├── history.html             # Report History -- one line per past run, PDF download only
+│       ├── reporting.html            # Reporting Hub -- trend charts + category-by-run table across all runs
+│       ├── content.html              # Content Outlines -- Outline/Draft/QA Checker tabs, every brief
+│       ├── activity.html             # Activity & Performance -- see §13
+│       ├── keyword-research.html     # Keyword Research -- see §14
+│       ├── assets/logo.png           # This project's sidebar logo (optional -- falls back to text brand mark)
+│       ├── content_briefs/brief-XXXX.pdf  # One outline PDF per brief (structured spec)
+│       ├── content_drafts/draft-XXXX.pdf  # One draft PDF per written draft (reads like an article)
+│       ├── content_qa/qa-XXXX.pdf         # One QA report PDF per reviewed brief
+│       ├── activity_reports/         # Daily/weekly/monthly activity PDFs
+│       ├── keyword_research_exports/ # Master + per-batch keyword Excel/PDF exports
+│       └── reports/
+│           ├── run-XXXX.pdf          # Permanent PDF archive, one file per run
+│           └── reporting-hub-latest.pdf  # Trend summary PDF -- overwritten every run, not archived per-run
 ├── agent1_crawl/
 │   ├── sitemap_discovery.py         # Reads robots.txt + sitemap.xml -> list of URLs to crawl
 │   ├── page_extractor.py            # Fetches ONE page (raw + Playwright-rendered), extracts SEO data
@@ -68,9 +80,9 @@ seo-audit-automation/
 │   ├── site_checks.py               # Cross-page rule checks (6 rules)
 │   └── run_validation.py            # Runs all checks, saves findings to DB
 ├── agent4_dashboard/
-│   ├── build_dashboard.py           # Shared data-loading helpers + PDF archive builder (build_and_save_pdf_report)
-│   ├── build_dashboard_metronic.py  # Builds docs/index.html + docs/history.html (Metronic-styled dashboard)
-│   └── build_reporting_hub.py       # Builds docs/reporting.html + reporting-hub-latest.pdf (trends across all runs)
+│   ├── build_dashboard.py           # Shared data-loading helpers + PDF archive builder (build_and_save_pdf_report(project))
+│   ├── build_dashboard_metronic.py  # Builds <project>/index.html + history.html (Metronic dashboard); shared sidebar/shell used by all 5 pages
+│   └── build_reporting_hub.py       # Builds <project>/reporting.html + reporting-hub-latest.pdf (trends across all runs)
 ├── notifications/
 │   └── send_digest_email.py         # Sends the summary email via Gmail SMTP
 ├── content_agent/                   # Content Agent (all three agents built) -- see §12
@@ -81,16 +93,18 @@ seo-audit-automation/
 │   ├── save_brief.py                # CLI: persists a finished brief (called by the blog-outline skill)
 │   ├── save_draft.py                # CLI: persists a finished draft, computes real word counts (blog-write skill)
 │   ├── save_qa_review.py            # CLI: recomputes deterministic checks fresh + saves the QA report (blog-qa skill)
-│   ├── build_content_page.py        # Builds docs/content.html (3 tabs) + per-brief/draft/QA PDFs
+│   ├── build_content_page.py        # Builds <project>/content.html (3 tabs) + per-brief/draft/QA PDFs
 │   └── example_blogs/               # Reference posts for style/structure (empty until Rahul adds some)
 ├── activity_agent/                  # Activity Agent -- see §13
 │   ├── database.py                  # activity_tasks/activity_daily_logs/activity_log_entries tables + save/load
-│   └── build_activity_page.py       # Builds docs/activity.html + daily/weekly/monthly PDFs
+│   └── build_activity_page.py       # Builds <project>/activity.html + daily/weekly/monthly PDFs
 ├── keyword_research/                 # Keyword Research module -- see §14
 │   ├── database.py                  # keyword_research_batches/keyword_research_keywords tables + dedup logic
 │   ├── analytics.py                 # Deterministic overlap/opportunity/trending/per-competitor computations
+│   ├── quality_filters.py           # Repeated-word + brand/proper-noun keyword exclusion rules
+│   ├── data/english_words.txt       # Bundled English dictionary used by quality_filters.py
 │   ├── save_batch.py                # CLI: validates + persists one imported batch (keyword-research skill)
-│   └── build_keyword_research_page.py  # Builds docs/keyword-research.html + Excel/PDF exports
+│   └── build_keyword_research_page.py  # Builds <project>/keyword-research.html + Excel/PDF exports
 ├── .github/
 │   └── workflows/seo-audit.yml      # Weekly schedule (Mon 06:00 UTC) + manual trigger
 └── .claude/
@@ -204,7 +218,7 @@ Title ≤60 chars, meta description ≤160, OG title ≤60, OG description ≤16
 
 ## 7. Key decisions and non-obvious gotchas
 
-- **Database must be committed to git.** GitHub Actions runners start from a fresh checkout every time — if `data/seo_audit_history.db` were gitignored, every scheduled run would lose all history. The workflow's last step commits the updated `.db` and `docs/` back to the repo. (`data/latest_crawl.json` stays gitignored — it's a disposable intermediate artifact, fully captured in the DB.)
+- **Database must be committed to git.** GitHub Actions runners start from a fresh checkout every time — if each project's `data/<project>/seo_audit_history.db` were gitignored, every scheduled run would lose all history. The workflow commits `data/` and `docs/` back to the repo after each project (§15). (`data/<project>/latest_crawl.json` stays gitignored — it's a disposable intermediate artifact, fully captured in the DB.)
 - **Repo is public, not private.** GitHub Pages for a *private* repo requires a paid plan (GitHub Pro+). Rahul explicitly chose "make it public" over paying or skipping live hosting. The dashboard/findings are technically visible to anyone with the URL (not indexed/promoted, but not access-controlled).
 - **Character encoding bug (real, found and fixed):** Python's `requests` library defaulted to ISO-8859-1 instead of UTF-8 for raw HTML fetches (since the server's `Content-Type` header didn't specify a charset), which silently mangled special characters and caused ~50 false "JS rendering differs" findings. Fixed by forcing `response.encoding = "utf-8"`. **Lesson for future projects: always force UTF-8 explicitly when fetching HTML with `requests`.**
 - **Duplicate-link findings bug (found and fixed):** a page linking to the same URL twice (e.g., header nav + footer) was generating duplicate findings per occurrence instead of per unique link. Fixed by de-duplicating link targets per page before checking. Unverified (not-in-sitemap) links were further consolidated from "one finding per page" to "one finding per unique target URL, listing which pages reference it" — otherwise a single shared nav link outside the sitemap generated ~75 near-identical low-value findings.
@@ -215,11 +229,11 @@ Title ≤60 chars, meta description ≤160, OG title ≤60, OG description ≤16
 
 ## 8. Deployment / operations
 
-- **Schedule**: every Monday, 06:00 UTC, via `.github/workflows/seo-audit.yml`.
-- **Manual trigger, three ways**:
-  1. GitHub website → Actions tab → "Weekly SEO Audit" → Run workflow button.
-  2. Terminal: `cd ~/Desktop/Automation/seo-audit-automation && gh workflow run seo-audit.yml`
-  3. In Claude Code: type **`/seo-audit`** (custom Skill at `.claude/skills/seo-audit/SKILL.md` — triggers the workflow, watches it, reports back). **Known quirk**: as of 2026-07-28 this hasn't registered as a recognized slash command even across multiple new chat sessions since the file was created — if `/seo-audit` still returns "Unknown command," just ask in plain English ("run the audit") instead; the underlying steps are identical either way. Worth re-testing occasionally in case it's a propagation delay rather than a permanent issue.
+- **Schedule**: every Monday, 06:00 UTC, via `.github/workflows/seo-audit.yml` — loops over every registered project (§15) sequentially in one job, committing after each one.
+- **Manual trigger, three ways** (all default to "every registered project" unless a specific one is given):
+  1. GitHub website → Actions tab → "Weekly SEO Audit" → Run workflow button (optionally fill in the `project` input to run just one).
+  2. Terminal: `cd ~/Desktop/Automation/seo-audit-automation && gh workflow run seo-audit.yml -f project=<slug>` (omit `-f project=...` to run all).
+  3. In Claude Code: type **`/seo-audit`** (custom Skill at `.claude/skills/seo-audit/SKILL.md` — asks which project, triggers the workflow for it, watches it, reports back). **Known quirk**: as of 2026-07-28 this hasn't registered as a recognized slash command even across multiple new chat sessions since the file was created — if `/seo-audit` still returns "Unknown command," just ask in plain English ("run the audit") instead; the underlying steps are identical either way. Worth re-testing occasionally in case it's a propagation delay rather than a permanent issue.
 - **Secrets** (GitHub repo secrets, not in code): `SMTP_EMAIL_ADDRESS`, `SMTP_APP_PASSWORD` (Gmail App Password, not the real account password), `NOTIFICATION_RECIPIENT`.
 - **Local dev environment**: Python 3.9.6 (macOS system Python), virtualenv at `.venv/`, `pip install -r requirements.txt` then `python -m playwright install chromium`.
 - **Local git identity** (set locally for this project only, not globally): name "Rahul Khant", email `rahulkhant@simprosys.com`.
@@ -345,6 +359,32 @@ A fourth, separate module, prompted by a real practical problem: Rahul was manua
 - **Brand/proper-noun keywords** — Rahul's 28 tracked competitors (exact list) plus a general heuristic for the much bigger real-world source of noise: specific hotel/resort property names Google Keyword Planner picks up (e.g. "kk royal jaipur"). There's no dictionary of hotel brand names to check against, so this works by elimination: a word that isn't in a real English dictionary (`keyword_research/data/english_words.txt`, a bundled copy of the classic Unix `words` list — bundled rather than read from `/usr/share/dict/words` so this doesn't silently behave differently on a machine that doesn't have that file), isn't known industry jargon (pms, gds, crm, airbnb, google...), and isn't a real place name (a second allow-list, also hand-built from this exact dataset) is almost always a proper noun in this dataset. Both allow-lists were built by frequency-analyzing the real 16,268-keyword master list, not guessed — but neither is exhaustive; an unusual town or hotel name in a future batch could land on the wrong side of this. That's a disclosed, accepted limitation, not a bug: fix a specific miss by adding a word to the right list in `quality_filters.py`, don't rebuild the approach.
 
 Per Rahul's explicit call (2026-08-06): excluded keywords are dropped entirely, not shown anywhere in the dashboard/exports, and not logged or persisted anywhere either — no review queue, no "what got removed" export. If a specific miss turns out to matter later, that's a follow-up, not something this module tracks now.
+
+---
+
+## 15. Multi-project support (built 2026-08-07)
+
+Rahul runs 7 real projects across unrelated industries and wants this same platform — audit, Content Agent, Activity Agent, Keyword Research, all of it — for every one of them, not just Simprosys. Discussed at length before any code changed (see `roadmap_discussion.md`): the agreed design is **one shared Python codebase, but a separate database file and a separate dashboard output folder per project** — not a unified multi-tenant database with a `project_id` column threaded through every table, and not a full copy of the code per project. Given the projects have nothing analytically in common (different industries, different audiences), there's no real value in a unified data model, and duplicating the code would mean shipping every future fix N times instead of once.
+
+**`projects.py`** (repo root) is the one new file this hinges on — a plain Python dict (not YAML/JSON: nothing in this codebase reads external config today, and a dict is easier to hand to an AI assistant to edit than a new file format), mapping a project slug to its `display_name`, `site_url`, and optional `notification_recipient`, plus four helpers (`db_path`, `docs_dir`, `dashboard_url`, `list_projects`). Adding project #8 is one dict entry, not a code change.
+
+**Everything below `projects.py` already had the right seam.** `agent2_storage.database.get_connection(db_path=...)` already accepted a path override before this change, and the three downstream `database.py` files (content/activity/keyword-research) already forwarded it — no storage-layer changes were needed at all. The actual work was the ~14 call sites that called `get_connection()` with zero arguments (now all take a `project` slug and resolve `db_path(project)` themselves), and the 6 files that independently hardcoded a `DOCS_DIR` constant at import time (`build_dashboard.py`, `build_dashboard_metronic.py`, `build_reporting_hub.py`, `build_content_page.py`, `build_activity_page.py`, `build_keyword_research_page.py` — each now resolves `docs_dir(project)` inside its own `build_and_save_*(project)` function instead).
+
+**Every generated `href`/`src` in every dashboard page turned out to already be a relative path** (confirmed by grep before writing any code) — so nesting the whole output tree one level deeper, from `docs/*.html` to `docs/<slug>/*.html`, needed zero HTML changes. Only the Python-side "where do I write this file" logic needed to change.
+
+**Branding**: `_render_sidebar_nav` (in `build_dashboard_metronic.py`, shared by all 5 dashboard pages) now takes `display_name` and `has_logo` (`_sidebar_brand_args(project)` resolves both). A project with its own `docs/<slug>/assets/logo.png` gets the image; one without gets a plain text brand mark instead of a broken image icon — checked once in Python at build time, not via a JS `onerror` fallback (simpler, and this codebase already knows the file's existence before writing any HTML at all).
+
+**Landing page** (`build_landing_page.py`, repo root, no DB access): `docs/index.html` is no longer Simprosys's own dashboard — it's a plain picker page listing every registered project, linking into `docs/<slug>/index.html`. Rebuilt every run from `main.py` so it's always current as projects are added.
+
+**Migration**: Simprosys's existing database and dashboard moved via `git mv` (preserves history) to `data/simprosys/seo_audit_history.db` and `docs/simprosys/`. Since the old top-level URLs (`.../content.html`, `.../keyword-research.html`, etc.) were already shared/bookmarked, Rahul asked for redirect stubs rather than letting them 404 (`build_landing_page.build_redirect_stubs()` — a small fixed list, not derived from the project registry, since it's specifically the old single-project URL scheme and doesn't grow). `docs/index.html` itself needed no stub — the new landing page is a sensible thing to land on, not a dead end.
+
+**`main.py`** changed from `run_full_audit(site_root_url)` to `run_full_audit(project)` — a project slug, not a URL; the site URL is now looked up from the registry. Crawling a different site means registering a project, not passing an ad hoc CLI argument.
+
+**GitHub Actions** (`.github/workflows/seo-audit.yml`) loops over every registered project sequentially in one job — not a parallel matrix, since a matrix would mean multiple jobs checking out the same starting commit and racing to push, risking one project's run overwriting another's. Commits after each project individually (not once at the end), so a failure on project 5 doesn't lose 1-4's completed work. `workflow_dispatch` also takes an optional `project` input (default `all`) so `/seo-audit` can target just one project on demand instead of running every one of them.
+
+**Every CLI entry point takes the project slug as its first positional argument** (e.g. `python -m keyword_research.save_batch <project> path/to/batch.json`), matching this codebase's existing all-positional-`sys.argv` convention rather than introducing a `--project` flag (no `argparse` exists anywhere in this repo).
+
+**Scope of this pass**: only `simprosys` is a real registered project so far — the mechanism is fully built and proven end-to-end on real data, ready for Rahul to register the other 6 by adding an entry to `projects.py` once he has each one's name and site URL. Not blocked on that information; adding them later is configuration, not development.
 
 ---
 

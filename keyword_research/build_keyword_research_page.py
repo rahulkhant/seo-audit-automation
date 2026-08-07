@@ -27,7 +27,6 @@ Generates:
 
 import html
 from datetime import datetime
-from pathlib import Path
 
 from openpyxl import Workbook
 from openpyxl.styles import Font
@@ -47,11 +46,10 @@ from agent4_dashboard.build_dashboard_metronic import (
     _render_sidebar_nav,
     _render_topbar,
     _shared_head,
+    _sidebar_brand_args,
 )
+from projects import db_path, docs_dir
 
-DOCS_DIR = Path(__file__).resolve().parent.parent / "docs"
-KEYWORD_RESEARCH_FILE_PATH = DOCS_DIR / "keyword-research.html"
-EXPORTS_DIR_PATH = DOCS_DIR / "keyword_research_exports"
 MASTER_XLSX_FILENAME = "master-keywords-latest.xlsx"
 MASTER_PDF_FILENAME = "master-insights-latest.pdf"
 
@@ -518,7 +516,7 @@ def _render_batch_modal(batch, batch_analytics):
     """
 
 
-def generate_keyword_research_page_html(master_keywords, master_analytics, batches, batch_analytics_by_id):
+def generate_keyword_research_page_html(master_keywords, master_analytics, batches, batch_analytics_by_id, project):
     subtitle_html = f"{master_analytics['total_keywords']} unique keyword(s) &middot; {len(batches)} batch(es) recorded"
 
     insights_body = (
@@ -541,6 +539,7 @@ def generate_keyword_research_page_html(master_keywords, master_analytics, batch
         )
         history_body = f'<div class="batch-list">{batch_rows}</div>{batch_modals}'
 
+    display_name, has_logo = _sidebar_brand_args(project)
     return f"""<!doctype html>
 <html lang="en">
 <head>
@@ -549,7 +548,7 @@ def generate_keyword_research_page_html(master_keywords, master_analytics, batch
 </head>
 <body>
 <div class="app">
-  {_render_sidebar_nav("keyword-research")}
+  {_render_sidebar_nav("keyword-research", display_name, has_logo)}
   <div class="main">
     {_render_topbar("Keyword Research", subtitle_html)}
     <main class="content">
@@ -706,18 +705,22 @@ def _render_pdf(print_html, pdf_path):
     return pdf_path
 
 
-def build_and_save_keyword_research_page():
-    connection = get_connection()
+def build_and_save_keyword_research_page(project):
+    connection = get_connection(db_path(project))
     try:
-        DOCS_DIR.mkdir(parents=True, exist_ok=True)
+        project_docs_dir = docs_dir(project)
+        project_docs_dir.mkdir(parents=True, exist_ok=True)
+        keyword_research_file_path = project_docs_dir / "keyword-research.html"
+        exports_dir_path = project_docs_dir / "keyword_research_exports"
+
         batches = load_all_batches(connection)
         master_keywords = load_master_keywords(connection)
         master_analytics = run_all_analytics(master_keywords)
 
-        _write_keywords_excel(master_keywords, EXPORTS_DIR_PATH / MASTER_XLSX_FILENAME)
+        _write_keywords_excel(master_keywords, exports_dir_path / MASTER_XLSX_FILENAME)
         _render_pdf(
             _generate_insights_print_html("Master Keyword Insights", "Cumulative across every included batch", master_analytics),
-            EXPORTS_DIR_PATH / MASTER_PDF_FILENAME,
+            exports_dir_path / MASTER_PDF_FILENAME,
         )
 
         batch_analytics_by_id = {}
@@ -726,22 +729,25 @@ def build_and_save_keyword_research_page():
             batch_analytics = run_all_analytics(batch_keywords)
             batch_analytics_by_id[batch["batch_id"]] = batch_analytics
 
-            _write_keywords_excel(batch_keywords, EXPORTS_DIR_PATH / _batch_xlsx_filename(batch["batch_id"]))
+            _write_keywords_excel(batch_keywords, exports_dir_path / _batch_xlsx_filename(batch["batch_id"]))
             label = batch["label"] or f"Batch #{batch['batch_id']}"
             _render_pdf(
                 _generate_insights_print_html(f"Keyword Insights -- {label}", _format_created_at(batch["created_at"]), batch_analytics),
-                EXPORTS_DIR_PATH / _batch_pdf_filename(batch["batch_id"]),
+                exports_dir_path / _batch_pdf_filename(batch["batch_id"]),
             )
 
-        page_html = generate_keyword_research_page_html(master_keywords, master_analytics, batches, batch_analytics_by_id)
-        with open(KEYWORD_RESEARCH_FILE_PATH, "w", encoding="utf-8") as page_file:
+        page_html = generate_keyword_research_page_html(master_keywords, master_analytics, batches, batch_analytics_by_id, project)
+        with open(keyword_research_file_path, "w", encoding="utf-8") as page_file:
             page_file.write(page_html)
 
-        return KEYWORD_RESEARCH_FILE_PATH
+        return keyword_research_file_path
     finally:
         connection.close()
 
 
 if __name__ == "__main__":
-    saved_path = build_and_save_keyword_research_page()
+    import sys
+
+    test_project = sys.argv[1] if len(sys.argv) > 1 else "simprosys"
+    saved_path = build_and_save_keyword_research_page(test_project)
     print(f"Keyword Research page built: {saved_path}")

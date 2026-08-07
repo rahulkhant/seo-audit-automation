@@ -26,7 +26,16 @@ Do the following, in order:
 ## 1. Confirm working directory
 If not already there, change to `/Users/rahul/Desktop/Automation/seo-audit-automation`.
 
-## 2. Collect the inputs (once, up front -- Outliner stage)
+## 2. Which project is this for?
+Every project has its own separate content database and dashboard. Ask
+which project this post belongs to, unless it's already clear from
+context, and validate it:
+```
+.venv/bin/python3 -c "from projects import list_projects; print(' '.join(slug for slug, _ in list_projects()))"
+```
+If the name given isn't in that list, ask again rather than guessing.
+
+## 3. Collect the inputs (once, up front -- Outliner stage)
 If the user's request already included some of these, don't re-ask for
 them -- only ask conversationally for what's missing:
 
@@ -47,7 +56,7 @@ them -- only ask conversationally for what's missing:
 This is the only input gathering step in the whole pipeline -- nothing
 after this point should require going back to ask for more.
 
-## 3. Validate before doing anything else
+## 4. Validate before doing anything else
 - Topic and primary keyword must be non-empty text.
 - Target word count must be a positive whole number.
 - Headings list must have at least one entry, each with a level of H2 or
@@ -56,15 +65,15 @@ after this point should require going back to ask for more.
 If anything is missing or doesn't make sense, ask the user to clarify
 rather than guessing or silently proceeding with a bad assumption.
 
-## 4. Load reference examples, if any exist
+## 5. Load reference examples, if any exist
 ```
 ls content_agent/example_blogs/*.md content_agent/example_blogs/*.txt 2>/dev/null
 ```
 If files exist, read them now -- you'll want them both for the outline's
-pacing (step 6) and for the draft's voice/style later (step 8). If none
+pacing (step 7) and for the draft's voice/style later (step 9). If none
 exist yet, proceed without, a one-line mention is enough.
 
-## 5. Compute word budgets (deterministic -- Outliner stage, run this, don't estimate by hand)
+## 6. Compute word budgets (deterministic -- Outliner stage, run this, don't estimate by hand)
 Build the headings list (excluding H1) as JSON and run:
 ```
 .venv/bin/python3 -c "
@@ -79,7 +88,7 @@ This returns the section list with `word_budget` already filled in,
 including the intro/conclusion slots. Do not recompute or override these
 numbers yourself.
 
-## 6. Write the outline content (Outliner judgment step)
+## 7. Write the outline content (Outliner judgment step)
 For every section in the budgeted list (including intro and conclusion),
 decide and fill in:
 - `points_to_cover`: 2-4 sentences of what this section must actually say
@@ -94,17 +103,17 @@ decide and fill in:
 Show the assembled outline in the chat as you build it, so whoever's
 running this sees it forming in real time.
 
-## 7. Save the brief
+## 8. Save the brief
 Write the finished brief as JSON (matching the shape in
 `content_agent/database.py`'s `save_brief` docstring) to a temp file, then:
 ```
-.venv/bin/python3 -m content_agent.save_brief <path-to-brief.json>
+.venv/bin/python3 -m content_agent.save_brief <project> <path-to-brief.json>
 ```
 This prints the new `brief_id`. Don't rebuild the dashboard or commit yet
--- that happens once at the very end (step 12), after all three stages
+-- that happens once at the very end (step 13), after all three stages
 are done.
 
-## 8. Write the draft -- no further input needed (Writer stage)
+## 9. Write the draft -- no further input needed (Writer stage)
 Using the brief_id from step 7, write the draft section by section (not
 one giant pass). For every section in the brief (including the
 intro/conclusion slots, which have `heading: null`), write prose that:
@@ -157,25 +166,26 @@ section needs a list.
 Show each section in the chat as you write it, same transparency
 principle as the outline step.
 
-## 9. Save the draft
+## 10. Save the draft
 Build the sections list (one entry per brief section, same order, each
 `{"heading": ..., "level": ..., "content": "..."}` -- no word_count key,
 that's computed for you) as JSON, write it to a temp file alongside
 `brief_id`, then:
 ```
-.venv/bin/python3 -m content_agent.save_draft <path-to-draft.json>
+.venv/bin/python3 -m content_agent.save_draft <project> <path-to-draft.json>
 ```
 This computes real word counts from the text and prints the new
 `draft_id`. Still no rebuild/commit yet.
 
-## 10. Run the QA Checker -- no further input needed
+## 11. Run the QA Checker -- no further input needed
 Preview the deterministic report:
 ```
 .venv/bin/python3 -c "
 import json
 from content_agent.database import get_connection, load_brief, load_draft_for_brief
 from content_agent.qa_checks import run_deterministic_checks, compute_score
-connection = get_connection()
+from projects import db_path
+connection = get_connection(db_path('<project>'))
 brief = load_brief(connection, <brief_id>)
 draft = load_draft_for_brief(connection, <brief_id>)
 connection.close()
@@ -202,37 +212,40 @@ A note on the scoring math (Rahul, 2026-08-05): the point deductions in
 to "fix" the math yourself; just use it as-is and mention in the summary
 if a deduction seems off.
 
-## 11. Save the QA review
+## 12. Save the QA review
 Write `{"judgment_adjustment": ..., "judgment_notes": "..."}` to a temp
 file, then:
 ```
-.venv/bin/python3 -m content_agent.save_qa_review <brief_id> <path-to-judgment.json>
+.venv/bin/python3 -m content_agent.save_qa_review <project> <brief_id> <path-to-judgment.json>
 ```
 This recomputes the deterministic report fresh and prints the final
 review_id and score.
 
-## 12. Rebuild the dashboard -- once, for all three stages together
+## 13. Rebuild the dashboard -- once, for all three stages together
 ```
-.venv/bin/python3 -m agent4_dashboard.build_dashboard_metronic
-.venv/bin/python3 -m agent4_dashboard.build_reporting_hub
-.venv/bin/python3 -m content_agent.build_content_page
+.venv/bin/python3 -m agent4_dashboard.build_dashboard_metronic <project>
+.venv/bin/python3 -m agent4_dashboard.build_reporting_hub <project>
+.venv/bin/python3 -m content_agent.build_content_page <project>
 ```
 (All three -- the Reporting Hub's activity feed and the shared sidebar
 both need refreshing, not just the Content page.)
 
-## 13. Commit and push -- automatically, no separate confirmation step
+## 14. Commit and push -- automatically, no separate confirmation step
 One commit covering the outline, draft, and QA review together.
 ```
-git add data/seo_audit_history.db docs/content.html docs/content_briefs/ docs/content_drafts/ docs/content_qa/ docs/index.html docs/history.html docs/reporting.html docs/reports/reporting-hub-latest.pdf
+git add data/<project>/ docs/<project>/content.html docs/<project>/content_briefs/ docs/<project>/content_drafts/ docs/<project>/content_qa/ docs/<project>/index.html docs/<project>/history.html docs/<project>/reporting.html docs/<project>/reports/reporting-hub-latest.pdf
 git commit -m "Add blog post: <topic>"
 git push
 ```
 
-## 14. Report back
+## 15. Report back
 Tell whoever's running this, in one summary covering all three stages:
 - The brief_id and a short summary of the outline.
 - The draft's total word count vs. the target, and any sections that
   came in notably over/under budget.
 - The final QA score out of 10, every deduction with its reason, and the
   judgment notes.
-- The dashboard link: https://rahulkhant.github.io/seo-audit-automation/content.html
+- The dashboard link:
+```
+.venv/bin/python3 -c "from projects import dashboard_url; print(dashboard_url('<project>') + 'content.html')"
+```

@@ -21,6 +21,7 @@ Agent 3's job description: validate stored data against our SEO rules.
 from agent2_storage.database import get_connection, save_findings
 from agent3_validation.page_checks import check_page
 from agent3_validation.site_checks import check_site
+from projects import db_path
 
 
 def get_most_recent_run_id(connection):
@@ -45,14 +46,14 @@ def validate_run(connection, run_id):
     return findings
 
 
-def run_validation_and_save(run_id=None):
+def run_validation_and_save(project, run_id=None):
     """
     Main entry point. Validates the given run (or the most recent one, if
     none is specified) and saves the findings to the database. Returns the
     run_id that was validated and the findings, so the caller (or our
     manual test below) can print a summary.
     """
-    connection = get_connection()
+    connection = get_connection(db_path(project))
     try:
         if run_id is None:
             run_id = get_most_recent_run_id(connection)
@@ -66,9 +67,11 @@ def run_validation_and_save(run_id=None):
 
 # Manual test: validate the most recent crawl run and print a summary.
 if __name__ == "__main__":
+    import sys
     from collections import Counter
 
-    validated_run_id, all_findings = run_validation_and_save()
+    test_project = sys.argv[1] if len(sys.argv) > 1 else "simprosys"
+    validated_run_id, all_findings = run_validation_and_save(test_project)
 
     print(f"Validated run_id={validated_run_id}")
     print(f"Total findings saved: {len(all_findings)}")

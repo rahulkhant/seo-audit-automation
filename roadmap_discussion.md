@@ -137,6 +137,16 @@ Rahul's follow-up ask: strip keywords containing brand names, and keywords with 
 
 Built as an elimination heuristic instead of a brand list: a word not in a real English dictionary, not known industry jargon, and not a real place name is almost always a proper noun in this dataset. See `PROJECT_REPORT.md` §14 for the mechanics and the explicitly disclosed limitation (an unusual town/hotel name could land on the wrong side of it — fix by extending an allow-list, not by rebuilding it).
 
+## 5g. Multi-project support (2026-08-07)
+
+Rahul runs 7 real projects, different industries and audiences, and wants to use this same platform for all of them, not just Simprosys. Talked through as its own design discussion before any code changed: he confirmed the projects have "many differentiators" (i.e. nothing analytically in common), which is what tipped the design toward **separate data + separate dashboard per project, one shared codebase** rather than a unified multi-tenant database with a project switcher — a unified model only pays for itself when there's real value in comparing across projects side by side, which isn't the case here.
+
+Two follow-up decisions, both confirmed directly:
+- **Old dashboard URLs** (bookmarked/shared already): add redirect stubs at the old paths rather than let them 404.
+- **Scope for this pass**: fully build and prove the mechanism on `simprosys` (real data, migrated via `git mv`), register the other 6 later by adding an entry to `projects.py` once Rahul has each one's name and site URL — not blocked on that information now.
+
+See `PROJECT_REPORT.md` §15 for the full build. Investigated before writing any code (three parallel Explore passes + a Plan-agent validation pass) specifically to confirm the storage layer's `get_connection(db_path=...)` override already existed end-to-end and that every dashboard page's HTML only used relative links — both turned out to be true, which is why this was a parameter-threading exercise across existing seams rather than a rewrite.
+
 ## 5. Open questions / not yet decided
 
 - No priority order confirmed yet among Phases 2-7 (explicitly deferred by Rahul, 2026-07-30).

@@ -20,13 +20,11 @@ already saved and turns it into something readable.
 
 import html
 from datetime import datetime
-from pathlib import Path
 
 from playwright.sync_api import sync_playwright
 
 from agent2_storage.database import get_connection
-
-REPORTS_DIR_PATH = Path(__file__).resolve().parent.parent / "docs" / "reports"
+from projects import db_path, docs_dir
 
 # How many findings to show per page in the dashboard table -- keeps the
 # page from becoming an unreadable multi-thousand-row wall on a large site.
@@ -319,7 +317,7 @@ def _generate_print_html(connection, run_id):
 """
 
 
-def _save_pdf_report(connection, run_id, reports_dir=REPORTS_DIR_PATH):
+def _save_pdf_report(connection, run_id, reports_dir):
     """
     Renders this run's full report to a permanent PDF file using
     Playwright -- the same headless Chromium we already use for crawling,
@@ -344,20 +342,24 @@ def _save_pdf_report(connection, run_id, reports_dir=REPORTS_DIR_PATH):
     return pdf_path
 
 
-def build_and_save_pdf_report(run_id=None):
-    connection = get_connection()
+def build_and_save_pdf_report(project, run_id=None):
+    connection = get_connection(db_path(project))
     try:
         if run_id is None:
             row = connection.execute("SELECT MAX(run_id) FROM runs").fetchone()
             run_id = row[0]
 
-        pdf_path = _save_pdf_report(connection, run_id)
+        reports_dir = docs_dir(project) / "reports"
+        pdf_path = _save_pdf_report(connection, run_id, reports_dir)
         return run_id, pdf_path
     finally:
         connection.close()
 
 
 if __name__ == "__main__":
-    saved_run_id, saved_pdf_path = build_and_save_pdf_report()
+    import sys
+
+    test_project = sys.argv[1] if len(sys.argv) > 1 else "simprosys"
+    saved_run_id, saved_pdf_path = build_and_save_pdf_report(test_project)
     print(f"PDF report archived for run_id={saved_run_id}")
     print(f"Saved to: {saved_pdf_path}")

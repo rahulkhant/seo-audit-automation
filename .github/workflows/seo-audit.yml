@@ -3,13 +3,18 @@
 # Purpose
 # -------
 # Runs the complete audit (main.py) automatically once a week, in the
-# cloud, with no one needing to be at their computer. It also supports a
-# manual "Run workflow" button (workflow_dispatch) so we can test it
-# on-demand without waiting for the schedule.
+# cloud, with no one needing to be at their computer, for every registered
+# project (see projects.py) -- one after another in this same job, not a
+# parallel matrix, specifically so each project's commit+push happens
+# before the next project starts (a matrix would have multiple jobs
+# checking out the same starting commit and racing to push, which risks
+# one project's run silently overwriting another's). Committing after each
+# project (not once at the very end) means a failure on project 5 doesn't
+# lose 1-4's already-completed work.
 #
-# Because each run starts from a fresh checkout of the repository, the
-# database and dashboard changes main.py produces only "count" once we
-# commit them back -- that's what the final step does.
+# Also supports a manual "Run workflow" button (workflow_dispatch) with an
+# optional project input, so a single project can be re-run on demand
+# without waiting for the schedule or running all of them.
 
 name: Weekly SEO Audit
 
@@ -17,10 +22,15 @@ on:
   schedule:
     # Every Monday at 06:00 UTC. Cron format: minute hour day month weekday.
     - cron: "0 6 * * 1"
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      project:
+        description: "Project slug to run (see projects.py), or leave as 'all' to run every registered project."
+        required: false
+        default: "all"
 
-# Needed so this workflow's automatic commit (the last step below) is
-# allowed to push back to the repository.
+# Needed so this workflow's automatic commits (one per project, see below)
+# are allowed to push back to the repository.
 permissions:
   contents: write
 
@@ -42,17 +52,27 @@ jobs:
       - name: Install Playwright's browser
         run: python -m playwright install --with-deps chromium
 
-      - name: Run the SEO audit
+      - name: Run the SEO audit for every selected project
         env:
           SMTP_EMAIL_ADDRESS: ${{ secrets.SMTP_EMAIL_ADDRESS }}
           SMTP_APP_PASSWORD: ${{ secrets.SMTP_APP_PASSWORD }}
           NOTIFICATION_RECIPIENT: ${{ secrets.NOTIFICATION_RECIPIENT }}
-        run: python main.py
-
-      - name: Commit updated database and dashboard back to the repo
+          PROJECT_INPUT: ${{ github.event.inputs.project || 'all' }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/seo_audit_history.db docs/
-          git diff --cached --quiet || git commit -m "Automated SEO audit run [skip ci]"
-          git push
+
+          if [ "$PROJECT_INPUT" = "all" ]; then
+            PROJECTS=$(python -c "from projects import list_projects; print(' '.join(slug for slug, _ in list_projects()))")
+          else
+            PROJECTS="$PROJECT_INPUT"
+          fi
+
+          for project in $PROJECTS; do
+            echo "=== Running audit for project: $project ==="
+            python main.py "$project"
+
+            git add data/ docs/
+            git diff --cached --quiet || git commit -m "Automated SEO audit run: $project [skip ci]"
+            git push
+          done

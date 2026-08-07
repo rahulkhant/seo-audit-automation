@@ -16,7 +16,16 @@ Do the following, in order:
 ## 1. Confirm working directory
 If not already there, change to `/Users/rahul/Desktop/Automation/seo-audit-automation`.
 
-## 2. Collect the inputs
+## 2. Which project is this for?
+Every project has its own separate content database and dashboard. Ask
+which project this brief belongs to, unless it's already clear from
+context, and validate it:
+```
+.venv/bin/python3 -c "from projects import list_projects; print(' '.join(slug for slug, _ in list_projects()))"
+```
+If the name given isn't in that list, ask again rather than guessing.
+
+## 3. Collect the inputs
 If the user's request already included some of these, don't re-ask for
 them -- only ask conversationally for what's missing:
 
@@ -34,7 +43,7 @@ them -- only ask conversationally for what's missing:
 - **CTA** -- what action/link the post should drive toward
 - **Other notes** (anything else that must be covered or avoided) -- optional
 
-## 3. Validate before doing anything else
+## 4. Validate before doing anything else
 - Topic and primary keyword must be non-empty text.
 - Target word count must be a positive whole number.
 - Headings list must have at least one entry, each with a level of H2 or
@@ -43,7 +52,7 @@ them -- only ask conversationally for what's missing:
 If anything is missing or doesn't make sense, ask the user to clarify
 rather than guessing or silently proceeding with a bad assumption.
 
-## 4. Load reference examples, if any exist
+## 5. Load reference examples, if any exist
 ```
 ls content_agent/example_blogs/*.md content_agent/example_blogs/*.txt 2>/dev/null
 ```
@@ -51,7 +60,7 @@ If files exist, read them for a sense of typical section pacing and tone.
 If none exist yet, proceed without -- don't nag the user about it every
 single run, a one-line mention is enough.
 
-## 5. Compute word budgets (deterministic -- run this, don't estimate by hand)
+## 6. Compute word budgets (deterministic -- run this, don't estimate by hand)
 Build the headings list (excluding H1) as JSON and run:
 ```
 .venv/bin/python3 -c "
@@ -67,7 +76,7 @@ including the intro/conclusion slots. Do not recompute or override these
 numbers yourself -- they're the one part of this whole agent that's
 supposed to be exactly reproducible math, not judgment.
 
-## 6. Write the actual brief content (this is your judgment step)
+## 7. Write the actual brief content (this is your judgment step)
 For every section in the budgeted list (including intro and conclusion),
 decide and fill in:
 - `points_to_cover`: 2-4 sentences of what this section must actually say
@@ -84,32 +93,35 @@ Show the assembled outline in the chat as you build it, so Rahul sees it
 forming in real time -- he's not approving a hidden step, this whole
 process should be visible.
 
-## 7. Save the brief
+## 8. Save the brief
 Write the finished brief as JSON (matching the shape in
 `content_agent/database.py`'s `save_brief` docstring) to a temp file, then:
 ```
-.venv/bin/python3 -m content_agent.save_brief <path-to-brief.json>
+.venv/bin/python3 -m content_agent.save_brief <project> <path-to-brief.json>
 ```
 This prints the new `brief_id`.
 
-## 8. Rebuild the dashboard
+## 9. Rebuild the dashboard
 ```
-.venv/bin/python3 -m agent4_dashboard.build_dashboard_metronic
-.venv/bin/python3 -m agent4_dashboard.build_reporting_hub
-.venv/bin/python3 -m content_agent.build_content_page
+.venv/bin/python3 -m agent4_dashboard.build_dashboard_metronic <project>
+.venv/bin/python3 -m agent4_dashboard.build_reporting_hub <project>
+.venv/bin/python3 -m content_agent.build_content_page <project>
 ```
 (All three, not just the Content page -- the shared sidebar now includes
 a "Content" link, so every page needs regenerating to stay in sync.)
 
-## 9. Commit and push -- automatically, no separate confirmation step
+## 10. Commit and push -- automatically, no separate confirmation step
 This was an explicit decision: this skill pushes on its own, the same way
 the SEO audit's GitHub Actions workflow already does.
 ```
-git add data/seo_audit_history.db docs/content.html docs/content_briefs/ docs/index.html docs/history.html docs/reporting.html docs/reports/reporting-hub-latest.pdf
+git add data/<project>/ docs/<project>/content.html docs/<project>/content_briefs/ docs/<project>/index.html docs/<project>/history.html docs/<project>/reporting.html docs/<project>/reports/reporting-hub-latest.pdf
 git commit -m "Add content outline: <topic>"
 git push
 ```
 
-## 10. Report back
+## 11. Report back
 Tell Rahul: the brief_id, a short summary of the outline, and the
-dashboard link: https://rahulkhant.github.io/seo-audit-automation/content.html
+dashboard link:
+```
+.venv/bin/python3 -c "from projects import dashboard_url; print(dashboard_url('<project>') + 'content.html')"
+```

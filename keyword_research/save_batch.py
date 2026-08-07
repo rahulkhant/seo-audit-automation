@@ -11,7 +11,7 @@ an actual keyword.
 
 Usage
 -----
-    python -m keyword_research.save_batch path/to/batch.json
+    python -m keyword_research.save_batch <project> path/to/batch.json
 
 Input JSON shape:
     {
@@ -37,6 +37,7 @@ import json
 import sys
 
 from keyword_research.database import get_connection, save_batch
+from projects import db_path
 
 
 def _validate(payload):
@@ -58,17 +59,17 @@ def _validate(payload):
 
 
 def main():
-    if len(sys.argv) != 2:
-        print("Usage: python -m keyword_research.save_batch path/to/batch.json", file=sys.stderr)
+    if len(sys.argv) != 3:
+        print("Usage: python -m keyword_research.save_batch <project> path/to/batch.json", file=sys.stderr)
         sys.exit(1)
 
-    batch_path = sys.argv[1]
+    project, batch_path = sys.argv[1], sys.argv[2]
     with open(batch_path, "r", encoding="utf-8") as batch_file:
         payload = json.load(batch_file)
 
     _validate(payload)
 
-    connection = get_connection()
+    connection = get_connection(db_path(project))
     try:
         batch_id = save_batch(
             connection,

@@ -14,7 +14,7 @@ model reports about its own output.
 
 Usage
 -----
-    python -m content_agent.save_qa_review <brief_id> path/to/judgment.json
+    python -m content_agent.save_qa_review <project> <brief_id> path/to/judgment.json
 
 judgment.json shape:
     {
@@ -37,6 +37,7 @@ from content_agent.database import (
     save_qa_review,
 )
 from content_agent.qa_checks import compute_score, run_deterministic_checks
+from projects import db_path
 
 MAX_JUDGMENT_ADJUSTMENT = 2.0
 
@@ -56,18 +57,19 @@ def _validate_judgment(payload):
 
 
 def main():
-    if len(sys.argv) != 3:
-        print("Usage: python -m content_agent.save_qa_review <brief_id> path/to/judgment.json", file=sys.stderr)
+    if len(sys.argv) != 4:
+        print("Usage: python -m content_agent.save_qa_review <project> <brief_id> path/to/judgment.json", file=sys.stderr)
         sys.exit(1)
 
-    brief_id = int(sys.argv[1])
-    judgment_path = sys.argv[2]
+    project = sys.argv[1]
+    brief_id = int(sys.argv[2])
+    judgment_path = sys.argv[3]
     with open(judgment_path, "r", encoding="utf-8") as judgment_file:
         judgment = json.load(judgment_file)
 
     _validate_judgment(judgment)
 
-    connection = get_connection()
+    connection = get_connection(db_path(project))
     try:
         brief = load_brief(connection, brief_id)
         if brief is None:

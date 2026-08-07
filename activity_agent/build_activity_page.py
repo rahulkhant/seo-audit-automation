@@ -39,7 +39,6 @@ Generates:
 import html
 import json
 from datetime import date, datetime, timedelta
-from pathlib import Path
 
 from playwright.sync_api import sync_playwright
 
@@ -57,11 +56,10 @@ from agent4_dashboard.build_dashboard_metronic import (
     _render_sidebar_nav,
     _render_topbar,
     _shared_head,
+    _sidebar_brand_args,
 )
+from projects import db_path, docs_dir
 
-DOCS_DIR = Path(__file__).resolve().parent.parent / "docs"
-ACTIVITY_FILE_PATH = DOCS_DIR / "activity.html"
-REPORTS_DIR_PATH = DOCS_DIR / "activity_reports"
 WEEKLY_PDF_FILENAME = "weekly-latest.pdf"
 MONTHLY_PDF_FILENAME = "monthly-latest.pdf"
 
@@ -416,7 +414,7 @@ def _render_log_modal(log):
     """
 
 
-def generate_activity_page_html(open_tasks, logs, today):
+def generate_activity_page_html(open_tasks, logs, today, project):
     kpis = _compute_kpis(open_tasks, logs, today)
     month_start, month_end = _month_range(today)
     category_counts = _category_breakdown(logs, month_start, month_end)
@@ -432,6 +430,7 @@ def generate_activity_page_html(open_tasks, logs, today):
 
     apex_cdn_tag = '<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>' if category_counts else ""
     chart_script = _render_category_chart_script(category_counts)
+    display_name, has_logo = _sidebar_brand_args(project)
 
     return f"""<!doctype html>
 <html lang="en">
@@ -441,7 +440,7 @@ def generate_activity_page_html(open_tasks, logs, today):
 </head>
 <body>
 <div class="app">
-  {_render_sidebar_nav("activity")}
+  {_render_sidebar_nav("activity", display_name, has_logo)}
   <div class="main">
     {_render_topbar("Activity & Performance", subtitle_html)}
     <main class="content">
@@ -573,16 +572,20 @@ def _render_pdf(print_html, pdf_path):
     return pdf_path
 
 
-def build_and_save_activity_page():
-    connection = get_connection()
+def build_and_save_activity_page(project):
+    connection = get_connection(db_path(project))
     try:
-        DOCS_DIR.mkdir(parents=True, exist_ok=True)
+        project_docs_dir = docs_dir(project)
+        project_docs_dir.mkdir(parents=True, exist_ok=True)
+        activity_file_path = project_docs_dir / "activity.html"
+        reports_dir_path = project_docs_dir / "activity_reports"
+
         today = date.today()
         open_tasks = load_open_tasks(connection)
         logs = load_all_logs_with_entries(connection)
 
         for log in logs:
-            _render_pdf(_generate_daily_print_html(log), REPORTS_DIR_PATH / _daily_pdf_filename(log["log_date"]))
+            _render_pdf(_generate_daily_print_html(log), reports_dir_path / _daily_pdf_filename(log["log_date"]))
 
         week_start, week_end = _week_range(today)
         weekly_logs = _logs_in_range(logs, week_start, week_end)
@@ -592,7 +595,7 @@ def build_and_save_activity_page():
                 f"{week_start.strftime('%b %d')} - {week_end.strftime('%b %d, %Y')}",
                 weekly_logs,
             ),
-            REPORTS_DIR_PATH / WEEKLY_PDF_FILENAME,
+            reports_dir_path / WEEKLY_PDF_FILENAME,
         )
 
         month_start, month_end = _month_range(today)
@@ -603,18 +606,21 @@ def build_and_save_activity_page():
                 month_start.strftime("%B %Y"),
                 monthly_logs,
             ),
-            REPORTS_DIR_PATH / MONTHLY_PDF_FILENAME,
+            reports_dir_path / MONTHLY_PDF_FILENAME,
         )
 
-        activity_html = generate_activity_page_html(open_tasks, logs, today)
-        with open(ACTIVITY_FILE_PATH, "w", encoding="utf-8") as activity_file:
+        activity_html = generate_activity_page_html(open_tasks, logs, today, project)
+        with open(activity_file_path, "w", encoding="utf-8") as activity_file:
             activity_file.write(activity_html)
 
-        return ACTIVITY_FILE_PATH
+        return activity_file_path
     finally:
         connection.close()
 
 
 if __name__ == "__main__":
-    saved_path = build_and_save_activity_page()
+    import sys
+
+    test_project = sys.argv[1] if len(sys.argv) > 1 else "simprosys"
+    saved_path = build_and_save_activity_page(test_project)
     print(f"Activity page built: {saved_path}")

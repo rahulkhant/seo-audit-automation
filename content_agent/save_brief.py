@@ -14,7 +14,7 @@ project ends its work with a "save" step.
 
 Usage
 -----
-    python -m content_agent.save_brief path/to/brief.json
+    python -m content_agent.save_brief <project> path/to/brief.json
 
 Prints the new brief_id on success, so the skill can reference it (e.g.
 when telling the user which page/row to look at on the dashboard).
@@ -24,6 +24,7 @@ import json
 import sys
 
 from content_agent.database import get_connection, save_brief
+from projects import db_path
 
 REQUIRED_FIELDS = ["topic", "primary_keyword", "target_word_count", "sections"]
 
@@ -37,17 +38,17 @@ def _validate(brief):
 
 
 def main():
-    if len(sys.argv) != 2:
-        print("Usage: python -m content_agent.save_brief path/to/brief.json", file=sys.stderr)
+    if len(sys.argv) != 3:
+        print("Usage: python -m content_agent.save_brief <project> path/to/brief.json", file=sys.stderr)
         sys.exit(1)
 
-    brief_path = sys.argv[1]
+    project, brief_path = sys.argv[1], sys.argv[2]
     with open(brief_path, "r", encoding="utf-8") as brief_file:
         brief = json.load(brief_file)
 
     _validate(brief)
 
-    connection = get_connection()
+    connection = get_connection(db_path(project))
     try:
         brief_id = save_brief(connection, brief)
     finally:

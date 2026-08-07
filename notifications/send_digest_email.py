@@ -70,17 +70,22 @@ def _build_body(run_id, counts, trend, dashboard_url):
     return "\n".join(lines)
 
 
-def send_digest_email(run_id, findings, trend, dashboard_url):
+def send_digest_email(run_id, findings, trend, dashboard_url, recipient_override=None):
     """
     Sends the summary email. Returns True if it was sent, False if the
     required environment variables aren't set. Returning False instead of
     raising an error means a missing/misconfigured email setup never
     crashes the rest of the audit -- it just skips this last step with a
     clear message about why.
+
+    `recipient_override` is a specific project's notification_recipient
+    from projects.py, if it has one set -- most projects don't, and fall
+    back to the shared NOTIFICATION_RECIPIENT environment variable, same
+    as before multi-project support existed.
     """
     sender_address = os.environ.get("SMTP_EMAIL_ADDRESS")
     app_password = os.environ.get("SMTP_APP_PASSWORD")
-    recipient_address = os.environ.get("NOTIFICATION_RECIPIENT")
+    recipient_address = recipient_override or os.environ.get("NOTIFICATION_RECIPIENT")
 
     if not (sender_address and app_password and recipient_address):
         print("Email notification skipped: SMTP_EMAIL_ADDRESS / SMTP_APP_PASSWORD / NOTIFICATION_RECIPIENT not set.")
@@ -102,10 +107,14 @@ def send_digest_email(run_id, findings, trend, dashboard_url):
 
 # Manual test: send a real email using the most recently stored run.
 if __name__ == "__main__":
+    import sys
+
     from agent2_storage.database import get_connection
     from agent4_dashboard.build_dashboard import compute_trend, load_findings
+    from projects import db_path
 
-    connection = get_connection()
+    test_project = sys.argv[1] if len(sys.argv) > 1 else "simprosys"
+    connection = get_connection(db_path(test_project))
     try:
         most_recent_run_id = connection.execute("SELECT MAX(run_id) FROM runs").fetchone()[0]
         run_findings = load_findings(connection, most_recent_run_id)

@@ -13,7 +13,7 @@ a description for a new one, and day_status must be a real status.
 
 Usage
 -----
-    python -m activity_agent.save_activity_log path/to/log.json
+    python -m activity_agent.save_activity_log <project> path/to/log.json
 
 Input JSON shape:
     {
@@ -42,6 +42,7 @@ import re
 import sys
 
 from activity_agent.database import VALID_STATUSES, get_connection, load_task, save_activity_log
+from projects import db_path
 
 _DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
@@ -70,15 +71,15 @@ def _validate(payload, connection):
 
 
 def main():
-    if len(sys.argv) != 2:
-        print("Usage: python -m activity_agent.save_activity_log path/to/log.json", file=sys.stderr)
+    if len(sys.argv) != 3:
+        print("Usage: python -m activity_agent.save_activity_log <project> path/to/log.json", file=sys.stderr)
         sys.exit(1)
 
-    log_path = sys.argv[1]
+    project, log_path = sys.argv[1], sys.argv[2]
     with open(log_path, "r", encoding="utf-8") as log_file:
         payload = json.load(log_file)
 
-    connection = get_connection()
+    connection = get_connection(db_path(project))
     try:
         _validate(payload, connection)
         log_id = save_activity_log(
