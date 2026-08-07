@@ -8,7 +8,12 @@ reports -- not shown, not stored, per Rahul's call (2026-08-06): drop them
 outright, no review queue, no persisted list of what got dropped.
 
 1. Repeated-word keywords (e.g. "hotel hotel management") -- deterministic,
-   no reference data needed.
+   no reference data needed. Also catches singular/plural near-repeats one
+   word apart (e.g. "hotel hotels near me"), via has_near_duplicate_stem --
+   deliberately windowed rather than checked anywhere in the keyword, since
+   an unwindowed version would wrongly drop legitimate phrases like "hotel
+   management software for small hotels" (Rahul flagged the "hotel hotels
+   near me" case directly, 2026-08-07).
 
 2. Keywords containing a brand or proper-noun term -- Rahul's 28 tracked
    competitors (an exact, zero-ambiguity list) plus a general heuristic for
@@ -132,6 +137,35 @@ def has_repeated_word(keyword_text):
     return len(words) != len(set(words))
 
 
+def _stem(word):
+    # Light singular/plural normalization -- just enough to recognize
+    # "hotel"/"hotels" as the same word without a real stemmer. Guarded by
+    # a minimum length so short words like "as" or "gas" don't get mangled
+    # into something that accidentally matches a neighbor.
+    if word.endswith("ies") and len(word) > 4:
+        return word[:-3] + "y"
+    if word.endswith("es") and len(word) > 4:
+        return word[:-2]
+    if word.endswith("s") and not word.endswith("ss") and len(word) > 3:
+        return word[:-1]
+    return word
+
+
+def has_near_duplicate_stem(keyword_text):
+    """Catches singular/plural repeats close together ("hotel hotels near
+    me") that has_repeated_word misses because "hotel" and "hotels" are
+    different tokens. Deliberately windowed to at most one word apart --
+    unlike has_repeated_word, an unconstrained version of this would wrongly
+    catch legitimate phrases like "hotel management software for small
+    hotels", where the same stem repeats much later for a real reason."""
+    stems = [_stem(word) for word in _tokenize(keyword_text) if len(word) > 1 and not word.isdigit()]
+    for i, stem in enumerate(stems):
+        for gap in (1, 2):
+            if i + gap < len(stems) and stems[i + gap] == stem:
+                return True
+    return False
+
+
 def contains_brand_term(keyword_text):
     lowered = keyword_text.lower()
     if any(brand in lowered for brand in COMPETITOR_BRAND_TERMS):
@@ -143,4 +177,8 @@ def contains_brand_term(keyword_text):
 
 
 def is_valid_keyword(keyword_text):
-    return not has_repeated_word(keyword_text) and not contains_brand_term(keyword_text)
+    return (
+        not has_repeated_word(keyword_text)
+        and not has_near_duplicate_stem(keyword_text)
+        and not contains_brand_term(keyword_text)
+    )
