@@ -1,0 +1,572 @@
+<!doctype html>
+<html lang="en">
+<head>
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SEO Audit Dashboard - https://hmspro.com/</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+
+  :root {
+    color-scheme: light;
+    --mx-body-bg: #f5f8fa;
+    --mx-card-bg: #ffffff;
+    --mx-border: #eff2f5;
+    --mx-text-dark: #181c32;
+    --mx-text-gray-700: #3f4254;
+    --mx-text-gray-600: #7e8299;
+    --mx-text-gray-500: #a1a5b7;
+    --mx-primary: #009ef7;
+    --mx-primary-light: rgba(0,158,247,0.1);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:where(:not([data-theme="light"])) {
+      color-scheme: dark;
+      --mx-body-bg: #15151f;
+      --mx-card-bg: #1c1c28;
+      --mx-border: #2b2b3a;
+      --mx-text-dark: #ffffff;
+      --mx-text-gray-700: #cdcddb;
+      --mx-text-gray-600: #9899ac;
+      --mx-text-gray-500: #6d6d80;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --mx-body-bg: #15151f;
+    --mx-card-bg: #1c1c28;
+    --mx-border: #2b2b3a;
+    --mx-text-dark: #ffffff;
+    --mx-text-gray-700: #cdcddb;
+    --mx-text-gray-600: #9899ac;
+    --mx-text-gray-500: #6d6d80;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--mx-body-bg);
+    color: var(--mx-text-dark);
+    font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  a { color: inherit; }
+
+  .app { display: flex; min-height: 100vh; align-items: stretch; }
+
+  .sidebar {
+    width: 264px; flex-shrink: 0; background: #1e1e2d; color: #92929f;
+    display: flex; flex-direction: column; position: sticky; top: 0; height: 100vh;
+  }
+  .sidebar-brand {
+    padding: 22px 24px; font-size: 1.05rem; font-weight: 700; color: #ffffff;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .brand-logo { height: 34px; width: auto; display: block; }
+  .brand-logo-text { font-size: 1.1rem; font-weight: 700; color: #ffffff; }
+  .sidebar-nav { padding: 8px 12px; display: flex; flex-direction: column; gap: 2px; flex: 1; }
+  .sidebar-link {
+    display: flex; align-items: center; gap: 12px; padding: 11px 14px; border-radius: 8px;
+    text-decoration: none; color: #92929f; font-size: 0.92rem; font-weight: 500;
+  }
+  .sidebar-link svg { width: 18px; height: 18px; flex-shrink: 0; }
+  .sidebar-link:hover { color: #ffffff; background: rgba(255,255,255,0.06); }
+  .sidebar-link.active { color: #ffffff; background: rgba(255,255,255,0.06); box-shadow: inset 3px 0 0 var(--mx-primary); }
+
+  .main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+    padding: 20px 32px; background: var(--mx-card-bg); border-bottom: 1px solid var(--mx-border);
+  }
+  .topbar-title { font-size: 1.25rem; font-weight: 700; }
+  .topbar-sub { color: var(--mx-text-gray-600); font-size: 0.87rem; margin-top: 3px; }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px; font-weight: 600; font-size: 0.87rem;
+    padding: 10px 18px; border-radius: 8px; text-decoration: none; border: none; cursor: pointer;
+    font-family: inherit; white-space: nowrap;
+  }
+  .btn svg { width: 16px; height: 16px; }
+  .btn-primary { background: var(--mx-primary); color: #ffffff; }
+  .btn-primary:hover { background: #008fdd; }
+  .btn-light { background: var(--mx-primary-light); color: var(--mx-primary); }
+  .btn-light:hover { background: rgba(0,158,247,0.18); }
+  .btn:disabled { opacity: 0.4; cursor: default; }
+
+  .content { padding: 28px 32px 48px; max-width: 1360px; width: 100%; margin: 0 auto; }
+
+  .kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 20px; }
+  .kpi-card {
+    background: var(--mx-card-bg); border: 1px solid var(--mx-border); border-radius: 12px;
+    padding: 20px; display: flex; align-items: center; gap: 16px;
+  }
+  .kpi-icon {
+    width: 48px; height: 48px; border-radius: 10px; display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; color: var(--kpi-color); background-color: color-mix(in srgb, var(--kpi-color) 15%, transparent);
+  }
+  .kpi-icon svg { width: 22px; height: 22px; }
+  .kpi-value { font-size: 1.6rem; font-weight: 700; line-height: 1.1; }
+  .kpi-label { color: var(--mx-text-gray-600); font-size: 0.85rem; margin-top: 3px; }
+
+  .row-2col { display: grid; grid-template-columns: 1.1fr 1fr; gap: 20px; margin-bottom: 20px; align-items: stretch; }
+
+  .card { background: var(--mx-card-bg); border: 1px solid var(--mx-border); border-radius: 12px; margin-bottom: 20px; }
+  .card:last-child { margin-bottom: 0; }
+  .row-2col > .card { margin-bottom: 0; }
+  .card-header {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+    padding: 18px 22px; border-bottom: 1px solid var(--mx-border);
+  }
+  .card-header-title { font-size: 1.02rem; font-weight: 700; }
+  .card-body { padding: 20px 22px; }
+
+  .chart-pages-audited { text-align: center; color: var(--mx-text-gray-600); font-size: 0.85rem; margin-top: 8px; }
+  .chart-empty, .trend-empty { color: var(--mx-text-gray-600); font-size: 0.9rem; padding: 24px 0; text-align: center; }
+
+  .trend-list { display: flex; flex-direction: column; gap: 16px; padding: 22px; }
+  .trend-list-item { display: flex; align-items: center; gap: 12px; }
+  .trend-icon {
+    width: 38px; height: 38px; border-radius: 9px; display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; color: var(--kpi-color); background-color: color-mix(in srgb, var(--kpi-color) 15%, transparent);
+  }
+  .trend-icon svg { width: 18px; height: 18px; }
+  .trend-value { font-weight: 700; font-size: 1.05rem; }
+  .trend-desc { color: var(--mx-text-gray-600); font-size: 0.85rem; }
+
+  .card-header-controls { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  #category-select, #search-input {
+    font-family: inherit; font-size: 0.87rem; padding: 9px 14px; border-radius: 8px;
+    border: 1px solid var(--mx-border); background: var(--mx-body-bg); color: var(--mx-text-dark);
+  }
+  #category-select { min-width: 230px; }
+  #search-input { min-width: 260px; }
+
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; table-layout: fixed; border-collapse: collapse; }
+  thead th {
+    text-align: left; padding: 12px 22px; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.03em;
+    color: var(--mx-text-gray-500); font-weight: 600; border-bottom: 1px solid var(--mx-border); white-space: nowrap;
+  }
+  tbody td {
+    padding: 14px 22px; font-size: 0.87rem; vertical-align: top; border-bottom: 1px solid var(--mx-border);
+    word-wrap: break-word; overflow-wrap: break-word;
+  }
+  tbody tr:hover { background: var(--mx-body-bg); }
+  td.muted { color: var(--mx-text-gray-600); }
+
+  .severity-badge {
+    display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 999px;
+    font-weight: 600; font-size: 0.78rem; color: var(--badge-color); white-space: nowrap;
+    background-color: color-mix(in srgb, var(--badge-color) 14%, transparent);
+  }
+
+  .pagination-bar { display: flex; align-items: center; gap: 12px; padding: 18px 22px; }
+  #page-indicator { color: var(--mx-text-gray-600); font-size: 0.85rem; }
+
+  col.col-severity { width: 12%; }
+  col.col-page { width: 22%; }
+  col.col-issue { width: 27%; }
+  col.col-expected { width: 19%; }
+  col.col-actual { width: 20%; }
+  col.col-run { width: 12%; }
+  col.col-date { width: 24%; }
+  col.col-pages { width: 14%; }
+  col.col-hist-severity { width: 30%; }
+  col.col-download { width: 20%; }
+
+  @media (max-width: 960px) {
+    .row-2col { grid-template-columns: 1fr; }
+    .kpi-row { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 720px) {
+    .app { flex-direction: column; }
+    .sidebar { width: 100%; height: auto; position: static; flex-direction: row; align-items: center; }
+    .sidebar-nav { flex-direction: row; }
+    .kpi-row { grid-template-columns: 1fr; }
+    .content { padding: 20px; }
+  }
+
+</style>
+
+</head>
+<body>
+<div class="app">
+  
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <span class="brand-logo-text">HMSPro</span>
+      </div>
+      <nav class="sidebar-nav">
+        <a class="sidebar-link active" href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11.5 12 4l8 7.5"/><path d="M6 10v9a1 1 0 0 0 1 1h4v-6h2v6h4a1 1 0 0 0 1-1v-9"/></svg><span>Dashboard</span></a>
+        <a class="sidebar-link" href="history.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg><span>History</span></a>
+        <a class="sidebar-link" href="reporting.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5h16"/><path d="M7 16v-4"/><path d="M12 16V8"/><path d="M17 16v-6.5"/></svg><span>Reporting</span></a>
+        <a class="sidebar-link" href="content.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3.5h9l3 3v14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-16a1 1 0 0 1 1-1z"/><path d="M8.5 10h7"/><path d="M8.5 13.5h7"/><path d="M8.5 17h4.5"/></svg><span>Content</span></a>
+        <a class="sidebar-link" href="activity.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2.5 6L14 5l2 7h5"/></svg><span>Activity & Performance</span></a>
+        <a class="sidebar-link" href="keyword-research.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.5" cy="10.5" r="6"/><path d="M15 15 20.5 20.5"/></svg><span>Keyword Research</span></a>
+      </nav>
+    </aside>
+    
+  <div class="main">
+    
+    <header class="topbar">
+      <div>
+        <div class="topbar-title">SEO Audit Dashboard</div>
+        <div class="topbar-sub">https://hmspro.com/ &middot; Run #1 &middot; Aug 07, 2026, 09:35 AM UTC</div>
+      </div>
+      <a class="btn btn-primary" href="reports/run-0001.pdf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11"/><path d="M7.5 11 12 15.5 16.5 11"/><path d="M5 18.5h14"/></svg><span>Download PDF</span></a>
+    </header>
+    
+    <main class="content">
+      <section class="kpi-row">
+        <div class="kpi-card">
+          <div class="kpi-icon" style="--kpi-color: #009ef7"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h11"/><path d="M8 12h11"/><path d="M8 18h11"/><path d="M4 6h.01"/><path d="M4 12h.01"/><path d="M4 18h.01"/></svg></div>
+          <div>
+            <div class="kpi-value">22</div>
+            <div class="kpi-label">Total Findings</div>
+          </div>
+        </div>
+        
+        <div class="kpi-card">
+          <div class="kpi-icon" style="--kpi-color: #f1416c"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 3.5h7l5 5v7l-5 5h-7l-5-5v-7z"/><path d="M12 8v5"/><path d="M12 16.5h.01"/></svg></div>
+          <div>
+            <div class="kpi-value">0</div>
+            <div class="kpi-label">Critical</div>
+          </div>
+        </div>
+        
+        <div class="kpi-card">
+          <div class="kpi-icon" style="--kpi-color: #ffc700"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4 2 20h20z"/><path d="M12 10v4"/><path d="M12 17h.01"/></svg></div>
+          <div>
+            <div class="kpi-value">5</div>
+            <div class="kpi-label">Warning</div>
+          </div>
+        </div>
+        
+        <div class="kpi-card">
+          <div class="kpi-icon" style="--kpi-color: #7239ea"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 11v5"/><path d="M12 8h.01"/></svg></div>
+          <div>
+            <div class="kpi-value">17</div>
+            <div class="kpi-label">Info</div>
+          </div>
+        </div>
+        </section>
+      <section class="row-2col">
+        
+    <div class="card chart-card">
+      <div class="card-header"><div class="card-header-title">Health Overview</div></div>
+      <div class="card-body">
+        <div id="healthChart"></div>
+        <div class="chart-pages-audited">Pages Audited: <strong>8</strong></div>
+      </div>
+    </div>
+    
+        
+    <div class="card trend-card">
+      <div class="card-header"><div class="card-header-title">Since Last Run</div></div>
+      <p class="trend-empty">This is the first recorded run -- no previous run to compare against yet.</p>
+    </div>
+    
+      </section>
+      
+    <section class="card findings-card">
+      <div class="card-header">
+        <div class="card-header-title">Findings</div>
+        <div class="card-header-controls">
+          <select id="category-select">
+            <option value="all">All Issues (22)</option><option value="meta-title-description">Meta Title &amp; Description (3)</option><option value="headings">Headings (0)</option><option value="social-tags">Social Tags (OG &amp; Twitter) (17)</option><option value="url-structure">URL Structure (0)</option><option value="canonical-tags">Canonical Tags (0)</option><option value="robots-indexability">Robots &amp; Indexability (2)</option><option value="images-alt-text">Images &amp; Alt Text (0)</option><option value="structured-data">Structured Data (Schema) (0)</option><option value="https-security">HTTPS &amp; Security (0)</option><option value="redirects">Redirects (0)</option><option value="internal-linking">Internal Linking (0)</option>
+          </select>
+          <input type="search" id="search-input" placeholder="Search page, issue, severity, expected/actual values...">
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table id="findings-table">
+          <colgroup>
+            <col class="col-severity"><col class="col-page"><col class="col-issue">
+            <col class="col-expected"><col class="col-actual">
+          </colgroup>
+          <thead>
+            <tr><th>Severity</th><th>Page</th><th>Issue</th><th>Expected</th><th>Actual</th></tr>
+          </thead>
+          <tbody>
+            
+        <tr data-severity="warning" data-category="meta-title-description" data-search="warning https://hmspro.com/ title is longer than recommended. under 60 characters 64 characters (&quot;manage properties efficiently and boost direct bookings | hmspro&quot;) meta title &amp; description">
+          <td><span class="severity-badge" style="--badge-color: #ffc700">⚠ Warning</span></td>
+          <td><a href="https://hmspro.com/" target="_blank" rel="noopener">https://hmspro.com/</a></td>
+          <td>Title is longer than recommended.</td>
+          <td class="muted">Under 60 characters</td>
+          <td class="muted">64 characters (&quot;Manage Properties Efficiently and Boost Direct Bookings | HMSPro&quot;)</td>
+        </tr>
+        
+        <tr data-severity="warning" data-category="robots-indexability" data-search="warning https://hmspro.com/ no sitemap.xml could be found for this site. a reachable sitemap.xml (directly, or referenced from robots.txt) not found -- pages were discovered by following internal links instead. robots &amp; indexability">
+          <td><span class="severity-badge" style="--badge-color: #ffc700">⚠ Warning</span></td>
+          <td><a href="https://hmspro.com/" target="_blank" rel="noopener">https://hmspro.com/</a></td>
+          <td>No sitemap.xml could be found for this site.</td>
+          <td class="muted">A reachable sitemap.xml (directly, or referenced from robots.txt)</td>
+          <td class="muted">Not found -- pages were discovered by following internal links instead.</td>
+        </tr>
+        
+        <tr data-severity="warning" data-category="robots-indexability" data-search="warning https://hmspro.com/ no robots.txt file could be found for this site. a reachable robots.txt file not found robots &amp; indexability">
+          <td><span class="severity-badge" style="--badge-color: #ffc700">⚠ Warning</span></td>
+          <td><a href="https://hmspro.com/" target="_blank" rel="noopener">https://hmspro.com/</a></td>
+          <td>No robots.txt file could be found for this site.</td>
+          <td class="muted">A reachable robots.txt file</td>
+          <td class="muted">Not found</td>
+        </tr>
+        
+        <tr data-severity="warning" data-category="meta-title-description" data-search="warning https://hmspro.com/about-us meta description is longer than recommended. under 160 characters 275 characters meta title &amp; description">
+          <td><span class="severity-badge" style="--badge-color: #ffc700">⚠ Warning</span></td>
+          <td><a href="https://hmspro.com/about-us" target="_blank" rel="noopener">https://hmspro.com/about-us</a></td>
+          <td>Meta description is longer than recommended.</td>
+          <td class="muted">Under 160 characters</td>
+          <td class="muted">275 characters</td>
+        </tr>
+        
+        <tr data-severity="warning" data-category="meta-title-description" data-search="warning https://hmspro.com/features meta description is longer than recommended. under 160 characters 202 characters meta title &amp; description">
+          <td><span class="severity-badge" style="--badge-color: #ffc700">⚠ Warning</span></td>
+          <td><a href="https://hmspro.com/features" target="_blank" rel="noopener">https://hmspro.com/features</a></td>
+          <td>Meta description is longer than recommended.</td>
+          <td class="muted">Under 160 characters</td>
+          <td class="muted">202 characters</td>
+        </tr>
+        
+        <tr data-severity="info" data-category="social-tags" data-search="info https://hmspro.com/ missing twitter title. present none social tags (og &amp; twitter)">
+          <td><span class="severity-badge" style="--badge-color: #7239ea">ℹ Info</span></td>
+          <td><a href="https://hmspro.com/" target="_blank" rel="noopener">https://hmspro.com/</a></td>
+          <td>Missing Twitter title.</td>
+          <td class="muted">Present</td>
+          <td class="muted">None</td>
+        </tr>
+        
+        <tr data-severity="info" data-category="social-tags" data-search="info https://hmspro.com/ missing twitter description. present none social tags (og &amp; twitter)">
+          <td><span class="severity-badge" style="--badge-color: #7239ea">ℹ Info</span></td>
+          <td><a href="https://hmspro.com/" target="_blank" rel="noopener">https://hmspro.com/</a></td>
+          <td>Missing Twitter description.</td>
+          <td class="muted">Present</td>
+          <td class="muted">None</td>
+        </tr>
+        
+        <tr data-severity="info" data-category="social-tags" data-search="info https://hmspro.com/about-us open graph description is longer than recommended. under 160 characters 213 characters social tags (og &amp; twitter)">
+          <td><span class="severity-badge" style="--badge-color: #7239ea">ℹ Info</span></td>
+          <td><a href="https://hmspro.com/about-us" target="_blank" rel="noopener">https://hmspro.com/about-us</a></td>
+          <td>Open Graph description is longer than recommended.</td>
+          <td class="muted">Under 160 characters</td>
+          <td class="muted">213 characters</td>
+        </tr>
+        
+        <tr data-severity="info" data-category="social-tags" data-search="info https://hmspro.com/about-us missing twitter title. present none social tags (og &amp; twitter)">
+          <td><span class="severity-badge" style="--badge-color: #7239ea">ℹ Info</span></td>
+          <td><a href="https://hmspro.com/about-us" target="_blank" rel="noopener">https://hmspro.com/about-us</a></td>
+          <td>Missing Twitter title.</td>
+          <td class="muted">Present</td>
+          <td class="muted">None</td>
+        </tr>
+        
+        <tr data-severity="info" data-category="social-tags" data-search="info https://hmspro.com/about-us missing twitter description. present none social tags (og &amp; twitter)">
+          <td><span class="severity-badge" style="--badge-color: #7239ea">ℹ Info</span></td>
+          <td><a href="https://hmspro.com/about-us" target="_blank" rel="noopener">https://hmspro.com/about-us</a></td>
+          <td>Missing Twitter description.</td>
+          <td class="muted">Present</td>
+          <td class="muted">None</td>
+        </tr>
+        
+        <tr data-severity="info" data-category="social-tags" data-search="info https://hmspro.com/contact-us missing twitter title. present none social tags (og &amp; twitter)">
+          <td><span class="severity-badge" style="--badge-color: #7239ea">ℹ Info</span></td>
+          <td><a href="https://hmspro.com/contact-us" target="_blank" rel="noopener">https://hmspro.com/contact-us</a></td>
+          <td>Missing Twitter title.</td>
+          <td class="muted">Present</td>
+          <td class="muted">None</td>
+        </tr>
+        
+        <tr data-severity="info" data-category="social-tags" data-search="info https://hmspro.com/contact-us missing twitter description. present none social tags (og &amp; twitter)">
+          <td><span class="severity-badge" style="--badge-color: #7239ea">ℹ Info</span></td>
+          <td><a href="https://hmspro.com/contact-us" target="_blank" rel="noopener">https://hmspro.com/contact-us</a></td>
+          <td>Missing Twitter description.</td>
+          <td class="muted">Present</td>
+          <td class="muted">None</td>
+        </tr>
+        
+        <tr data-severity="info" data-category="social-tags" data-search="info https://hmspro.com/features missing twitter title. present none social tags (og &amp; twitter)">
+          <td><span class="severity-badge" style="--badge-color: #7239ea">ℹ Info</span></td>
+          <td><a href="https://hmspro.com/features" target="_blank" rel="noopener">https://hmspro.com/features</a></td>
+          <td>Missing Twitter title.</td>
+          <td class="muted">Present</td>
+          <td class="muted">None</td>
+        </tr>
+        
+        <tr data-severity="info" data-category="social-tags" data-search="info https://hmspro.com/features missing twitter description. present none social tags (og &amp; twitter)">
+          <td><span class="severity-badge" style="--badge-color: #7239ea">ℹ Info</span></td>
+          <td><a href="https://hmspro.com/features" target="_blank" rel="noopener">https://hmspro.com/features</a></td>
+          <td>Missing Twitter description.</td>
+          <td class="muted">Present</td>
+          <td class="muted">None</td>
+        </tr>
+        
+        <tr data-severity="info" data-category="social-tags" data-search="info https://hmspro.com/partner missing twitter title. present none social tags (og &amp; twitter)">
+          <td><span class="severity-badge" style="--badge-color: #7239ea">ℹ Info</span></td>
+          <td><a href="https://hmspro.com/partner" target="_blank" rel="noopener">https://hmspro.com/partner</a></td>
+          <td>Missing Twitter title.</td>
+          <td class="muted">Present</td>
+          <td class="muted">None</td>
+        </tr>
+        
+        <tr data-severity="info" data-category="social-tags" data-search="info https://hmspro.com/partner missing twitter description. present none social tags (og &amp; twitter)">
+          <td><span class="severity-badge" style="--badge-color: #7239ea">ℹ Info</span></td>
+          <td><a href="https://hmspro.com/partner" target="_blank" rel="noopener">https://hmspro.com/partner</a></td>
+          <td>Missing Twitter description.</td>
+          <td class="muted">Present</td>
+          <td class="muted">None</td>
+        </tr>
+        
+        <tr data-severity="info" data-category="social-tags" data-search="info https://hmspro.com/pricing missing twitter title. present none social tags (og &amp; twitter)">
+          <td><span class="severity-badge" style="--badge-color: #7239ea">ℹ Info</span></td>
+          <td><a href="https://hmspro.com/pricing" target="_blank" rel="noopener">https://hmspro.com/pricing</a></td>
+          <td>Missing Twitter title.</td>
+          <td class="muted">Present</td>
+          <td class="muted">None</td>
+        </tr>
+        
+        <tr data-severity="info" data-category="social-tags" data-search="info https://hmspro.com/pricing missing twitter description. present none social tags (og &amp; twitter)">
+          <td><span class="severity-badge" style="--badge-color: #7239ea">ℹ Info</span></td>
+          <td><a href="https://hmspro.com/pricing" target="_blank" rel="noopener">https://hmspro.com/pricing</a></td>
+          <td>Missing Twitter description.</td>
+          <td class="muted">Present</td>
+          <td class="muted">None</td>
+        </tr>
+        
+        <tr data-severity="info" data-category="social-tags" data-search="info https://hmspro.com/privacy-policy missing twitter title. present none social tags (og &amp; twitter)">
+          <td><span class="severity-badge" style="--badge-color: #7239ea">ℹ Info</span></td>
+          <td><a href="https://hmspro.com/privacy-policy" target="_blank" rel="noopener">https://hmspro.com/privacy-policy</a></td>
+          <td>Missing Twitter title.</td>
+          <td class="muted">Present</td>
+          <td class="muted">None</td>
+        </tr>
+        
+        <tr data-severity="info" data-category="social-tags" data-search="info https://hmspro.com/privacy-policy missing twitter description. present none social tags (og &amp; twitter)">
+          <td><span class="severity-badge" style="--badge-color: #7239ea">ℹ Info</span></td>
+          <td><a href="https://hmspro.com/privacy-policy" target="_blank" rel="noopener">https://hmspro.com/privacy-policy</a></td>
+          <td>Missing Twitter description.</td>
+          <td class="muted">Present</td>
+          <td class="muted">None</td>
+        </tr>
+        
+        <tr data-severity="info" data-category="social-tags" data-search="info https://hmspro.com/terms-of-service missing twitter title. present none social tags (og &amp; twitter)">
+          <td><span class="severity-badge" style="--badge-color: #7239ea">ℹ Info</span></td>
+          <td><a href="https://hmspro.com/terms-of-service" target="_blank" rel="noopener">https://hmspro.com/terms-of-service</a></td>
+          <td>Missing Twitter title.</td>
+          <td class="muted">Present</td>
+          <td class="muted">None</td>
+        </tr>
+        
+        <tr data-severity="info" data-category="social-tags" data-search="info https://hmspro.com/terms-of-service missing twitter description. present none social tags (og &amp; twitter)">
+          <td><span class="severity-badge" style="--badge-color: #7239ea">ℹ Info</span></td>
+          <td><a href="https://hmspro.com/terms-of-service" target="_blank" rel="noopener">https://hmspro.com/terms-of-service</a></td>
+          <td>Missing Twitter description.</td>
+          <td class="muted">Present</td>
+          <td class="muted">None</td>
+        </tr>
+        
+          </tbody>
+        </table>
+      </div>
+      <div class="pagination-bar">
+        <button id="prev-page" class="btn btn-light">&larr; Prev</button>
+        <span id="page-indicator"></span>
+        <button id="next-page" class="btn btn-light">Next &rarr;</button>
+      </div>
+    </section>
+    
+    </main>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+<script>
+
+var chartEl = document.querySelector("#healthChart");
+if (chartEl && window.ApexCharts) {
+  var chart = new ApexCharts(chartEl, {
+    chart: { type: "donut", height: 260, fontFamily: "Inter, sans-serif" },
+    series: [0, 5, 17],
+    labels: ["Critical", "Warning", "Info"],
+    colors: ["#f1416c", "#ffc700", "#7239ea"],
+    legend: { position: "bottom" },
+    dataLabels: { enabled: false },
+    stroke: { width: 0 },
+    plotOptions: {
+      pie: {
+        donut: {
+          size: "68%",
+          labels: {
+            show: true,
+            total: { show: true, label: "Total Issues", showAlways: true, fontSize: "13px" }
+          }
+        }
+      }
+    }
+  });
+  chart.render();
+}
+
+
+(function () {
+  var rowsPerPage = 25;
+  var currentPage = 1;
+  var currentCategory = "all";
+  var currentSearch = "";
+  var allRows = Array.from(document.querySelectorAll("#findings-table tbody tr"));
+  var prevButton = document.getElementById("prev-page");
+
+  function getFilteredRows() {
+    return allRows.filter(function (row) {
+      var matchesCategory = currentCategory === "all" || row.getAttribute("data-category") === currentCategory;
+      var matchesSearch = currentSearch === "" || row.getAttribute("data-search").indexOf(currentSearch) !== -1;
+      return matchesCategory && matchesSearch;
+    });
+  }
+
+  function render() {
+    var filteredRows = getFilteredRows();
+    var totalPages = Math.max(1, Math.ceil(filteredRows.length / rowsPerPage));
+    if (currentPage > totalPages) { currentPage = totalPages; }
+
+    allRows.forEach(function (row) { row.style.display = "none"; });
+    var startIndex = (currentPage - 1) * rowsPerPage;
+    filteredRows.slice(startIndex, startIndex + rowsPerPage).forEach(function (row) {
+      row.style.display = "";
+    });
+
+    document.getElementById("page-indicator").textContent =
+      "Page " + currentPage + " of " + totalPages + " (" + filteredRows.length + " findings)";
+    prevButton.disabled = currentPage <= 1;
+    document.getElementById("next-page").disabled = currentPage >= totalPages;
+  }
+
+  if (prevButton) {
+    document.getElementById("category-select").addEventListener("change", function (event) {
+      currentCategory = event.target.value;
+      currentPage = 1;
+      render();
+    });
+
+    document.getElementById("search-input").addEventListener("input", function (event) {
+      currentSearch = event.target.value.trim().toLowerCase();
+      currentPage = 1;
+      render();
+    });
+
+    prevButton.addEventListener("click", function () {
+      if (currentPage > 1) { currentPage -= 1; render(); }
+    });
+    document.getElementById("next-page").addEventListener("click", function () {
+      currentPage += 1; render();
+    });
+
+    render();
+  }
+})();
+
+</script>
+</body>
+</html>

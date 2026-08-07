@@ -4,7 +4,7 @@
 
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>SEO Reporting Hub</title>
+<title>SEO Audit Report History</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -191,24 +191,6 @@
 
 </style>
 
-<style>
-  .activity-feed { display: flex; flex-direction: column; }
-  .activity-item {
-    display: flex; align-items: center; gap: 14px; padding: 14px 22px; border-bottom: 1px solid var(--mx-border);
-    text-decoration: none; color: inherit;
-  }
-  .activity-item:last-child { border-bottom: none; }
-  .activity-item:hover { background: var(--mx-body-bg); }
-  .activity-icon {
-    width: 36px; height: 36px; border-radius: 9px; display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0; color: var(--kpi-color); background-color: color-mix(in srgb, var(--kpi-color) 15%, transparent);
-  }
-  .activity-icon svg { width: 17px; height: 17px; }
-  .activity-main { flex: 1; min-width: 0; }
-  .activity-label { font-weight: 600; font-size: 0.9rem; }
-  .activity-sublabel { color: var(--mx-text-gray-600); font-size: 0.8rem; margin-top: 2px; }
-  .activity-time { color: var(--mx-text-gray-500); font-size: 0.8rem; white-space: nowrap; flex-shrink: 0; }
-</style>
 </head>
 <body>
 <div class="app">
@@ -219,8 +201,8 @@
       </div>
       <nav class="sidebar-nav">
         <a class="sidebar-link" href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11.5 12 4l8 7.5"/><path d="M6 10v9a1 1 0 0 0 1 1h4v-6h2v6h4a1 1 0 0 0 1-1v-9"/></svg><span>Dashboard</span></a>
-        <a class="sidebar-link" href="history.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg><span>History</span></a>
-        <a class="sidebar-link active" href="reporting.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5h16"/><path d="M7 16v-4"/><path d="M12 16V8"/><path d="M17 16v-6.5"/></svg><span>Reporting</span></a>
+        <a class="sidebar-link active" href="history.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg><span>History</span></a>
+        <a class="sidebar-link" href="reporting.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5h16"/><path d="M7 16v-4"/><path d="M12 16V8"/><path d="M17 16v-6.5"/></svg><span>Reporting</span></a>
         <a class="sidebar-link" href="content.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3.5h9l3 3v14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-16a1 1 0 0 1 1-1z"/><path d="M8.5 10h7"/><path d="M8.5 13.5h7"/><path d="M8.5 17h4.5"/></svg><span>Content</span></a>
         <a class="sidebar-link" href="activity.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2.5 6L14 5l2 7h5"/></svg><span>Activity & Performance</span></a>
         <a class="sidebar-link" href="keyword-research.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.5" cy="10.5" r="6"/><path d="M15 15 20.5 20.5"/></svg><span>Keyword Research</span></a>
@@ -231,77 +213,39 @@
     
     <header class="topbar">
       <div>
-        <div class="topbar-title">Reporting Hub</div>
-        <div class="topbar-sub">1 run(s) recorded &middot; latest: Run #1, Aug 07, 2026, 09:35 AM UTC</div>
+        <div class="topbar-title">Report History</div>
+        <div class="topbar-sub">Every past audit run. Older reports are downloadable as PDF only.</div>
       </div>
-      <a class="btn btn-primary" href="reports/reporting-hub-latest.pdf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11"/><path d="M7.5 11 12 15.5 16.5 11"/><path d="M5 18.5h14"/></svg><span>Download PDF</span></a>
+      
     </header>
     
     <main class="content">
-      
-    <div class="card">
-      <div class="card-header"><div class="card-header-title">Recent Activity</div></div>
-      <div class="activity-feed">
-    <a class="activity-item" href="reports/run-0001.pdf">
-      <div class="activity-icon" style="--kpi-color: #009ef7"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11.5 12 4l8 7.5"/><path d="M6 10v9a1 1 0 0 0 1 1h4v-6h2v6h4a1 1 0 0 0 1-1v-9"/></svg></div>
-      <div class="activity-main">
-        <div class="activity-label">Audit run #1 completed</div>
-        <div class="activity-sublabel">8 pages audited · 22 findings</div>
-      </div>
-      <div class="activity-time">Aug 07, 2026, 09:35 AM UTC</div>
-    </a>
-    </div>
-    </div>
-    
-      
-    <div class="card">
-      <div class="card-header"><div class="card-header-title">Findings Over Time</div></div>
-      <div class="card-body"><div id="trendChart"></div></div>
-    </div>
-    
-      
-    <div class="card">
-      <div class="card-header"><div class="card-header-title">New / Resolved / Recurring by Run</div></div>
-      <div class="card-body"><div class="chart-empty">Need at least two runs to compare.</div></div>
-    </div>
-    
-      
-    <div class="card">
-      <div class="card-header"><div class="card-header-title">Category Breakdown by Run</div></div>
-      
+      <section class="card">
         <div class="table-wrap">
-          <table style="table-layout: auto">
-            <thead><tr><th>Category</th><th>Run #1</th></tr></thead>
-            <tbody><tr><td>Meta Title &amp; Description</td><td>3</td></tr><tr><td>Headings</td><td>0</td></tr><tr><td>Social Tags (OG &amp; Twitter)</td><td>17</td></tr><tr><td>URL Structure</td><td>0</td></tr><tr><td>Canonical Tags</td><td>0</td></tr><tr><td>Robots &amp; Indexability</td><td>2</td></tr><tr><td>Images &amp; Alt Text</td><td>0</td></tr><tr><td>Structured Data (Schema)</td><td>0</td></tr><tr><td>HTTPS &amp; Security</td><td>0</td></tr><tr><td>Redirects</td><td>0</td></tr><tr><td>Internal Linking</td><td>0</td></tr><tr><td><strong>Total</strong></td><td><strong>22</strong></td></tr></tbody>
+          <table>
+            <colgroup>
+              <col class="col-run"><col class="col-date"><col class="col-pages">
+              <col class="col-hist-severity"><col class="col-download">
+            </colgroup>
+            <thead>
+              <tr><th>Run</th><th>Date</th><th>Pages Audited</th><th>Severity Summary</th><th>Report</th></tr>
+            </thead>
+            <tbody>
+              
+        <tr>
+          <td>Run #1</td>
+          <td>Aug 07, 2026, 09:35 AM UTC</td>
+          <td>8</td>
+          <td><span class="severity-badge" style="--badge-color: #f1416c">⛔ 0</span> &nbsp; <span class="severity-badge" style="--badge-color: #ffc700">⚠ 5</span> &nbsp; <span class="severity-badge" style="--badge-color: #7239ea">ℹ 17</span></td>
+          <td><a class="btn btn-light" href="reports/run-0001.pdf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11"/><path d="M7.5 11 12 15.5 16.5 11"/><path d="M5 18.5h14"/></svg><span>Download PDF</span></a></td>
+        </tr>
+        
+            </tbody>
           </table>
         </div>
-        
-    </div>
-    
+      </section>
     </main>
   </div>
 </div>
-<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
-<script>
-
-var trendChartEl = document.querySelector("#trendChart");
-if (trendChartEl && window.ApexCharts) {
-  var trendChart = new ApexCharts(trendChartEl, {
-    chart: { type: "area", height: 300, fontFamily: "Inter, sans-serif", stacked: true, toolbar: { show: false } },
-    series: [
-      { name: "Critical", data: [0] },
-      { name: "Warning", data: [5] },
-      { name: "Info", data: [17] }
-    ],
-    xaxis: { categories: ["Run #1"] },
-    colors: ["#f1416c", "#ffc700", "#7239ea"],
-    legend: { position: "bottom" },
-    dataLabels: { enabled: false },
-    stroke: { curve: "smooth", width: 2 }
-  });
-  trendChart.render();
-}
-
-</script>
 </body>
 </html>
