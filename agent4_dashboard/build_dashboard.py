@@ -65,7 +65,7 @@ CATEGORIES = [
     }),
     ("robots-indexability", "Robots & Indexability", {
         "robots-conflicting-directives", "robots-noindex-in-sitemap", "sitemap-non-html-entry",
-        "page-not-200", "page-fetch-failed",
+        "page-not-200", "page-fetch-failed", "missing-sitemap", "missing-robots-txt",
     }),
     ("images-alt-text", "Images & Alt Text", {"image-alt-missing"}),
     ("structured-data", "Structured Data (Schema)", {"schema-invalid-json", "schema-missing"}),

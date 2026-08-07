@@ -85,6 +85,12 @@ def _fetch_robots_txt_info(site_root_url, user_agent):
       - "sitemap_urls": any sitemap locations robots.txt explicitly points to.
         Some sites list one, some list several, some list none (in which
         case we fall back to the standard /sitemap.xml location).
+      - "robots_txt_found": whether robots.txt actually exists (True/False).
+        RobotFileParser.read() silently treats a 404 as "no rules" -- it
+        never tells us whether the file was actually there, so we check
+        that ourselves with a separate lightweight request. A missing
+        robots.txt is itself worth reporting later as a finding (see
+        agent3_validation/site_checks.py).
     """
     robots_txt_url = site_root_url.rstrip("/") + "/robots.txt"
 
@@ -103,10 +109,21 @@ def _fetch_robots_txt_info(site_root_url, user_agent):
     # site_maps() returns None if robots.txt has no "Sitemap:" lines at all.
     sitemap_urls = parser.site_maps() or []
 
+    try:
+        robots_txt_response = requests.get(
+            robots_txt_url,
+            headers={"User-Agent": user_agent},
+            timeout=30,
+        )
+        robots_txt_found = robots_txt_response.status_code == 200
+    except requests.RequestException:
+        robots_txt_found = False
+
     return {
         "parser": parser,
         "crawl_delay_seconds": crawl_delay_seconds,
         "sitemap_urls": sitemap_urls,
+        "robots_txt_found": robots_txt_found,
     }
 
 
@@ -150,7 +167,8 @@ def discover_urls_to_crawl(site_root_url, user_agent=CRAWLER_USER_AGENT):
     Returns a dictionary with:
       - "urls_to_crawl": list of URLs that are both in the sitemap AND
         allowed by robots.txt. This is what Agent 1's next step (1b) will
-        actually visit.
+        actually visit when "discovery_mode" is "sitemap". Empty when
+        "discovery_mode" is "link_crawl" (see below).
       - "disallowed_but_in_sitemap": list of URLs that appear in the sitemap
         but are blocked by robots.txt. Having any URLs here is itself a real
         SEO problem (the best-practice document says sitemaps should only
@@ -159,10 +177,22 @@ def discover_urls_to_crawl(site_root_url, user_agent=CRAWLER_USER_AGENT):
         information.
       - "crawl_delay_seconds": how long to wait between requests when we
         get to step 1b (politeness setting).
-      - "sitemap_url_used": which sitemap URL we actually read, useful for
+      - "sitemap_url_used": which sitemap URL we actually tried, useful for
         debugging.
+      - "discovery_mode": "sitemap" if a sitemap was found and read
+        successfully, or "link_crawl" if no sitemap could be found at all
+        (e.g. it 404s) -- in that case step 1b needs to discover pages by
+        following internal links from the homepage instead, since there's
+        no pre-made list to work from.
+      - "sitemap_found": True/False, whether the sitemap fetch succeeded.
+      - "robots_txt_found": True/False, whether robots.txt itself exists.
+      - "robots_parser": the RobotFileParser, passed through so step 1b can
+        keep applying the same Disallow rules to URLs it discovers on the
+        fly during a link-following crawl (the sitemap path already applies
+        these rules upfront, below).
     """
     robots_info = _fetch_robots_txt_info(site_root_url, user_agent)
+    robots_parser = robots_info["parser"]
 
     # Prefer the sitemap location(s) robots.txt points to. If robots.txt
     # didn't mention any, fall back to the conventional /sitemap.xml path.
@@ -172,16 +202,22 @@ def discover_urls_to_crawl(site_root_url, user_agent=CRAWLER_USER_AGENT):
 
     # Most sites (including ours) only declare one sitemap, but we loop over
     # all declared sitemaps and combine their URLs, in case more than one
-    # is listed.
+    # is listed. If every declared sitemap is unreachable (e.g. a 404, or no
+    # sitemap exists at all), fall back to discovering pages by following
+    # internal links instead, rather than crashing the whole audit run.
     all_sitemap_page_urls = []
-    for sitemap_url in sitemap_urls_to_check:
-        all_sitemap_page_urls.extend(_fetch_sitemap_urls(sitemap_url, user_agent))
+    sitemap_found = True
+    try:
+        for sitemap_url in sitemap_urls_to_check:
+            all_sitemap_page_urls.extend(_fetch_sitemap_urls(sitemap_url, user_agent))
+    except requests.RequestException:
+        sitemap_found = False
+        all_sitemap_page_urls = []
 
     # Now split the sitemap's URLs into "allowed to crawl" vs "disallowed by
     # robots.txt", using the robots.txt rules we already parsed above.
     urls_to_crawl = []
     disallowed_but_in_sitemap = []
-    robots_parser = robots_info["parser"]
     for page_url in all_sitemap_page_urls:
         if _is_excluded_url(page_url):
             continue
@@ -195,6 +231,10 @@ def discover_urls_to_crawl(site_root_url, user_agent=CRAWLER_USER_AGENT):
         "disallowed_but_in_sitemap": disallowed_but_in_sitemap,
         "crawl_delay_seconds": robots_info["crawl_delay_seconds"],
         "sitemap_url_used": ", ".join(sitemap_urls_to_check),
+        "discovery_mode": "sitemap" if sitemap_found else "link_crawl",
+        "sitemap_found": sitemap_found,
+        "robots_txt_found": robots_info["robots_txt_found"],
+        "robots_parser": robots_parser,
     }
 
 

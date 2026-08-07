@@ -55,6 +55,32 @@ CREATE TABLE IF NOT EXISTS runs (
 )
 """
 
+# Columns added after the "runs" table already existed in real, committed
+# database files (simprosys and hmspro both had real run history before
+# this feature) -- "CREATE TABLE IF NOT EXISTS" above only applies to a
+# brand new database, so existing files need each of these columns added
+# with ALTER TABLE instead. Kept as its own list (rather than folding into
+# CREATE_RUNS_TABLE_SQL) so it's obvious this is a migration step, not part
+# of the original schema.
+RUNS_TABLE_MIGRATION_COLUMNS = [
+    ("discovery_mode", "TEXT"),
+    ("sitemap_found", "INTEGER"),
+    ("robots_txt_found", "INTEGER"),
+]
+
+
+def _apply_runs_table_migrations(connection):
+    """
+    Adds any of RUNS_TABLE_MIGRATION_COLUMNS that aren't already present on
+    the "runs" table. Safe to call every time a connection is opened:
+    existing columns are left untouched, and existing rows simply get NULL
+    for whichever new columns didn't exist when they were written.
+    """
+    existing_columns = {row["name"] for row in connection.execute("PRAGMA table_info(runs)")}
+    for column_name, column_type in RUNS_TABLE_MIGRATION_COLUMNS:
+        if column_name not in existing_columns:
+            connection.execute(f"ALTER TABLE runs ADD COLUMN {column_name} {column_type}")
+
 CREATE_PAGES_TABLE_SQL = """
 CREATE TABLE IF NOT EXISTS pages (
     page_id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -128,6 +154,7 @@ def get_connection(db_path=DB_FILE_PATH):
     connection.execute(CREATE_RUNS_TABLE_SQL)
     connection.execute(CREATE_PAGES_TABLE_SQL)
     connection.execute(CREATE_FINDINGS_TABLE_SQL)
+    _apply_runs_table_migrations(connection)
     connection.commit()
     return connection
 
@@ -173,8 +200,9 @@ def save_crawl_result(connection, crawl_result):
         INSERT INTO runs (
             site_root_url, run_timestamp, crawl_duration_seconds,
             total_pages_crawled, total_crawl_errors, sitemap_url_used,
-            disallowed_but_in_sitemap_json, crawl_errors_json
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            disallowed_but_in_sitemap_json, crawl_errors_json,
+            discovery_mode, sitemap_found, robots_txt_found
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
         (
             crawl_result["site_root_url"],
@@ -185,6 +213,9 @@ def save_crawl_result(connection, crawl_result):
             crawl_result["sitemap_url_used"],
             _to_json_or_none(crawl_result["disallowed_but_in_sitemap"]),
             _to_json_or_none(crawl_result["crawl_errors"]),
+            crawl_result["discovery_mode"],
+            int(crawl_result["sitemap_found"]),
+            int(crawl_result["robots_txt_found"]),
         ),
     )
     run_id = cursor.lastrowid

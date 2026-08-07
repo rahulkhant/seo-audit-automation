@@ -38,11 +38,12 @@ def validate_run(connection, run_id):
     below), so this function stays easy to test on its own.
     """
     page_rows = connection.execute("SELECT * FROM pages WHERE run_id = ?", (run_id,)).fetchall()
+    run_row = connection.execute("SELECT * FROM runs WHERE run_id = ?", (run_id,)).fetchone()
 
     findings = []
     for page_row in page_rows:
         findings.extend(check_page(page_row))
-    findings.extend(check_site(page_rows))
+    findings.extend(check_site(page_rows, run_row))
     return findings
 
 

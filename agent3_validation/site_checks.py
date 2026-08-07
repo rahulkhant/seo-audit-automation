@@ -211,10 +211,42 @@ def _check_canonical_targets(pages):
     return findings
 
 
-def check_site(page_rows):
+def _check_missing_discovery_sources(run_row):
+    """
+    Flags a site with no sitemap.xml and/or no robots.txt -- both are
+    themselves real, actionable SEO gaps (search engines rely on both for
+    efficient crawling/indexing), not just an internal detail of how we
+    discovered the site's pages.
+
+    "sitemap_found"/"robots_txt_found" are NULL (not 0) for any run
+    recorded before this check existed -- we deliberately skip those rather
+    than retroactively flagging something that was never actually checked.
+    """
+    findings = []
+    if run_row["sitemap_found"] is not None and not run_row["sitemap_found"]:
+        findings.append(make_finding(
+            run_row["site_root_url"], "missing-sitemap",
+            "No sitemap.xml could be found for this site.",
+            "A reachable sitemap.xml (directly, or referenced from robots.txt)",
+            "Not found -- pages were discovered by following internal links instead.",
+            rules.SEVERITY_WARNING,
+        ))
+    if run_row["robots_txt_found"] is not None and not run_row["robots_txt_found"]:
+        findings.append(make_finding(
+            run_row["site_root_url"], "missing-robots-txt",
+            "No robots.txt file could be found for this site.",
+            "A reachable robots.txt file",
+            "Not found",
+            rules.SEVERITY_WARNING,
+        ))
+    return findings
+
+
+def check_site(page_rows, run_row):
     """
     Main entry point for this file. Takes every raw database row (from the
-    "pages" table) for ONE run and returns every cross-page finding.
+    "pages" table) for ONE run, plus that run's own "runs" row, and returns
+    every cross-page finding.
     """
     pages = [load_page_for_checks(row) for row in page_rows]
     # These checks only make sense for real HTML pages with actual link
@@ -234,4 +266,5 @@ def check_site(page_rows):
     findings.extend(_check_duplicate_text(html_pages, "title", "duplicate-title", "title tag"))
     findings.extend(_check_duplicate_text(html_pages, "meta_description", "duplicate-meta-description", "meta description"))
     findings.extend(_check_canonical_targets(html_pages))
+    findings.extend(_check_missing_discovery_sources(run_row))
     return findings
