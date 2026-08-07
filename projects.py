@@ -42,6 +42,11 @@ PROJECTS = {
         # other than that default.
         "notification_recipient": None,
     },
+    "hmspro": {
+        "display_name": "HMSPro",
+        "site_url": "https://hmspro.com/",
+        "notification_recipient": None,
+    },
 }
 
 
